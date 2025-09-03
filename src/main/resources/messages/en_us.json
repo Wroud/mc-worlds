@@ -1,0 +1,8 @@
+{
+  "dev.wroud.mc.worlds.command.create.exception.world_already_exists": "A world with that id already exists!",
+  "dev.wroud.mc.worlds.command.exception.unknown_world": "Unknown world id!",
+
+  "dev.wroud.mc.worlds.command.create.success": "World ${id} has been created successfully. <aqua><underlined><run_cmd '/worlds tp ${id}'>Click to teleport to it!",
+  "dev.wroud.mc.worlds.command.delete.success": "World ${id} has been deleted successfully!",
+  "dev.wroud.mc.worlds.command.teleport.success": "Teleporting to ${id}"
+}

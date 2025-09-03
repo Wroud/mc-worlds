@@ -1,0 +1,32 @@
+{
+  "required": true,
+  "package": "dev.wroud.mc.worlds.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixinextras": {
+    "minVersion": "0.5.0-rc.1"
+  },
+  "client": [
+  ],
+  "mixins": [
+    "fixes.BaseFireBlockMixin",
+    "fixes.ChangeDimensionTriggerMixin",
+    "fixes.DedicatedServerMixin",
+    "fixes.EndPortalBlockMixin",
+    "fixes.EntityMixin",
+    "fixes.LegacyStructureDataHandlerMixin",
+    "fixes.LocationPredicateMixin",
+    "fixes.MapItemSavedDataMixin",
+    "fixes.NetherPortalBlockMixin",
+    "fixes.ServerLevelMixin",
+    "fixes.ServerPlayerTeleportMixin",
+    "fixes.TheEndGatewayBlockEntityMixin",
+    "fixes.ThrownEnderpearlMixin",
+    "ExecuteCommandMixin",
+    "MinecraftServerAccessor",
+    "NetherPortalBlockAccessor",
+    "TheEndGatewayBlockEntityAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
