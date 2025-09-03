@@ -22,7 +22,7 @@ public class WorldsCommands {
 
 	public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = (context,
 			builder) -> SharedSuggestionProvider.suggestResource(
-					McWorldInitializer.getMcWorld().getManadger().getWorldIds(), builder);
+					McWorldInitializer.getMcWorld(context.getSource().getServer()).getManadger().getWorldIds(), builder);
 
 	public static final SimpleCommandExceptionType UNKNOWN_WORLD_EXCEPTION = new SimpleCommandExceptionType(
 			localized("dev.wroud.mc.worlds.command.exception.unknown_world"));

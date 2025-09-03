@@ -73,8 +73,7 @@ public class LevelData implements ServerLevelData {
             WEATHER_ENTITY_CODEC.fieldOf("weather").forGetter(ld -> ld.weatherData),
             GAME_SETTINGS_CODEC.fieldOf("game_settings").forGetter(ld -> ld.gameSettingsData),
             CompoundTag.CODEC.listOf().optionalFieldOf("scheduled_events", new ArrayList<>())
-                    .forGetter(ld -> ld.scheduledEvents.store().compoundStream().toList())
-                    )
+                    .forGetter(ld -> ld.scheduledEvents.store().compoundStream().toList()))
             .apply(instance, LevelData::new));
 
     private static class CoreData {
@@ -164,7 +163,8 @@ public class LevelData implements ServerLevelData {
 
     private WorldData worldData;
 
-    public LevelData(CoreData coreData, WorldStateData worldStateData, WanderingTraderData wanderingTraderData, WeatherData weatherData) {
+    public LevelData(CoreData coreData, WorldStateData worldStateData, WanderingTraderData wanderingTraderData,
+            WeatherData weatherData) {
         this(coreData, worldStateData, wanderingTraderData, weatherData, null, new ArrayList<>());
     }
 

@@ -2,7 +2,7 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.ChangelogPluginExtension
 
 plugins {
-    id("fabric-loom") version "1.10-SNAPSHOT"
+    id("fabric-loom") version "1.11-SNAPSHOT"
     id("maven-publish")
     id("me.modmuss50.mod-publish-plugin") version "0.8.4"
     id("org.jetbrains.changelog")
@@ -46,19 +46,13 @@ dependencies {
     minecraft("com.mojang:minecraft:${findProperty("minecraft_version")}")
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:${findProperty("loader_version")}")
-
     modImplementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
 
     includeMod("me.lucko:fabric-permissions-api:${findProperty("permission_api_version")}")
 
-    includeMod("eu.pb4:sgui:${findProperty("sgui_version")}")
-
     includeMod("maven.modrinth:message-api:${findProperty("message_api_version")}")
     includeMod("eu.pb4:placeholder-api:${findProperty("placeholder_api_version")}")
     includeMod("eu.pb4:player-data-api:${findProperty("player_data_api_version")}")
-
-    includeDep("com.github.junrar:junrar:${findProperty("junrar_version")}")
-    includeDep("org.apache.commons:commons-compress:${findProperty("apache_common_compress_version")}")
 }
 
 publishMods {

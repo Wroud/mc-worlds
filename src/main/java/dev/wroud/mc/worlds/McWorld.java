@@ -17,20 +17,20 @@ public class McWorld {
     return worldsManadger;
   }
 
-  public void loadWorlds() {
-    worldsManadger.loadWorlds();
-    worldsManadger.prepareWorlds();
+  public void loadSavedWorlds() {
+    worldsManadger.loadSavedWorlds();
+    worldsManadger.prepareSavedWorlds();
   }
 
-  public WorldHandle create(ResourceLocation location, LevelData levelData) {
-    return worldsManadger.loadWorld(location, levelData);
+  public WorldHandle loadOrCreate(ResourceLocation location, LevelData levelData) {
+    return worldsManadger.loadOrCreateWorld(location, levelData);
   }
 
-  public boolean remove(ResourceLocation location) {
-    return worldsManadger.removeWorld(location);
+  public void handleWorldUnload(ResourceLocation level) {
+    worldsManadger.unloadWorld(level);
   }
 
-  public void prepare(WorldHandle handle) {
+  public void prepareWorld(WorldHandle handle) {
     worldsManadger.prepareWorld(handle);
   }
 }

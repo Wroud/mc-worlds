@@ -1,9 +1,12 @@
 package dev.wroud.mc.worlds.manadger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
@@ -18,7 +21,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.TicketStorage;
-import net.minecraft.world.level.border.BorderChangeListener.DelegateBorderChangeListener;
 
 public class WorldsManadger {
   private static final Logger LOGGER = LogUtils.getLogger();
@@ -42,23 +44,30 @@ public class WorldsManadger {
     return worlds.get(location);
   }
 
-  public void loadWorlds() {
+  public void loadSavedWorlds() {
     worldsData.getLevelsData().forEach((location, levelData) -> {
-      loadWorld(location, levelData);
+      loadOrCreateWorld(location, levelData);
     });
   }
 
-  public void prepareWorlds() {
+  public void prepareSavedWorlds() {
     worlds.values().forEach(handle -> prepareWorld(handle));
   }
 
-  public WorldHandle loadWorld(ResourceLocation id, LevelData levelData) {
+  public WorldHandle loadOrCreateWorld(ResourceLocation id, LevelData levelData) {
     if (worlds.containsKey(id)) {
       return worlds.get(id);
     }
-    LOGGER.info("Loading world: {}", id);
 
     var resourceKey = ResourceKey.create(Registries.DIMENSION, id);
+    var session = ((MinecraftServerAccessor) this.server).getStorageSource();
+    File worldDirectory = session.getDimensionPath(resourceKey).toFile();
+    if (worldDirectory.exists()) {
+      LOGGER.info("Loading world: {}", id);
+    } else {
+      LOGGER.info("Creating new world: {}", id);
+    }
+
     levelData.setWorldData(server.getWorldData());
     var serverLevel = new CustomServerLevel(
         this.server,
@@ -72,10 +81,6 @@ public class WorldsManadger {
         ImmutableList.of(),
         this.server.overworld().getRandomSequences());
 
-    this.server.overworld().getWorldBorder()
-        .addListener(new DelegateBorderChangeListener(serverLevel.getWorldBorder()));
-    ((MinecraftServerAccessor) this.server).getLevels().put(resourceKey, serverLevel);
-
     var worldHandle = new WorldHandle(id, levelData, serverLevel);
     worlds.put(id, worldHandle);
     this.worldsData.addLevelData(id, levelData);
@@ -88,19 +93,33 @@ public class WorldsManadger {
       LOGGER.info("Activating all deactivated tickets for world: {}", handle.getId());
       ticketStorage.activateAllDeactivatedTickets();
     }
-    LOGGER.info("Waiting for next tick for world: {}", handle.getId());
-    // ((MinecraftServerAccessor) this.server).waitUntilNextTick();
-    LOGGER.info("Next tick complete for world: {}", handle.getId());
     handle.getServerLevel().setSpawnSettings(this.server.isSpawningMonsters());
     LOGGER.info("Spawn settings updated for world: {}", handle.getId());
   }
 
-  public boolean removeWorld(ResourceLocation location) {
+  public void unloadWorld(ResourceLocation location) {
     var handle = worlds.remove(location);
     if (handle != null) {
-      ((MinecraftServerAccessor) this.server).getLevels().remove(handle.getServerLevel().dimension());
-      return true;
+      var world = handle.getServerLevel();
+
+      if (world.noSave) {
+        if (world.isManuallyStopped()) {
+          var session = ((MinecraftServerAccessor) this.server).getStorageSource();
+          File worldDirectory = session.getDimensionPath(world.dimension()).toFile();
+          if (worldDirectory.exists()) {
+            try {
+              FileUtils.deleteDirectory(worldDirectory);
+            } catch (IOException e) {
+              LOGGER.warn("Failed to delete world directory for dimension {}", world.dimension(), e);
+              try {
+                FileUtils.forceDeleteOnExit(worldDirectory);
+              } catch (IOException ignored) {
+              }
+            }
+          }
+        }
+        this.worldsData.removeLevelData(location);
+      }
     }
-    return false;
   }
 }

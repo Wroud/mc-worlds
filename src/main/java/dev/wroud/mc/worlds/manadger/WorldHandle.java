@@ -1,14 +1,14 @@
 package dev.wroud.mc.worlds.manadger;
 
+import dev.wroud.mc.worlds.server.CustomServerLevel;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 
 public class WorldHandle {
   private ResourceLocation id;
-  private ServerLevel serverLevel;
+  private CustomServerLevel serverLevel;
   private LevelData levelData;
 
-  public WorldHandle(ResourceLocation id, LevelData levelData, ServerLevel serverLevel) {
+  public WorldHandle(ResourceLocation id, LevelData levelData, CustomServerLevel serverLevel) {
     this.id = id;
     this.levelData = levelData;
     this.serverLevel = serverLevel;
@@ -22,7 +22,7 @@ public class WorldHandle {
     return levelData;
   }
 
-  public ServerLevel getServerLevel() {
+  public CustomServerLevel getServerLevel() {
     return serverLevel;
   }
 }

@@ -61,11 +61,11 @@ public class CreateCommand {
 		LOGGER.info("Using dimension type: {}", type);
 		var levelData = LevelData.overworldDefault(id, levelStem, seed);
 
-		var handle = McWorldInitializer.getMcWorld().create(id,
+		var handle = McWorldInitializer.getMcWorld(server).loadOrCreate(id,
 				levelData);
 		LOGGER.info("Created world: {}", id);
 
-		McWorldInitializer.getMcWorld().prepare(handle);
+		McWorldInitializer.getMcWorld(server).prepareWorld(handle);
 		LOGGER.info("Prepared world: {}", id);
 		source.sendSuccess(() -> builder("dev.wroud.mc.worlds.command.create.success")
 				.addPlaceholder("id", id.toString()).build(), false);
