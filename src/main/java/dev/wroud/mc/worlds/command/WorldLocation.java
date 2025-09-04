@@ -3,18 +3,22 @@ package dev.wroud.mc.worlds.command;
 import net.minecraft.BlockUtil;
 import net.minecraft.BlockUtil.FoundRectangle;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.NetherPortalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.levelgen.feature.EndPlatformFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.EndGatewayConfiguration;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
+import java.util.Set;
 
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.portal.TeleportTransition;
@@ -44,6 +48,21 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
     }
 
     private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {
+        BlockPos blockPos2 = ServerLevel.END_SPAWN_POINT;
+        Vec3 vec3 = blockPos2.getBottomCenter();
+        
+        EndPlatformFeature.createEndPlatform(level, BlockPos.containing(vec3).below(), true);
+        var f = Direction.WEST.toYRot();
+        var set = Relative.union(Relative.DELTA, Set.of(Relative.X_ROT));
+        if (entity instanceof ServerPlayer) {
+            vec3 = vec3.subtract(0.0, 1.0, 0.0);
+        }
+
+        return new TeleportTransition(level, vec3, Vec3.ZERO, f, 0.0F, set,
+                TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET));
+    }
+
+    private static TeleportTransition getEndGatewaySpawn(ServerLevel level, Entity entity) {
         BlockPos blockPos = entity.blockPosition();
         BlockPos blockPos2 = EndGatewayUtil.findOrCreateValidTeleportPos(level, blockPos);
         blockPos2 = blockPos2.above(10);
@@ -98,6 +117,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
     }
 
     public void teleport(Entity entity) {
+        entity.setPortalCooldown();
         entity.teleport(transition);
     }
 }

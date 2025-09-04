@@ -27,9 +27,11 @@ import net.minecraft.world.level.timers.TimerQueue;
 
 public class LevelData implements ServerLevelData {
     // Core dimension and world generation data
-    private static final Codec<CoreData> CORE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    private static final Codec<WorldOptionsData> CORE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             LevelStem.CODEC.fieldOf("level_stem").forGetter(cd -> cd.levelStem),
-            Codec.LONG.optionalFieldOf("seed", 10L).forGetter(cd -> cd.seed)).apply(instance, CoreData::new));
+            Codec.LONG.optionalFieldOf("seed", 10L).forGetter(cd -> cd.seed),
+            Codec.BOOL.optionalFieldOf("generate_structures", true).forGetter(cd -> cd.generateStructures))
+            .apply(instance, WorldOptionsData::new));
 
     // World state and gameplay data
     private static final Codec<WorldStateData> WORLD_STATE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -63,7 +65,7 @@ public class LevelData implements ServerLevelData {
     private static final Codec<GameSettingsData> GAME_SETTINGS_CODEC = RecordCodecBuilder.create(instance -> instance
             .group(
                     CompoundTag.CODEC.optionalFieldOf("world_border", null).forGetter(gsd -> gsd.getTag()),
-                    Codec.BOOL.optionalFieldOf("initialized", true).forGetter(gsd -> gsd.initialized))
+                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(gsd -> gsd.initialized))
             .apply(instance, GameSettingsData::new));
 
     public static final Codec<LevelData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -76,13 +78,15 @@ public class LevelData implements ServerLevelData {
                     .forGetter(ld -> ld.scheduledEvents.store().compoundStream().toList()))
             .apply(instance, LevelData::new));
 
-    private static class CoreData {
+    private static class WorldOptionsData {
         private LevelStem levelStem;
         private long seed;
+        private boolean generateStructures;
 
-        public CoreData(LevelStem levelStem, long seed) {
+        public WorldOptionsData(LevelStem levelStem, long seed, boolean generateStructures) {
             this.levelStem = levelStem;
             this.seed = seed;
+            this.generateStructures = generateStructures;
         }
     }
 
@@ -154,7 +158,7 @@ public class LevelData implements ServerLevelData {
         }
     }
 
-    private CoreData coreData;
+    private WorldOptionsData coreData;
     private WorldStateData worldStateData;
     private WanderingTraderData wanderingTraderData;
     private WeatherData weatherData;
@@ -163,12 +167,12 @@ public class LevelData implements ServerLevelData {
 
     private WorldData worldData;
 
-    public LevelData(CoreData coreData, WorldStateData worldStateData, WanderingTraderData wanderingTraderData,
+    public LevelData(WorldOptionsData coreData, WorldStateData worldStateData, WanderingTraderData wanderingTraderData,
             WeatherData weatherData) {
         this(coreData, worldStateData, wanderingTraderData, weatherData, null, new ArrayList<>());
     }
 
-    public LevelData(CoreData coreData, WorldStateData worldStateData,
+    public LevelData(WorldOptionsData coreData, WorldStateData worldStateData,
             WanderingTraderData wanderingTraderData, WeatherData weatherData,
             GameSettingsData gameSettingsData, List<CompoundTag> scheduledEvents) {
         this(coreData, worldStateData, wanderingTraderData, weatherData, gameSettingsData,
@@ -177,7 +181,7 @@ public class LevelData implements ServerLevelData {
                                 .map(tag -> new Dynamic<>(net.minecraft.nbt.NbtOps.INSTANCE, tag))));
     }
 
-    public LevelData(CoreData coreData, WorldStateData worldStateData,
+    public LevelData(WorldOptionsData coreData, WorldStateData worldStateData,
             WanderingTraderData wanderingTraderData, WeatherData weatherData,
             GameSettingsData gameSettingsData, TimerQueue<MinecraftServer> scheduledEvents) {
         this.coreData = coreData;
@@ -188,12 +192,20 @@ public class LevelData implements ServerLevelData {
         this.scheduledEvents = scheduledEvents;
     }
 
+    public WorldData getWorldData() {
+        return this.worldData;
+    }
+
     public LevelStem getLevelStem() {
         return coreData.levelStem;
     }
 
     public long getSeed() {
         return coreData.seed;
+    }
+
+    public boolean getGenerateStructures() {
+        return coreData.generateStructures;
     }
 
     public boolean isDebugWorld() {
@@ -384,14 +396,15 @@ public class LevelData implements ServerLevelData {
         this.worldData = worldData;
     }
 
-    public static LevelData overworldDefault(ResourceLocation id, LevelStem levelStem, long seed) {
+    public static LevelData getDefault(ResourceLocation id, LevelStem levelStem, long seed,
+            boolean generateStructures) {
         return new LevelData(
-                new CoreData(levelStem, seed),
+                new WorldOptionsData(levelStem, seed, generateStructures),
                 new WorldStateData(BlockPos.ZERO,
                         0.0F),
                 new WanderingTraderData(0, 0, Optional.ofNullable(null)),
                 new WeatherData(0L, 0L, false, false, 0, 0, 0),
-                new GameSettingsData(WorldBorder.DEFAULT_SETTINGS, true),
+                new GameSettingsData(WorldBorder.DEFAULT_SETTINGS, false),
                 new TimerQueue<MinecraftServer>(TimerCallbacks.SERVER_CALLBACKS));
     }
 }

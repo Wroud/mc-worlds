@@ -14,6 +14,9 @@ import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.CustomServerLevel;
+import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
+import net.minecraft.CrashReport;
+import net.minecraft.ReportedException;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -81,6 +84,7 @@ public class WorldsManadger {
         ImmutableList.of(),
         this.server.overworld().getRandomSequences());
 
+    this.initializeWorld(levelData, serverLevel);
     var worldHandle = new WorldHandle(id, levelData, serverLevel);
     worlds.put(id, worldHandle);
     this.worldsData.addLevelData(id, levelData);
@@ -120,6 +124,31 @@ public class WorldsManadger {
         }
         this.worldsData.removeLevelData(location);
       }
+    }
+  }
+
+  private void initializeWorld(LevelData levelData, CustomServerLevel level) {
+    if (!DimensionDetectionUtil.isOverworldLikeDimension(level)) {
+      return;
+    }
+
+    if (!levelData.isInitialized()) {
+      try {
+        MinecraftServerAccessor.invokeSetInitialSpawn(level, levelData, false,
+            levelData.isDebugWorld());
+        levelData.setInitialized(true);
+      } catch (Throwable var23) {
+        CrashReport crashReport = CrashReport.forThrowable(var23, "Exception initializing level");
+
+        try {
+          level.fillReportDetails(crashReport);
+        } catch (Throwable var22) {
+        }
+
+        throw new ReportedException(crashReport);
+      }
+
+      levelData.setInitialized(true);
     }
   }
 }

@@ -4,11 +4,13 @@ import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(ClientPacketListener.class)
@@ -18,33 +20,45 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
         super(minecraft, connection, commonListenerCookie);
     }
 
+    private Holder<DimensionType> currentDimensionHolder;
+
     @ModifyVariable(
-        method = "determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;",
-        at = @At("HEAD"),
-        argsOnly = true,
+        method = "handleRespawn",
+        at = @At("STORE"),
         ordinal = 0
     )
-    private ResourceKey<Level> replaceToDimension(ResourceKey<Level> toDimension) {
-        // For the destination dimension, we cannot reliably map it on the client side
-        // since we don't have access to the actual ServerLevel object.
-        // The server-side mixins will handle the mapping there.
+    private Holder<DimensionType> captureDimensionHolder(Holder<DimensionType> holder) {
+        this.currentDimensionHolder = holder;
+        return holder;
+    }
+
+    @ModifyArg(
+        method = "handleRespawn",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"),
+        index = 1
+    )
+    private ResourceKey<Level> modifyToDimension(ResourceKey<Level> toDimension) {
+        if (currentDimensionHolder != null) {
+            ResourceKey<DimensionType> dimensionTypeKey = currentDimensionHolder.unwrapKey().orElse(null);
+            if (dimensionTypeKey != null) {
+                ResourceKey<Level> vanillaMapping = DimensionDetectionUtil.getVanillaDimensionMapping(dimensionTypeKey);
+                if (vanillaMapping != null) {
+                    return vanillaMapping;
+                }
+            }
+        }
         return toDimension;
     }
 
-    @ModifyVariable(
-        method = "determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;",
-        at = @At("HEAD"),
-        argsOnly = true,
-        ordinal = 1
+    @ModifyArg(
+        method = "handleRespawn",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"),
+        index = 2
     )
-    private ResourceKey<Level> replaceFromDimension(ResourceKey<Level> fromDimension) {
-		LocalPlayer localPlayer = this.minecraft.player;
-		Level fromLevel = localPlayer.level();
-        if (fromLevel != null && fromLevel.dimension().equals(fromDimension)) {
-            ResourceKey<Level> vanillaMapping = DimensionDetectionUtil.getVanillaDimensionMapping(fromLevel);
-            if (vanillaMapping != null) {
-                return vanillaMapping;
-            }
+    private ResourceKey<Level> modifyFromDimension(ResourceKey<Level> fromDimension) {
+        var localPlayer = this.minecraft.player;
+        if (localPlayer != null && localPlayer.level() != null) {
+            return DimensionDetectionUtil.getVanillaDimensionMapping(localPlayer.level());
         }
         return fromDimension;
     }
