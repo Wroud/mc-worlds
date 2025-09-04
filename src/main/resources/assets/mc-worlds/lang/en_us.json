@@ -1,0 +1,10 @@
+{
+  "dev.wroud.mc.worlds.command.create.exception.world_already_exists": "A world with that id already exists!",
+  "dev.wroud.mc.worlds.command.exception.unknown_world": "Unknown world id!",
+  "dev.wroud.mc.worlds.command.create.success": "World ",
+  "dev.wroud.mc.worlds.command.create.success.created": " created. ",
+  "dev.wroud.mc.worlds.command.create.success.teleport": "Teleport",
+  "dev.wroud.mc.worlds.command.delete.success": "World %s has been deleted successfully!",
+  "dev.wroud.mc.worlds.command.teleport.success": "Teleporting to %s",
+  "dev.wroud.mc.worlds.command.create.exception.generic": "An error occurred while creating the world: %s"
+}

@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "wroud-worlds",
+	"id": "mc-worlds",
 	"version": "${version}",
 	"name": "Worlds",
 	"description": "Create and manage worlds in-game, through commands.",

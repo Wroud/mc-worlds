@@ -7,9 +7,6 @@ import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.manadger.LevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
@@ -31,10 +28,9 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.phys.Vec3;
 
 public class CustomServerLevel extends ServerLevel {
-  private static final Logger LOGGER = LogUtils.getLogger();
   private boolean isManuallyStopped;
-  private boolean isSaving;
   private boolean isClosed;
+  private boolean markedForClose;
   private DelegateBorderChangeListener borderChangeListener;
 
   public CustomServerLevel(
@@ -46,14 +42,14 @@ public class CustomServerLevel extends ServerLevel {
       LevelStem levelStem,
       ChunkProgressListener chunkProgressListener,
       boolean bl,
-      List<CustomSpawner> list,
+      List<CustomSpawner> customSpawners,
       @Nullable RandomSequences randomSequences) {
     super(minecraftServer, executor, levelStorageAccess, serverLevelData, resourceKey, levelStem, chunkProgressListener,
-        bl, BiomeManager.obfuscateSeed(serverLevelData.getSeed()), list, true, randomSequences);
+        bl, BiomeManager.obfuscateSeed(serverLevelData.getSeed()), customSpawners, true, randomSequences);
 
     this.isManuallyStopped = false;
-    this.isSaving = false;
     this.isClosed = false;
+    this.markedForClose = false;
     this.borderChangeListener = new DelegateBorderChangeListener(this.getWorldBorder());
 
     this.getServer().execute(() -> {
@@ -69,26 +65,14 @@ public class CustomServerLevel extends ServerLevel {
     if (this.isManuallyStopped) {
       this.kickPlayers(null);
 
-      if (this.isSaving) {
+      if (this.markedForClose) {
         return;
       }
 
       if (this.getChunkSource().chunkMap.hasWork()) {
         this.getChunkSource().deactivateTicketsOnClosing();
       } else {
-        this.isSaving = true;
-        this.getServer().execute(() -> {
-          ((MinecraftServerAccessor) this.getServer()).getLevels().remove(this.dimension());
-          LOGGER.info("Saving chunks for level '{}'/{}", this, this.dimension().location());
-          this.save(null, true, this.noSave);
-
-          try {
-            this.close();
-            ServerWorldEvents.UNLOAD.invoker().onWorldUnload(this.getServer(), this);
-          } catch (IOException var5) {
-            LOGGER.error("Exception closing the level", (Throwable) var5);
-          }
-        });
+        this.markedForClose = true;
         return;
       }
     }
@@ -97,6 +81,10 @@ public class CustomServerLevel extends ServerLevel {
 
   public boolean isManuallyStopped() {
     return isManuallyStopped && isClosed;
+  }
+
+  public boolean isMarkedForClose() {
+    return this.markedForClose;
   }
 
   @Override

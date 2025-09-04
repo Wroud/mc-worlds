@@ -21,8 +21,6 @@ java {
 
 repositories {
     mavenCentral()
-    maven("https://maven.nucleoid.xyz/")
-    maven("https://api.modrinth.com/maven")
 }
 
 loom {
@@ -49,10 +47,6 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
 
     includeMod("me.lucko:fabric-permissions-api:${findProperty("permission_api_version")}")
-
-    includeMod("maven.modrinth:message-api:${findProperty("message_api_version")}")
-    includeMod("eu.pb4:placeholder-api:${findProperty("placeholder_api_version")}")
-    includeMod("eu.pb4:player-data-api:${findProperty("player_data_api_version")}")
 }
 
 publishMods {
@@ -62,7 +56,6 @@ publishMods {
 
     displayName = "Worlds ${version.get()}"
     modLoaders.add("fabric")
-    modLoaders.add("quilt")
 
 
     // curseforge {

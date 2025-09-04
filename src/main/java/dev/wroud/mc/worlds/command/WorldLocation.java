@@ -50,7 +50,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
     private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {
         BlockPos blockPos2 = ServerLevel.END_SPAWN_POINT;
         Vec3 vec3 = blockPos2.getBottomCenter();
-        
+
         EndPlatformFeature.createEndPlatform(level, BlockPos.containing(vec3).below(), true);
         var f = Direction.WEST.toYRot();
         var set = Relative.union(Relative.DELTA, Set.of(Relative.X_ROT));

@@ -9,10 +9,11 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 
-import static me.drex.message.api.LocalizedMessage.localized;
 import static net.minecraft.commands.Commands.literal;
+
 
 public class WorldsCommands {
 
@@ -25,7 +26,7 @@ public class WorldsCommands {
 					McWorldInitializer.getMcWorld(context.getSource().getServer()).getManadger().getWorldIds(), builder);
 
 	public static final SimpleCommandExceptionType UNKNOWN_WORLD_EXCEPTION = new SimpleCommandExceptionType(
-			localized("dev.wroud.mc.worlds.command.exception.unknown_world"));
+			Component.translatable("dev.wroud.mc.worlds.command.exception.unknown_world"));
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher,
 			CommandBuildContext commandBuildContext) {

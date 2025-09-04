@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -22,8 +23,15 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.world.entity.ai.village.VillageSiege;
+import net.minecraft.world.entity.npc.CatSpawner;
+import net.minecraft.world.entity.npc.WanderingTraderSpawner;
+import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.TicketStorage;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
+import net.minecraft.world.level.levelgen.PatrolSpawner;
+import net.minecraft.world.level.levelgen.PhantomSpawner;
 
 public class WorldsManadger {
   private static final Logger LOGGER = LogUtils.getLogger();
@@ -72,6 +80,15 @@ public class WorldsManadger {
     }
 
     levelData.setWorldData(server.getWorldData());
+
+    List<CustomSpawner> list = ImmutableList.of();
+
+    if (levelData.getLevelStem().type().is(BuiltinDimensionTypes.OVERWORLD)) {
+      list = ImmutableList.of(
+          new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(),
+          new WanderingTraderSpawner(levelData));
+    }
+
     var serverLevel = new CustomServerLevel(
         this.server,
         ((MinecraftServerAccessor) this.server).getExecutor(),
@@ -81,7 +98,7 @@ public class WorldsManadger {
         levelData.getLevelStem(),
         chunkProgressListener,
         levelData.isDebugWorld(),
-        ImmutableList.of(),
+        list,
         this.server.overworld().getRandomSequences());
 
     this.initializeWorld(levelData, serverLevel);
@@ -134,6 +151,7 @@ public class WorldsManadger {
 
     if (!levelData.isInitialized()) {
       try {
+        // TODO: this will block the server thread, should be async
         MinecraftServerAccessor.invokeSetInitialSpawn(level, levelData, false,
             levelData.isDebugWorld());
         levelData.setInitialized(true);

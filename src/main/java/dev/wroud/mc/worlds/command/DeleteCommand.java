@@ -4,11 +4,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import dev.wroud.mc.worlds.server.CustomServerLevel;
-import me.drex.message.api.LocalizedMessage;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 
@@ -38,8 +38,9 @@ public class DeleteCommand {
 
 		((CustomServerLevel) serverLevel).stop(true);
 
-		source.sendSuccess(() -> LocalizedMessage.builder("dev.wroud.mc.worlds.command.delete.success")
-				.addPlaceholder("id", id.toString()).build(), false);
+		source.sendSuccess(
+				() -> Component.translatable("dev.wroud.mc.worlds.command.delete.success", id.toString()),
+				false);
 		return 1;
 	}
 }

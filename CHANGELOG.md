@@ -14,6 +14,14 @@
 
 ### Security
 
+## 1.2.0 - 2025-09-05
+
+### Fixed
+
+- Custom spawners in overworld like worlds (cats, phantoms, patrol, wandering trader)
+- Server crash during worlds deletion
+- Localization
+
 ## 1.1.0 - 2025-09-04
 
 ### Added

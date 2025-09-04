@@ -8,6 +8,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -19,7 +20,6 @@ import java.util.List;
 
 import static dev.wroud.mc.worlds.command.WorldsCommands.UNKNOWN_WORLD_EXCEPTION;
 import static dev.wroud.mc.worlds.command.WorldsCommands.WORLD_SUGGESTIONS;
-import static me.drex.message.api.LocalizedMessage.builder;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
@@ -50,7 +50,7 @@ public class TeleportCommand {
 		for (ServerPlayer player : targets) {
 			teleport(player, id);
 		}
-		source.sendSuccess(() -> builder("dev.wroud.mc.worlds.command.teleport.success").addPlaceholder("id", id.toString()).build(),
+		source.sendSuccess(() -> Component.translatable("dev.wroud.mc.worlds.command.teleport.success", id.toString()),
 				false);
 		return 1;
 	}

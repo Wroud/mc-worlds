@@ -17,7 +17,9 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -26,8 +28,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldOptions;
 
-import static me.drex.message.api.LocalizedMessage.builder;
-import static me.drex.message.api.LocalizedMessage.localized;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
@@ -88,23 +88,41 @@ public class CreateCommand {
 		var server = source.getServer();
 		validLevelId(id, server);
 
-		var registry = server.registryAccess();
-		var levelStemRegistry = registry.lookupOrThrow(Registries.LEVEL_STEM);
+		try {
+			var registry = server.registryAccess();
+			var levelStemRegistry = registry.lookupOrThrow(Registries.LEVEL_STEM);
 
-		LevelStem levelStem = levelStemRegistry.getValue(type);
-		LOGGER.info("Using dimension type: {}", levelStem.type());
-		var levelData = LevelData.getDefault(id, levelStem, seed, true);
+			LevelStem levelStem = levelStemRegistry.getValue(type);
+			LOGGER.info("Using dimension type: {}", levelStem.type());
+			var levelData = LevelData.getDefault(id, levelStem, seed, true);
 
-		var handle = McWorldInitializer.getMcWorld(server).loadOrCreate(id,
-				levelData);
-		LOGGER.info("Created world: {}", id);
+			var handle = McWorldInitializer.getMcWorld(server).loadOrCreate(id,
+					levelData);
+			LOGGER.info("Created world: {}", id);
 
-		McWorldInitializer.getMcWorld(server).prepareWorld(handle);
-		LOGGER.info("Prepared world: {}", id);
-		source.sendSuccess(() -> builder("dev.wroud.mc.worlds.command.create.success")
-				.addPlaceholder("id", id.toString()).build(), false);
+			McWorldInitializer.getMcWorld(server).prepareWorld(handle);
+			LOGGER.info("Prepared world: {}", id);
 
-		return Command.SINGLE_SUCCESS;
+			// Create the success message with clickable teleport link
+			Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
+					.append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
+					.append(Component.translatable("dev.wroud.mc.worlds.command.create.success.created"))
+					.append(Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
+							.withStyle(style -> style
+									.withColor(ChatFormatting.AQUA)
+									.withUnderlined(true)
+									.withClickEvent(new ClickEvent.RunCommand(
+											"/worlds tp " + id.toString()))));
+
+			source.sendSuccess(() -> successMessage, false);
+
+			return Command.SINGLE_SUCCESS;
+		} catch (Exception e) {
+			LOGGER.error("Error creating world", e);
+			throw new SimpleCommandExceptionType(
+					Component.translatable("dev.wroud.mc.worlds.command.create.exception.generic", e.getMessage()))
+					.create();
+		}
 	}
 
 	public static void validLevelId(ResourceLocation id, MinecraftServer server) throws CommandSyntaxException {
@@ -112,7 +130,7 @@ public class CreateCommand {
 		ServerLevel level = server.getLevel(resourceKey);
 		if (level != null) {
 			throw new SimpleCommandExceptionType(
-					localized("dev.wroud.mc.worlds.command.create.exception.world_already_exists"))
+					Component.translatable("dev.wroud.mc.worlds.command.create.exception.world_already_exists"))
 					.create();
 		}
 	}

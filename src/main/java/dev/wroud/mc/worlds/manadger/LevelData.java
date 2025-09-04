@@ -69,7 +69,7 @@ public class LevelData implements ServerLevelData {
             .apply(instance, GameSettingsData::new));
 
     public static final Codec<LevelData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            CORE_CODEC.fieldOf("core").forGetter(ld -> ld.coreData),
+            CORE_CODEC.fieldOf("core").forGetter(ld -> ld.worldOptionsData),
             WORLD_STATE_CODEC.fieldOf("world_state").forGetter(ld -> ld.worldStateData),
             WANDERING_TRADER_CODEC.fieldOf("wandering_trader").forGetter(ld -> ld.wanderingTraderData),
             WEATHER_ENTITY_CODEC.fieldOf("weather").forGetter(ld -> ld.weatherData),
@@ -158,7 +158,7 @@ public class LevelData implements ServerLevelData {
         }
     }
 
-    private WorldOptionsData coreData;
+    private WorldOptionsData worldOptionsData;
     private WorldStateData worldStateData;
     private WanderingTraderData wanderingTraderData;
     private WeatherData weatherData;
@@ -167,24 +167,25 @@ public class LevelData implements ServerLevelData {
 
     private WorldData worldData;
 
-    public LevelData(WorldOptionsData coreData, WorldStateData worldStateData, WanderingTraderData wanderingTraderData,
+    public LevelData(WorldOptionsData worldOptionsData, WorldStateData worldStateData,
+            WanderingTraderData wanderingTraderData,
             WeatherData weatherData) {
-        this(coreData, worldStateData, wanderingTraderData, weatherData, null, new ArrayList<>());
+        this(worldOptionsData, worldStateData, wanderingTraderData, weatherData, null, new ArrayList<>());
     }
 
-    public LevelData(WorldOptionsData coreData, WorldStateData worldStateData,
+    public LevelData(WorldOptionsData worldOptionsData, WorldStateData worldStateData,
             WanderingTraderData wanderingTraderData, WeatherData weatherData,
             GameSettingsData gameSettingsData, List<CompoundTag> scheduledEvents) {
-        this(coreData, worldStateData, wanderingTraderData, weatherData, gameSettingsData,
+        this(worldOptionsData, worldStateData, wanderingTraderData, weatherData, gameSettingsData,
                 new TimerQueue<MinecraftServer>(TimerCallbacks.SERVER_CALLBACKS,
                         scheduledEvents.stream()
                                 .map(tag -> new Dynamic<>(net.minecraft.nbt.NbtOps.INSTANCE, tag))));
     }
 
-    public LevelData(WorldOptionsData coreData, WorldStateData worldStateData,
+    public LevelData(WorldOptionsData worldOptionsData, WorldStateData worldStateData,
             WanderingTraderData wanderingTraderData, WeatherData weatherData,
             GameSettingsData gameSettingsData, TimerQueue<MinecraftServer> scheduledEvents) {
-        this.coreData = coreData;
+        this.worldOptionsData = worldOptionsData;
         this.worldStateData = worldStateData;
         this.wanderingTraderData = wanderingTraderData;
         this.weatherData = weatherData;
@@ -197,15 +198,15 @@ public class LevelData implements ServerLevelData {
     }
 
     public LevelStem getLevelStem() {
-        return coreData.levelStem;
+        return worldOptionsData.levelStem;
     }
 
     public long getSeed() {
-        return coreData.seed;
+        return worldOptionsData.seed;
     }
 
     public boolean getGenerateStructures() {
-        return coreData.generateStructures;
+        return worldOptionsData.generateStructures;
     }
 
     public boolean isDebugWorld() {
@@ -260,12 +261,12 @@ public class LevelData implements ServerLevelData {
 
     @Override
     public Difficulty getDifficulty() {
-        return this.worldData.getDifficulty();
+        return this.worldData.overworldData().getDifficulty();
     }
 
     @Override
     public boolean isDifficultyLocked() {
-        return this.worldData.isDifficultyLocked();
+        return this.worldData.overworldData().isDifficultyLocked();
     }
 
     @Override
