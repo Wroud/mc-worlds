@@ -6,7 +6,7 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.logging.LogUtils;
 
-import dev.wroud.mc.worlds.McWorldInitializer;
+import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manadger.LevelData;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
@@ -96,11 +96,11 @@ public class CreateCommand {
 			LOGGER.info("Using dimension type: {}", levelStem.type());
 			var levelData = LevelData.getDefault(id, levelStem, seed, true);
 
-			var handle = McWorldInitializer.getMcWorld(server).loadOrCreate(id,
+			var handle = McWorldMod.getMcWorld(server).loadOrCreate(id,
 					levelData);
 			LOGGER.info("Created world: {}", id);
 
-			McWorldInitializer.getMcWorld(server).prepareWorld(handle);
+			McWorldMod.getMcWorld(server).prepareWorld(handle);
 			LOGGER.info("Prepared world: {}", id);
 
 			// Create the success message with clickable teleport link

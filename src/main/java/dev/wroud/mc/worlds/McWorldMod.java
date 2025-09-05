@@ -22,7 +22,7 @@ import dev.wroud.mc.worlds.command.WorldsCommands;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.CustomServerLevel;
 
-public class McWorldInitializer implements ModInitializer {
+public class McWorldMod implements ModInitializer {
 
     public static final String MOD_ID = "mc-worlds";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);

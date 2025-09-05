@@ -1,6 +1,6 @@
 package dev.wroud.mc.worlds.mixin.fixes;
 
-import dev.wroud.mc.worlds.McWorldInitializer;
+import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -21,7 +21,7 @@ public class LegacyStructureDataHandlerMixin {
         ordinal = 0
     )
     private static ResourceKey<Level> replaceToDimension(ResourceKey<Level> resourceKey) {
-        MinecraftServer server = McWorldInitializer.getServer();
+        MinecraftServer server = McWorldMod.getServer();
         if (server != null) {
             ServerLevel level = server.getLevel(resourceKey);
             if (level != null) {

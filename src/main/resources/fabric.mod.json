@@ -12,7 +12,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"dev.wroud.mc.worlds.McWorldInitializer"
+			"dev.wroud.mc.worlds.McWorldMod"
 		]
 	},
 	"mixins": [

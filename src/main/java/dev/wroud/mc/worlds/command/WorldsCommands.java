@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import dev.wroud.mc.worlds.McWorldInitializer;
+import dev.wroud.mc.worlds.McWorldMod;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,7 +23,7 @@ public class WorldsCommands {
 
 	public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = (context,
 			builder) -> SharedSuggestionProvider.suggestResource(
-					McWorldInitializer.getMcWorld(context.getSource().getServer()).getManadger().getWorldIds(), builder);
+					McWorldMod.getMcWorld(context.getSource().getServer()).getManadger().getWorldIds(), builder);
 
 	public static final SimpleCommandExceptionType UNKNOWN_WORLD_EXCEPTION = new SimpleCommandExceptionType(
 			Component.translatable("dev.wroud.mc.worlds.command.exception.unknown_world"));
