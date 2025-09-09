@@ -75,6 +75,18 @@ publishMods {
     }
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            
+            groupId = project.group.toString()
+            artifactId = base.archivesName.get()
+            version = project.version.toString()
+        }
+    }
+}
+
 tasks {
     processResources {
         val props = mapOf(

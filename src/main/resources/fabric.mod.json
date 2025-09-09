@@ -1,30 +1,26 @@
 {
-	"schemaVersion": 1,
-	"id": "mc-worlds",
-	"version": "${version}",
-	"name": "Worlds",
-	"description": "Create and manage worlds in-game, through commands.",
-	"authors": [
-		"Wroud"
-	],
-	"license": "MIT",
-	"icon": "assets/mc-worlds/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			"dev.wroud.mc.worlds.McWorldMod"
-		]
-	},
-	"mixins": [
-		"server.mixins.json",
-		{
-			"config": "client.mixins.json",
-			"environment": "client"
-		}
-	],
-	"depends": {
-		"fabricloader": ">=0.16.10",
-		"java": ">=21",
-		"fabric-api": "*"
-	}
+  "schemaVersion": 1,
+  "id": "mc-worlds",
+  "version": "${version}",
+  "name": "Worlds",
+  "description": "Create and manage worlds in-game, through commands.",
+  "authors": ["Wroud"],
+  "license": "MIT",
+  "icon": "assets/mc-worlds/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.wroud.mc.worlds.McWorldMod"]
+  },
+  "mixins": [
+    "server.mixins.json",
+    {
+      "config": "client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
 }
