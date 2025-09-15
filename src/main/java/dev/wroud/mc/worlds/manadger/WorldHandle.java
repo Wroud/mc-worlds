@@ -1,6 +1,6 @@
 package dev.wroud.mc.worlds.manadger;
 
-import dev.wroud.mc.worlds.server.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import net.minecraft.resources.ResourceLocation;
 
 public class WorldHandle {

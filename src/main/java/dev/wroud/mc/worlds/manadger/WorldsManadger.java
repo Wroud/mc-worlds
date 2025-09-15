@@ -6,15 +6,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 
+import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
-import dev.wroud.mc.worlds.server.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
@@ -55,8 +55,15 @@ public class WorldsManadger {
     return worlds.get(location);
   }
 
+  public WorldsData getWorldsData() {
+    return worldsData;
+  }
+
   public void loadSavedWorlds() {
     worldsData.getLevelsData().forEach((location, levelData) -> {
+      if (levelData.isLazy()) {
+        return;
+      }
       loadOrCreateWorld(location, levelData);
     });
   }
@@ -89,7 +96,11 @@ public class WorldsManadger {
           new WanderingTraderSpawner(levelData));
     }
 
-    var serverLevel = new CustomServerLevel(
+    var serverLevelProvider = this.server.registryAccess()
+        .lookupOrThrow(WorldsRegistries.LEVEL_PROVIDER)
+        .getOrThrow(levelData.getProvider());
+
+    var serverLevel = serverLevelProvider.value().create(
         this.server,
         ((MinecraftServerAccessor) this.server).getExecutor(),
         ((MinecraftServerAccessor) this.server).getStorageSource(),
@@ -111,11 +122,10 @@ public class WorldsManadger {
   public void prepareWorld(WorldHandle handle) {
     TicketStorage ticketStorage = handle.getServerLevel().getDataStorage().get(TicketStorage.TYPE);
     if (ticketStorage != null) {
-      LOGGER.info("Activating all deactivated tickets for world: {}", handle.getId());
       ticketStorage.activateAllDeactivatedTickets();
     }
     handle.getServerLevel().setSpawnSettings(this.server.isSpawningMonsters());
-    LOGGER.info("Spawn settings updated for world: {}", handle.getId());
+    LOGGER.info("World prepared: {}", handle.getId());
   }
 
   public void unloadWorld(ResourceLocation location) {

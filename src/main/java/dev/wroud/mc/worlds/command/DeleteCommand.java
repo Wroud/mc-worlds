@@ -3,7 +3,7 @@ package dev.wroud.mc.worlds.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import dev.wroud.mc.worlds.server.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceLocationArgument;

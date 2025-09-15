@@ -4,6 +4,9 @@
 
 ### Added
 
+- Level provider API
+- Worlds lazy-loaded on demand by default
+
 ### Changed
 
 ### Deprecated

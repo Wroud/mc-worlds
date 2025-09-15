@@ -19,8 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.wroud.mc.worlds.command.WorldsCommands;
+import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
-import dev.wroud.mc.worlds.server.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 
 public class McWorldMod implements ModInitializer {
 
@@ -31,6 +32,8 @@ public class McWorldMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        WorldsRegistries.bootstrap();
+        
         ServerLifecycleEvents.SERVER_STARTED.register(serverInstance -> {
             var mcWorld = new McWorld(serverInstance);
             worlds.put(serverInstance, mcWorld);

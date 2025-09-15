@@ -23,6 +23,7 @@
     "fixes.ThrownEnderpearlMixin",
     "ExecuteCommandMixin",
     "MinecraftServerAccessor",
+    "MinecraftServerMixin",
     "NetherPortalBlockAccessor",
     "TheEndGatewayBlockEntityAccessor"
   ],

@@ -1,4 +1,4 @@
-package dev.wroud.mc.worlds.server;
+package dev.wroud.mc.worlds.server.level;
 
 import java.io.IOException;
 import java.util.ArrayList;

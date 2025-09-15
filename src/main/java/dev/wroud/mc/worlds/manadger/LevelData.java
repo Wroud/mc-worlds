@@ -9,9 +9,11 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
@@ -30,7 +32,10 @@ public class LevelData implements ServerLevelData {
     private static final Codec<WorldOptionsData> CORE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             LevelStem.CODEC.fieldOf("level_stem").forGetter(cd -> cd.levelStem),
             Codec.LONG.optionalFieldOf("seed", 10L).forGetter(cd -> cd.seed),
-            Codec.BOOL.optionalFieldOf("generate_structures", true).forGetter(cd -> cd.generateStructures))
+            Codec.BOOL.optionalFieldOf("generate_structures", true).forGetter(cd -> cd.generateStructures),
+            Codec.BOOL.optionalFieldOf("lazy", true).forGetter(cd -> cd.lazy),
+            ResourceKey.codec(WorldsRegistries.LEVEL_PROVIDER)
+                    .optionalFieldOf("provider", DefaultServerLevelProvider.DEFAULT).forGetter(cd -> cd.provider))
             .apply(instance, WorldOptionsData::new));
 
     // World state and gameplay data
@@ -82,11 +87,16 @@ public class LevelData implements ServerLevelData {
         private LevelStem levelStem;
         private long seed;
         private boolean generateStructures;
+        private boolean lazy;
+        private ResourceKey<ServerLevelProvider<?>> provider;
 
-        public WorldOptionsData(LevelStem levelStem, long seed, boolean generateStructures) {
+        public WorldOptionsData(LevelStem levelStem, long seed, boolean generateStructures, boolean lazy,
+                ResourceKey<ServerLevelProvider<?>> provider) {
             this.levelStem = levelStem;
             this.seed = seed;
             this.generateStructures = generateStructures;
+            this.lazy = lazy;
+            this.provider = provider;
         }
     }
 
@@ -197,6 +207,10 @@ public class LevelData implements ServerLevelData {
         return this.worldData;
     }
 
+    public ResourceKey<ServerLevelProvider<?>> getProvider() {
+        return worldOptionsData.provider;
+    }
+
     public LevelStem getLevelStem() {
         return worldOptionsData.levelStem;
     }
@@ -205,12 +219,20 @@ public class LevelData implements ServerLevelData {
         return worldOptionsData.seed;
     }
 
+    public boolean isLazy() {
+        return worldOptionsData.lazy;
+    }
+
     public boolean getGenerateStructures() {
         return worldOptionsData.generateStructures;
     }
 
     public boolean isDebugWorld() {
         return false; // Default to false for normal worlds
+    }
+
+    public void setLazy(boolean lazy) {
+        this.worldOptionsData.lazy = lazy;
     }
 
     @Override
@@ -397,15 +419,21 @@ public class LevelData implements ServerLevelData {
         this.worldData = worldData;
     }
 
-    public static LevelData getDefault(ResourceLocation id, LevelStem levelStem, long seed,
+    public static LevelData getDefault(ResourceKey<ServerLevelProvider<?>> provider, ResourceLocation id,
+            LevelStem levelStem, long seed,
             boolean generateStructures) {
         return new LevelData(
-                new WorldOptionsData(levelStem, seed, generateStructures),
+                new WorldOptionsData(levelStem, seed, generateStructures, true, provider),
                 new WorldStateData(BlockPos.ZERO,
                         0.0F),
                 new WanderingTraderData(0, 0, Optional.ofNullable(null)),
                 new WeatherData(0L, 0L, false, false, 0, 0, 0),
                 new GameSettingsData(WorldBorder.DEFAULT_SETTINGS, false),
                 new TimerQueue<MinecraftServer>(TimerCallbacks.SERVER_CALLBACKS));
+    }
+
+    public static LevelData getDefault(ResourceLocation id, LevelStem levelStem, long seed,
+            boolean generateStructures) {
+        return getDefault(DefaultServerLevelProvider.DEFAULT, id, levelStem, seed, generateStructures);
     }
 }
