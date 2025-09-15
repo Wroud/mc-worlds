@@ -6,6 +6,7 @@
 
 - Level provider API
 - Worlds lazy-loaded on demand by default
+- Dimensions type tags for custom dimension types
 
 ### Changed
 

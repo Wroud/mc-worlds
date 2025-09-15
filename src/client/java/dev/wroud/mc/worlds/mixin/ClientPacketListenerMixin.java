@@ -16,45 +16,32 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(ClientPacketListener.class)
 public abstract class ClientPacketListenerMixin extends ClientCommonPacketListenerImpl {
 
-    public ClientPacketListenerMixin(Minecraft minecraft, net.minecraft.network.Connection connection, net.minecraft.client.multiplayer.CommonListenerCookie commonListenerCookie) {
+    public ClientPacketListenerMixin(Minecraft minecraft, net.minecraft.network.Connection connection,
+            net.minecraft.client.multiplayer.CommonListenerCookie commonListenerCookie) {
         super(minecraft, connection, commonListenerCookie);
     }
 
     private Holder<DimensionType> currentDimensionHolder;
 
-    @ModifyVariable(
-        method = "handleRespawn",
-        at = @At("STORE"),
-        ordinal = 0
-    )
+    @ModifyVariable(method = "handleRespawn", at = @At("STORE"), ordinal = 0)
     private Holder<DimensionType> captureDimensionHolder(Holder<DimensionType> holder) {
         this.currentDimensionHolder = holder;
         return holder;
     }
 
-    @ModifyArg(
-        method = "handleRespawn",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"),
-        index = 1
-    )
+    @ModifyArg(method = "handleRespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"), index = 1)
     private ResourceKey<Level> modifyToDimension(ResourceKey<Level> toDimension) {
         if (currentDimensionHolder != null) {
-            ResourceKey<DimensionType> dimensionTypeKey = currentDimensionHolder.unwrapKey().orElse(null);
-            if (dimensionTypeKey != null) {
-                ResourceKey<Level> vanillaMapping = DimensionDetectionUtil.getVanillaDimensionMapping(dimensionTypeKey);
-                if (vanillaMapping != null) {
-                    return vanillaMapping;
-                }
+            ResourceKey<Level> vanillaMapping = DimensionDetectionUtil
+                    .getVanillaDimensionMapping(currentDimensionHolder);
+            if (vanillaMapping != null) {
+                return vanillaMapping;
             }
         }
         return toDimension;
     }
 
-    @ModifyArg(
-        method = "handleRespawn",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"),
-        index = 2
-    )
+    @ModifyArg(method = "handleRespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"), index = 2)
     private ResourceKey<Level> modifyFromDimension(ResourceKey<Level> fromDimension) {
         var localPlayer = this.minecraft.player;
         if (localPlayer != null && localPlayer.level() != null) {

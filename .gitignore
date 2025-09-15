@@ -38,3 +38,8 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+
+# Datagen
+versions/*/logs/
+versions/*/src/main/generated/

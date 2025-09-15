@@ -31,6 +31,12 @@ loom {
     }
 }
 
+fabricApi {
+    configureDataGeneration() {
+        client = false
+    }
+}
+
 fun DependencyHandlerScope.includeMod(dep: String) {
     include(modImplementation(dep)!!)
 }

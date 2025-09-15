@@ -9,7 +9,8 @@
   "icon": "assets/mc-worlds/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.wroud.mc.worlds.McWorldMod"]
+    "main": ["dev.wroud.mc.worlds.McWorldMod"],
+    "fabric-datagen": ["dev.wroud.mc.worlds.DataGenerator"]
   },
   "mixins": [
     "server.mixins.json",
