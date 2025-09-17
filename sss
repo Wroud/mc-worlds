@@ -1,0 +1,21 @@
+add section in readme about what features will work with this plugin in the custom dimensions
+ContextDimensionMixin - required for detecting overworld like dimensions for item model
+ClientPacketListenerMixin - needed for proper loading screens
+MinecraftClientMixin - needed for relevant music
+
+BaseFireBlockMixin - needed for portals activation in the overworld and the nether
+ChangeDimensionTriggerMixin - needed for mechanics that uses dimension change criteria for example achievements
+
+EndPortalBlockMixin - needed for correct portal work in custom dimensions
+
+EntityMixin - needed for correct entity teleportation
+LegacyStructureDataHandlerMixin - needed for correct per-dimension structures detection
+LocationPredicateMixin - you need to investigate it yourself 
+MapItemSavedDataMixin - needed for correct rotation calculation when traveling between nether and overworld
+NetherPortalBlockMixin - needed for correct portal wordk in the custom dimensions
+
+ServerLevelMixin - separates weather in dimensions
+ServerPlayerTeleportMixin - needed for correct nether teleporations
+ServerPlayerTriggerMixin - probably needed for achievements
+TheEndGatewayBlockEntityMixin - needed for correct end teleportations
+ThrownEnderpearlMixin - needed for teleportation support in the custom end/overworld via ender perl
