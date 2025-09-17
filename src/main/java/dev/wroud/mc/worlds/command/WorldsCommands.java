@@ -1,5 +1,7 @@
 package dev.wroud.mc.worlds.command;
 
+import java.util.stream.Stream;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
@@ -14,12 +16,20 @@ import net.minecraft.resources.ResourceKey;
 
 import static net.minecraft.commands.Commands.literal;
 
-
 public class WorldsCommands {
 
 	public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = (context,
-			builder) -> SharedSuggestionProvider.suggestResource(
-					context.getSource().getServer().levelKeys().stream().map(ResourceKey::location), builder);
+			builder) -> {
+		var server = context.getSource().getServer();
+		var serverLevels = server.levelKeys().stream().map(ResourceKey::location);
+		var customWorlds = McWorldMod.getMcWorld(server).getManadger().getWorldsData().getLevelsData().keySet().stream();
+
+		var allWorlds = Stream.concat(serverLevels, customWorlds)
+				.collect(java.util.stream.Collectors.toSet())
+				.stream();
+
+		return SharedSuggestionProvider.suggestResource(allWorlds, builder);
+	};
 
 	public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = (context,
 			builder) -> SharedSuggestionProvider.suggestResource(

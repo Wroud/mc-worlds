@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.3.1 - 2025-09-18
+
+### Fixed
+
+- Display unloaded worlds in the teleport comand list
+
 ## 1.3.0 - 2025-09-17
 
 ### Added

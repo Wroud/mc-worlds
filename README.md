@@ -59,7 +59,7 @@ repositories {
 
 ```kotlin
 dependencies {
-    modImplementation("dev.wroud.mc.worlds:mc-worlds:${mc_worlds_version}")
+    modImplementation("dev.wroud.mc:worlds:${mc_worlds_version}")
 }
 ```
 

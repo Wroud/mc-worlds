@@ -12,7 +12,7 @@ version = findProperty("mod_version") as String + "+" + findProperty("minecraft_
 group = findProperty("maven_group") as String
 
 base {
-    archivesName = findProperty("archives_base_name") as String
+    archivesName = findProperty("maven_artifact_id") as String
 }
 
 java {

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.mojang.serialization.Codec;
 
+import dev.wroud.mc.worlds.McWorldMod;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -16,7 +17,7 @@ public class WorldsData extends SavedData {
       .unboundedMap(ResourceLocation.CODEC, LevelData.CODEC)
       .xmap(WorldsData::new, wd -> wd.levels);
 
-  public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>("mc-worlds",
+  public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.MOD_ID,
       WorldsData::new, CODEC, null);
 
   private WorldsData() {
