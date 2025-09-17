@@ -4,10 +4,6 @@
 
 ### Added
 
-- Level provider API
-- Worlds lazy-loaded on demand by default
-- Dimensions type tags for custom dimension types
-
 ### Changed
 
 ### Deprecated
@@ -17,6 +13,18 @@
 ### Fixed
 
 ### Security
+
+## 1.3.0 - 2025-09-17
+
+### Added
+
+- Level provider API
+- Worlds lazy-loaded on demand by default
+- Dimensions type tags for custom dimension types
+
+### Changed
+
+- Worlds activated in tick instead of request
 
 ## 1.2.0 - 2025-09-05
 

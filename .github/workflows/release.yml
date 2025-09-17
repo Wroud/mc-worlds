@@ -13,6 +13,8 @@ jobs:
           java-version: 21
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+      - name: Run Datagen
+        run: ./gradlew runDatagen
       - name: Publish mods
         run: ./gradlew publishMods
         env:
