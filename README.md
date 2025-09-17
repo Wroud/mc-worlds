@@ -31,9 +31,48 @@ For detailed documentation and examples, see [API.md](API.md).
 
 ## Installation
 
+### For Players
 1. Download the mod file from the releases page
 2. Place it in your `mods` folder
 3. Start your Minecraft server or client
+
+### For Mod Developers (Using as Dependency)
+
+MC Worlds is published to GitHub Packages. To use it as a dependency in your Gradle project:
+
+1. Add the GitHub Packages repository to your `build.gradle.kts`:
+
+```kotlin
+repositories {
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/wroud/mc-worlds")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") as String?
+            password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
+        }
+    }
+}
+```
+
+2. Add the dependency:
+
+```kotlin
+dependencies {
+    modImplementation("dev.wroud.mc.worlds:mc-worlds:${mc_worlds_version}")
+}
+```
+
+3. Set up authentication by adding to your `gradle.properties`:
+
+```properties
+gpr.user=your_github_username
+gpr.key=your_github_token
+```
+
+Or set environment variables `GITHUB_ACTOR` and `GITHUB_TOKEN`.
+
+Note: You need a GitHub personal access token with `packages:read` permission to download from GitHub Packages.
 
 ## Requirements
 

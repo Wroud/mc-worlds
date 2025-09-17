@@ -60,7 +60,7 @@ publishMods {
     type.set(STABLE)
     changelog.set(fetchChangelog())
 
-    displayName = "Worlds ${version.get()}"
+    displayName = "${findProperty("name") as String} ${version.get()}"
     modLoaders.add("fabric")
 
 
@@ -71,7 +71,7 @@ publishMods {
     // }
     modrinth {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-        projectId = "rDdf0tz6"
+        projectId = findProperty("modrinth_project_id")!!.toString()
         minecraftVersions.addAll(findProperty("modrinth_minecraft_versions")!!.toString().split(", "))
     }
     github {
@@ -89,6 +89,44 @@ publishing {
             groupId = project.group.toString()
             artifactId = base.archivesName.get()
             version = project.version.toString()
+            
+            pom {
+                name.set(findProperty("name") as String)
+                description.set(findProperty("description") as String)
+                url.set(findProperty("url") as String)
+
+                licenses {
+                    license {
+                        name.set(findProperty("license") as String)
+                        url.set(findProperty("license_url") as String)
+                    }
+                }
+                
+                developers {
+                    developer {
+                        id.set("wroud")
+                        name.set("Wroud")
+                        email.set("support@wroud.dev")
+                    }
+                }
+                
+                scm {
+                    connection.set("scm:git:git://github.com/Wroud/mc-worlds.git")
+                    developerConnection.set("scm:git:ssh://github.com:Wroud/mc-worlds.git")
+                    url.set(findProperty("url") as String)
+                }
+            }
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/wroud/mc-worlds")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") as String?
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
+            }
         }
     }
 }
