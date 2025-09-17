@@ -7,8 +7,12 @@ import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.manadger.LevelData;
+import dev.wroud.mc.worlds.manadger.WorldsManadger;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.resources.ResourceKey;
@@ -20,6 +24,7 @@ import net.minecraft.world.RandomSequences;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.border.BorderChangeListener.DelegateBorderChangeListener;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -28,10 +33,13 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.phys.Vec3;
 
 public class CustomServerLevel extends ServerLevel {
+  private static final Logger LOGGER = LogUtils.getLogger();
   private boolean isManuallyStopped;
   private boolean isClosed;
   private boolean markedForClose;
   private DelegateBorderChangeListener borderChangeListener;
+  private boolean ticketsActivated;
+  private boolean spawnSettingsSet;
 
   public CustomServerLevel(
       MinecraftServer minecraftServer,
@@ -50,6 +58,8 @@ public class CustomServerLevel extends ServerLevel {
     this.isManuallyStopped = false;
     this.isClosed = false;
     this.markedForClose = false;
+    this.ticketsActivated = false;
+    this.spawnSettingsSet = false;
     this.borderChangeListener = new DelegateBorderChangeListener(this.getWorldBorder());
 
     this.getServer().execute(() -> {
@@ -75,6 +85,20 @@ public class CustomServerLevel extends ServerLevel {
         this.markedForClose = true;
         return;
       }
+    }
+    if (!this.ticketsActivated) {
+      TicketStorage ticketStorage = this.getDataStorage().get(TicketStorage.TYPE);
+      if (ticketStorage != null) {
+        ticketStorage.activateAllDeactivatedTickets();
+      }
+      this.ticketsActivated = true;
+      return;
+    }
+    if (!this.spawnSettingsSet) {
+      this.setSpawnSettings(this.getServer().isSpawningMonsters());
+      this.spawnSettingsSet = true;
+      WorldsManadger.LOGGER.info("World prepared: {}", this.dimension().location());
+      return;
     }
     super.tick(booleanSupplier);
   }

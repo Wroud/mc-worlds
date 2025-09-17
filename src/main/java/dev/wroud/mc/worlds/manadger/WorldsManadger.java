@@ -15,6 +15,7 @@ import com.mojang.logging.LogUtils;
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
@@ -28,13 +29,11 @@ import net.minecraft.world.entity.npc.CatSpawner;
 import net.minecraft.world.entity.npc.WanderingTraderSpawner;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.TicketStorage;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
 
 public class WorldsManadger {
-  private static final Logger LOGGER = LogUtils.getLogger();
+  public static final Logger LOGGER = LogUtils.getLogger();
   private Map<ResourceLocation, WorldHandle> worlds = new HashMap<>();
   private MinecraftServer server;
   private ChunkProgressListener chunkProgressListener;
@@ -68,10 +67,6 @@ public class WorldsManadger {
     });
   }
 
-  public void prepareSavedWorlds() {
-    worlds.values().forEach(handle -> prepareWorld(handle));
-  }
-
   public WorldHandle loadOrCreateWorld(ResourceLocation id, LevelData levelData) {
     if (worlds.containsKey(id)) {
       return worlds.get(id);
@@ -90,7 +85,7 @@ public class WorldsManadger {
 
     List<CustomSpawner> list = ImmutableList.of();
 
-    if (levelData.getLevelStem().type().is(BuiltinDimensionTypes.OVERWORLD)) {
+    if (levelData.getLevelStem().type().is(DimensionTypeTags.OVERWORLD_LIKE)) {
       list = ImmutableList.of(
           new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(),
           new WanderingTraderSpawner(levelData));
@@ -112,20 +107,12 @@ public class WorldsManadger {
         list,
         this.server.overworld().getRandomSequences());
 
-    this.initializeWorld(levelData, serverLevel);
     var worldHandle = new WorldHandle(id, levelData, serverLevel);
     worlds.put(id, worldHandle);
     this.worldsData.addLevelData(id, levelData);
-    return worldHandle;
-  }
 
-  public void prepareWorld(WorldHandle handle) {
-    TicketStorage ticketStorage = handle.getServerLevel().getDataStorage().get(TicketStorage.TYPE);
-    if (ticketStorage != null) {
-      ticketStorage.activateAllDeactivatedTickets();
-    }
-    handle.getServerLevel().setSpawnSettings(this.server.isSpawningMonsters());
-    LOGGER.info("World prepared: {}", handle.getId());
+    this.initializeWorld(levelData, serverLevel);
+    return worldHandle;
   }
 
   public void unloadWorld(ResourceLocation location) {
@@ -161,7 +148,7 @@ public class WorldsManadger {
 
     if (!levelData.isInitialized()) {
       try {
-        // TODO: this will block the server thread, should be async
+        // TODO: this will block the server thread, should be async, especially slow for spawns in the ocean
         MinecraftServerAccessor.invokeSetInitialSpawn(level, levelData, false,
             levelData.isDebugWorld());
         levelData.setInitialized(true);

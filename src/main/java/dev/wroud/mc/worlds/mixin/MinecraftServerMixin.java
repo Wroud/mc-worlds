@@ -24,7 +24,6 @@ public class MinecraftServerMixin {
 
             if (worldData != null) {
                 var handle = worlds.loadOrCreate(resourceKey.location(), worldData);
-                worlds.prepareWorld(handle);
                 cir.setReturnValue(handle.getServerLevel());
             }
         }

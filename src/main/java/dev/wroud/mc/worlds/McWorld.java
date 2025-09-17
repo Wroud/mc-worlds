@@ -19,7 +19,6 @@ public class McWorld {
 
   public void loadSavedWorlds() {
     worldsManadger.loadSavedWorlds();
-    worldsManadger.prepareSavedWorlds();
   }
 
   public WorldHandle loadOrCreate(ResourceLocation location, LevelData levelData) {
@@ -28,9 +27,5 @@ public class McWorld {
 
   public void handleWorldUnload(ResourceLocation level) {
     worldsManadger.unloadWorld(level);
-  }
-
-  public void prepareWorld(WorldHandle handle) {
-    worldsManadger.prepareWorld(handle);
   }
 }

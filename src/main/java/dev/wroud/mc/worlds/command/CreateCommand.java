@@ -96,12 +96,7 @@ public class CreateCommand {
 			LOGGER.info("Using dimension type: {}", levelStem.type());
 			var levelData = LevelData.getDefault(id, levelStem, seed, true);
 
-			var handle = McWorldMod.getMcWorld(server).loadOrCreate(id,
-					levelData);
-			LOGGER.info("Created world: {}", id);
-
-			McWorldMod.getMcWorld(server).prepareWorld(handle);
-			LOGGER.info("Prepared world: {}", id);
+			McWorldMod.getMcWorld(server).loadOrCreate(id, levelData);
 
 			// Create the success message with clickable teleport link
 			Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
