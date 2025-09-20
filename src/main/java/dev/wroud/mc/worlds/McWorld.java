@@ -1,8 +1,8 @@
 package dev.wroud.mc.worlds;
 
-import dev.wroud.mc.worlds.manadger.LevelData;
 import dev.wroud.mc.worlds.manadger.WorldHandle;
 import dev.wroud.mc.worlds.manadger.WorldsManadger;
+import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 
@@ -21,7 +21,7 @@ public class McWorld {
     worldsManadger.loadSavedWorlds();
   }
 
-  public WorldHandle loadOrCreate(ResourceLocation location, LevelData levelData) {
+  public WorldHandle loadOrCreate(ResourceLocation location, WorldsLevelData levelData) {
     return worldsManadger.loadOrCreateWorld(location, levelData);
   }
 

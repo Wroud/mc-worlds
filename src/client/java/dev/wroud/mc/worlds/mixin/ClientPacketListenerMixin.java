@@ -29,7 +29,7 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
         return holder;
     }
 
-    @ModifyArg(method = "handleRespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"), index = 1)
+    @ModifyArg(method = "handleRespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/LevelLoadingScreen$Reason;"), index = 1)
     private ResourceKey<Level> modifyToDimension(ResourceKey<Level> toDimension) {
         if (currentDimensionHolder != null) {
             ResourceKey<Level> vanillaMapping = DimensionDetectionUtil
@@ -41,7 +41,7 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
         return toDimension;
     }
 
-    @ModifyArg(method = "handleRespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/ReceivingLevelScreen$Reason;"), index = 2)
+    @ModifyArg(method = "handleRespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;determineLevelLoadingReason(ZLnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/client/gui/screens/LevelLoadingScreen$Reason;"), index = 2)
     private ResourceKey<Level> modifyFromDimension(ResourceKey<Level> fromDimension) {
         var localPlayer = this.minecraft.player;
         if (localPlayer != null && localPlayer.level() != null) {

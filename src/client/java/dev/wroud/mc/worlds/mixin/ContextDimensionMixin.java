@@ -29,7 +29,7 @@ public class ContextDimensionMixin {
         ItemDisplayContext itemDisplayContext
     ) {
         if (clientLevel != null && original != null) {
-            ResourceKey<Level> mappedDimension = DimensionDetectionUtil.getVanillaDimensionMapping(clientLevel);
+            var mappedDimension = DimensionDetectionUtil.getVanillaDimensionMapping(clientLevel);
             if (mappedDimension != null) {
                 return mappedDimension;
             }

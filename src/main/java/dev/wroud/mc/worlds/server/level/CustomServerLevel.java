@@ -11,33 +11,29 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import dev.wroud.mc.worlds.manadger.LevelData;
+import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
 import dev.wroud.mc.worlds.manadger.WorldsManadger;
+import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.world.RandomSequences;
-import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.biome.BiomeManager;
-import net.minecraft.world.level.border.BorderChangeListener.DelegateBorderChangeListener;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraft.world.phys.Vec3;
 
 public class CustomServerLevel extends ServerLevel {
   private static final Logger LOGGER = LogUtils.getLogger();
   private boolean isManuallyStopped;
   private boolean isClosed;
   private boolean markedForClose;
-  private DelegateBorderChangeListener borderChangeListener;
   private boolean ticketsActivated;
   private boolean spawnSettingsSet;
 
@@ -45,28 +41,27 @@ public class CustomServerLevel extends ServerLevel {
       MinecraftServer minecraftServer,
       Executor executor,
       LevelStorageSource.LevelStorageAccess levelStorageAccess,
-      LevelData serverLevelData,
+      WorldsLevelData serverLevelData,
       ResourceKey<Level> resourceKey,
       LevelStem levelStem,
-      ChunkProgressListener chunkProgressListener,
-      boolean bl,
       List<CustomSpawner> customSpawners,
       @Nullable RandomSequences randomSequences) {
-    super(minecraftServer, executor, levelStorageAccess, serverLevelData, resourceKey, levelStem, chunkProgressListener,
-        bl, BiomeManager.obfuscateSeed(serverLevelData.getSeed()), customSpawners, true, randomSequences);
+    super(minecraftServer, executor, levelStorageAccess, serverLevelData, resourceKey, levelStem,
+        serverLevelData.getWorldData().isDebugWorld(), BiomeManager.obfuscateSeed(serverLevelData.getSeed()),
+        customSpawners, true, randomSequences);
 
     this.isManuallyStopped = false;
     this.isClosed = false;
     this.markedForClose = false;
     this.ticketsActivated = false;
     this.spawnSettingsSet = false;
-    this.borderChangeListener = new DelegateBorderChangeListener(this.getWorldBorder());
 
     this.getServer().execute(() -> {
       ((MinecraftServerAccessor) this.getServer()).getLevels().put(resourceKey, this);
       ServerWorldEvents.LOAD.invoker().onWorldLoad(this.getServer(), this);
 
-      this.getServer().overworld().getWorldBorder().addListener(this.borderChangeListener);
+      this.getWorldBorder().setAbsoluteMaxSize(this.getServer().getAbsoluteMaxWorldSize());
+      this.getServer().getPlayerList().addWorldborderListener(this);
     });
   }
 
@@ -81,10 +76,11 @@ public class CustomServerLevel extends ServerLevel {
 
       if (this.getChunkSource().chunkMap.hasWork()) {
         this.getChunkSource().deactivateTicketsOnClosing();
+				this.getChunkSource().tick(() -> true, false);
       } else {
         this.markedForClose = true;
-        return;
       }
+        return;
     }
     if (!this.ticketsActivated) {
       TicketStorage ticketStorage = this.getDataStorage().get(TicketStorage.TYPE);
@@ -92,13 +88,10 @@ public class CustomServerLevel extends ServerLevel {
         ticketStorage.activateAllDeactivatedTickets();
       }
       this.ticketsActivated = true;
-      return;
-    }
-    if (!this.spawnSettingsSet) {
-      this.setSpawnSettings(this.getServer().isSpawningMonsters());
+    } else if (!this.spawnSettingsSet) {
+      this.setSpawnSettings(((MinecraftServerAccessor) this.getServer()).invokeSpawningMonsters());
       this.spawnSettingsSet = true;
       WorldsManadger.LOGGER.info("World prepared: {}", this.dimension().location());
-      return;
     }
     super.tick(booleanSupplier);
   }
@@ -114,17 +107,12 @@ public class CustomServerLevel extends ServerLevel {
   @Override
   public void close() throws IOException {
     super.close();
-    if (this.isManuallyStopped) {
-      this.getServer().overworld().getWorldBorder()
-          .removeListener(this.borderChangeListener);
-    }
     this.isClosed = true;
   }
 
   @Override
   public long getSeed() {
-    this.getServer().overworld();
-    return ((LevelData) this.levelData).getSeed();
+    return ((WorldsLevelData) this.levelData).getSeed();
   }
 
   public void stop(boolean noSave) {
@@ -146,12 +134,9 @@ public class CustomServerLevel extends ServerLevel {
 
     var players = new ArrayList<>(this.players());
 
-    var target = new TeleportTransition(destination, destination.getSharedSpawnPos().getBottomCenter(), Vec3.ZERO,
-        destination.getSharedSpawnAngle(), 0.0F,
-        Relative.union(Relative.DELTA, Relative.ROTATION), TeleportTransition.DO_NOTHING);
-
     for (ServerPlayer player : players) {
-      player.teleport(target);
+      player
+          .teleport(TeleportTransitionAbstraction.spawnAt(player, destination, TeleportTransition.PLACE_PORTAL_TICKET));
     }
   }
 }

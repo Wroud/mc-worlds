@@ -31,6 +31,14 @@ loom {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir("versions/${stonecutter.current.version}/src/main/java")
+        }
+    }
+}
+
 fabricApi {
     configureDataGeneration() {
         client = false
@@ -144,6 +152,16 @@ tasks {
             expand(props)
         }
     }
+}
+
+// Ensure runDatagen completes before other tasks
+afterEvaluate {
+    tasks.findByName("runClient")?.dependsOn("runDatagen")
+    tasks.findByName("runServer")?.dependsOn("runDatagen")
+    tasks.findByName("build")?.dependsOn("runDatagen")
+    tasks.findByName("publishMods")?.dependsOn("runDatagen")
+    tasks.findByName("publish")?.dependsOn("runDatagen")
+    tasks.findByName("publishToMavenLocal")?.dependsOn("runDatagen")
 }
 
 fun fetchChangelog(): String {

@@ -10,7 +10,7 @@
   "mixins": [
     "fixes.BaseFireBlockMixin",
     "fixes.ChangeDimensionTriggerMixin",
-    "fixes.DedicatedServerMixin",
+    "fixes.MinecraftServerMixin",
     "fixes.EndPortalBlockMixin",
     "fixes.EntityMixin",
     "fixes.LegacyStructureDataHandlerMixin",

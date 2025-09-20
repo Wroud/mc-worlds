@@ -6,15 +6,16 @@ import java.util.Map;
 import com.mojang.serialization.Codec;
 
 import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 public class WorldsData extends SavedData {
 
-  private final Map<ResourceLocation, LevelData> levels;
+  private final Map<ResourceLocation, WorldsLevelData> levels;
   private static final Codec<WorldsData> CODEC = Codec
-      .unboundedMap(ResourceLocation.CODEC, LevelData.CODEC)
+      .unboundedMap(ResourceLocation.CODEC, WorldsLevelData.CODEC)
       .xmap(WorldsData::new, wd -> wd.levels);
 
   public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.MOD_ID,
@@ -24,7 +25,7 @@ public class WorldsData extends SavedData {
     this.levels = new HashMap<>();
   }
 
-  private WorldsData(Map<ResourceLocation, LevelData> worlds) {
+  private WorldsData(Map<ResourceLocation, WorldsLevelData> worlds) {
     this.levels = new HashMap<>(worlds);
   }
 
@@ -38,7 +39,7 @@ public class WorldsData extends SavedData {
     super.setDirty(true);
   }
 
-  public void addLevelData(ResourceLocation id, LevelData data) {
+  public void addLevelData(ResourceLocation id, WorldsLevelData data) {
     levels.put(id, data);
   }
 
@@ -49,11 +50,11 @@ public class WorldsData extends SavedData {
     return false;
   }
 
-  public LevelData getLevelData(ResourceLocation id) {
+  public WorldsLevelData getLevelData(ResourceLocation id) {
     return levels.get(id);
   }
 
-  public Map<ResourceLocation, LevelData> getLevelsData() {
+  public Map<ResourceLocation, WorldsLevelData> getLevelsData() {
     return new HashMap<>(levels);
   }
 

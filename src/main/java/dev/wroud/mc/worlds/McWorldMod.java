@@ -33,11 +33,13 @@ public class McWorldMod implements ModInitializer {
     @Override
     public void onInitialize() {
         WorldsRegistries.bootstrap();
-        
-        ServerLifecycleEvents.SERVER_STARTED.register(serverInstance -> {
-            var mcWorld = new McWorld(serverInstance);
-            worlds.put(serverInstance, mcWorld);
-            mcWorld.loadSavedWorlds();
+
+        ServerWorldEvents.LOAD.register((serverInstance, world) -> {
+            if (world.dimension() == Level.OVERWORLD && !worlds.containsKey(serverInstance)) {
+                var mcWorld = new McWorld(serverInstance);
+                worlds.put(serverInstance, mcWorld);
+                mcWorld.loadSavedWorlds();
+            }
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(serverInstance -> {

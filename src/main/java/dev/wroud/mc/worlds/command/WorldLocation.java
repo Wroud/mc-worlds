@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import dev.wroud.mc.worlds.util.EndGatewayUtil;
 import dev.wroud.mc.worlds.util.NetherPortalUtil;
@@ -42,9 +43,8 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
         } else if (DimensionDetectionUtil.isNetherLikeDimension(level)) {
             return new WorldLocation(level, getNetherSpawn(level, entity));
         }
-        Vec3 vec3 = entity.adjustSpawnLocation(level, level.getSharedSpawnPos()).getBottomCenter();
-        return new WorldLocation(level, new TeleportTransition(level, vec3, Vec3.ZERO, 0.0F, 0.0F,
-                Relative.union(Relative.DELTA, Relative.ROTATION), TeleportTransition.PLACE_PORTAL_TICKET));
+        
+        return new WorldLocation(level, TeleportTransitionAbstraction.spawnAt(entity, level, TeleportTransition.PLACE_PORTAL_TICKET));
     }
 
     private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {

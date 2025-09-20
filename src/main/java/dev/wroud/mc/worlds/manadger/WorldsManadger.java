@@ -12,37 +12,33 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 
+import dev.wroud.mc.worlds.abstractions.MinecraftServerAbstraction;
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
+import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
-import net.minecraft.CrashReport;
-import net.minecraft.ReportedException;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.world.entity.ai.village.VillageSiege;
 import net.minecraft.world.entity.npc.CatSpawner;
 import net.minecraft.world.entity.npc.WanderingTraderSpawner;
 import net.minecraft.world.level.CustomSpawner;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
+import net.minecraft.world.level.storage.LevelData;
 
 public class WorldsManadger {
   public static final Logger LOGGER = LogUtils.getLogger();
   private Map<ResourceLocation, WorldHandle> worlds = new HashMap<>();
   private MinecraftServer server;
-  private ChunkProgressListener chunkProgressListener;
   private WorldsData worldsData;
 
   public WorldsManadger(MinecraftServer server) {
     this.server = server;
-    this.chunkProgressListener = ((MinecraftServerAccessor) server).getProgressListenerFactory()
-        .create(this.server.getWorldData().getGameRules().getInt(GameRules.RULE_SPAWN_CHUNK_RADIUS));
     this.worldsData = server.overworld().getDataStorage().computeIfAbsent(WorldsData.TYPE);
   }
 
@@ -67,7 +63,7 @@ public class WorldsManadger {
     });
   }
 
-  public WorldHandle loadOrCreateWorld(ResourceLocation id, LevelData levelData) {
+  public WorldHandle loadOrCreateWorld(ResourceLocation id, WorldsLevelData levelData) {
     if (worlds.containsKey(id)) {
       return worlds.get(id);
     }
@@ -102,10 +98,8 @@ public class WorldsManadger {
         levelData,
         resourceKey,
         levelData.getLevelStem(),
-        chunkProgressListener,
-        levelData.isDebugWorld(),
         list,
-        this.server.overworld().getRandomSequences());
+        null);
 
     var worldHandle = new WorldHandle(id, levelData, serverLevel);
     worlds.put(id, worldHandle);
@@ -145,25 +139,6 @@ public class WorldsManadger {
     if (!DimensionDetectionUtil.isOverworldLikeDimension(level)) {
       return;
     }
-
-    if (!levelData.isInitialized()) {
-      try {
-        // TODO: this will block the server thread, should be async, especially slow for spawns in the ocean
-        MinecraftServerAccessor.invokeSetInitialSpawn(level, levelData, false,
-            levelData.isDebugWorld());
-        levelData.setInitialized(true);
-      } catch (Throwable var23) {
-        CrashReport crashReport = CrashReport.forThrowable(var23, "Exception initializing level");
-
-        try {
-          level.fillReportDetails(crashReport);
-        } catch (Throwable var22) {
-        }
-
-        throw new ReportedException(crashReport);
-      }
-
-      levelData.setInitialized(true);
-    }
+    MinecraftServerAbstraction.initializeLevel(server, level);
   }
 }

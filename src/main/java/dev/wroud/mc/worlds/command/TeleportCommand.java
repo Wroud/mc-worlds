@@ -3,6 +3,7 @@ package dev.wroud.mc.worlds.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import dev.wroud.mc.worlds.abstractions.ServerPlayerAbstraction;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -57,7 +58,7 @@ public class TeleportCommand {
 
 	public static boolean teleport(ServerPlayer player, ResourceLocation id) {
 		ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-		ServerLevel serverLevel = player.getServer().getLevel(resourceKey);
+		ServerLevel serverLevel = ServerPlayerAbstraction.getServer(player).getLevel(resourceKey);
 		if (serverLevel == null || player.level() == serverLevel)
 			return false;
 

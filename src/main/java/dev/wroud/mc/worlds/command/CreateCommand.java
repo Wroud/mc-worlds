@@ -7,7 +7,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.McWorldMod;
-import dev.wroud.mc.worlds.manadger.LevelData;
+import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
@@ -92,9 +92,9 @@ public class CreateCommand {
 			var registry = server.registryAccess();
 			var levelStemRegistry = registry.lookupOrThrow(Registries.LEVEL_STEM);
 
-			LevelStem levelStem = levelStemRegistry.getValue(type);
-			LOGGER.info("Using dimension type: {}", levelStem.type());
-			var levelData = LevelData.getDefault(id, levelStem, seed, true);
+			var levelStem = levelStemRegistry.getValue(type);
+			LOGGER.info("Using dimension type: {}", type.location());
+			var levelData = WorldsLevelData.getDefault(id, levelStem, seed, true);
 
 			McWorldMod.getMcWorld(server).loadOrCreate(id, levelData);
 

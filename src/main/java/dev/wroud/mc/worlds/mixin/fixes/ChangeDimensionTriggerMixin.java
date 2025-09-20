@@ -1,5 +1,6 @@
 package dev.wroud.mc.worlds.mixin.fixes;
 
+import dev.wroud.mc.worlds.abstractions.ServerPlayerAbstraction;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.advancements.critereon.ChangeDimensionTrigger;
 import net.minecraft.resources.ResourceKey;
@@ -20,7 +21,7 @@ public class ChangeDimensionTriggerMixin {
         ordinal = 0
     )
     private ResourceKey<Level> replaceFromDimension(ResourceKey<Level> fromDimension, ServerPlayer serverPlayer) {
-        ServerLevel fromLevel = serverPlayer.getServer().getLevel(fromDimension);
+        ServerLevel fromLevel = ServerPlayerAbstraction.getServer(serverPlayer).getLevel(fromDimension);
         if (fromLevel != null) {
             ResourceKey<Level> vanillaFromMapping = DimensionDetectionUtil.getVanillaDimensionMapping(fromLevel);
             if (vanillaFromMapping != null) {
@@ -37,7 +38,7 @@ public class ChangeDimensionTriggerMixin {
         ordinal = 1
     )
     private ResourceKey<Level> replaceToDimension(ResourceKey<Level> toDimension, ServerPlayer serverPlayer) {
-        ServerLevel toLevel = serverPlayer.getServer().getLevel(toDimension);
+        ServerLevel toLevel = ServerPlayerAbstraction.getServer(serverPlayer).getLevel(toDimension);
         if (toLevel != null) {
             ResourceKey<Level> vanillaToMapping = DimensionDetectionUtil.getVanillaDimensionMapping(toLevel);
             if (vanillaToMapping != null) {
