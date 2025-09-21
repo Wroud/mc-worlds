@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
-import dev.wroud.mc.worlds.manadger.WorldsManadger;
-import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.manager.WorldsManager;
+import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.resources.ResourceKey;
@@ -91,7 +91,7 @@ public class CustomServerLevel extends ServerLevel {
     } else if (!this.spawnSettingsSet) {
       this.setSpawnSettings(((MinecraftServerAccessor) this.getServer()).invokeSpawningMonsters());
       this.spawnSettingsSet = true;
-      WorldsManadger.LOGGER.info("World prepared: {}", this.dimension().location());
+      WorldsManager.LOGGER.info("World prepared: {}", this.dimension().location());
     }
     super.tick(booleanSupplier);
   }

@@ -1,4 +1,4 @@
-package dev.wroud.mc.worlds.manadger;
+package dev.wroud.mc.worlds.manager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import com.mojang.serialization.Codec;
 
 import dev.wroud.mc.worlds.McWorldMod;
-import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;

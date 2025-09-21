@@ -1,4 +1,4 @@
-package dev.wroud.mc.worlds.manadger.level.data;
+package dev.wroud.mc.worlds.manager.level.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

@@ -1,8 +1,8 @@
 package dev.wroud.mc.worlds.core.registries;
 
 import dev.wroud.mc.worlds.McWorldMod;
-import dev.wroud.mc.worlds.manadger.DefaultServerLevelProvider;
-import dev.wroud.mc.worlds.manadger.ServerLevelProvider;
+import dev.wroud.mc.worlds.manager.DefaultServerLevelProvider;
+import dev.wroud.mc.worlds.manager.ServerLevelProvider;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;

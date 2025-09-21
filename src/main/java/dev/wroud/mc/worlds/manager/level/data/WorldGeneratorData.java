@@ -1,11 +1,11 @@
-package dev.wroud.mc.worlds.manadger.level.data;
+package dev.wroud.mc.worlds.manager.level.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
-import dev.wroud.mc.worlds.manadger.DefaultServerLevelProvider;
-import dev.wroud.mc.worlds.manadger.ServerLevelProvider;
+import dev.wroud.mc.worlds.manager.DefaultServerLevelProvider;
+import dev.wroud.mc.worlds.manager.ServerLevelProvider;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.LevelStem;
 

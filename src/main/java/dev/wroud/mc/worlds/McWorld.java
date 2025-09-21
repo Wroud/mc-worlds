@@ -1,31 +1,31 @@
 package dev.wroud.mc.worlds;
 
-import dev.wroud.mc.worlds.manadger.WorldHandle;
-import dev.wroud.mc.worlds.manadger.WorldsManadger;
-import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.manager.WorldHandle;
+import dev.wroud.mc.worlds.manager.WorldsManager;
+import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 
 public class McWorld {
-  private WorldsManadger worldsManadger;
+  private WorldsManager worldsManager;
 
   public McWorld(MinecraftServer server) {
-    this.worldsManadger = new WorldsManadger(server);
+    this.worldsManager = new WorldsManager(server);
   }
 
-  public WorldsManadger getManadger() {
-    return worldsManadger;
+  public WorldsManager getManadger() {
+    return worldsManager;
   }
 
   public void loadSavedWorlds() {
-    worldsManadger.loadSavedWorlds();
+    worldsManager.loadSavedWorlds();
   }
 
   public WorldHandle loadOrCreate(ResourceLocation location, WorldsLevelData levelData) {
-    return worldsManadger.loadOrCreateWorld(location, levelData);
+    return worldsManager.loadOrCreateWorld(location, levelData);
   }
 
   public void handleWorldUnload(ResourceLocation level) {
-    worldsManadger.unloadWorld(level);
+    worldsManager.unloadWorld(level);
   }
 }

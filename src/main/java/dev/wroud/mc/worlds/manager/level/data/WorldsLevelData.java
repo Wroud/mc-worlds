@@ -1,4 +1,4 @@
-package dev.wroud.mc.worlds.manadger.level.data;
+package dev.wroud.mc.worlds.manager.level.data;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +9,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import dev.wroud.mc.worlds.manadger.DefaultServerLevelProvider;
-import dev.wroud.mc.worlds.manadger.ServerLevelProvider;
+import dev.wroud.mc.worlds.manager.DefaultServerLevelProvider;
+import dev.wroud.mc.worlds.manager.ServerLevelProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

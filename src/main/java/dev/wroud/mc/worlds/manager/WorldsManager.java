@@ -1,4 +1,4 @@
-package dev.wroud.mc.worlds.manadger;
+package dev.wroud.mc.worlds.manager;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.abstractions.MinecraftServerAbstraction;
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
-import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
@@ -31,13 +31,13 @@ import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
 import net.minecraft.world.level.storage.LevelData;
 
-public class WorldsManadger {
+public class WorldsManager {
   public static final Logger LOGGER = LogUtils.getLogger();
   private Map<ResourceLocation, WorldHandle> worlds = new HashMap<>();
   private MinecraftServer server;
   private WorldsData worldsData;
 
-  public WorldsManadger(MinecraftServer server) {
+  public WorldsManager(MinecraftServer server) {
     this.server = server;
     this.worldsData = server.overworld().getDataStorage().computeIfAbsent(WorldsData.TYPE);
   }

@@ -1,6 +1,6 @@
-package dev.wroud.mc.worlds.manadger;
+package dev.wroud.mc.worlds.manager;
 
-import dev.wroud.mc.worlds.manadger.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import net.minecraft.resources.ResourceLocation;
 
