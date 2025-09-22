@@ -130,7 +130,6 @@ public class CustomServerLevel extends ServerLevel {
     if (destination == null) {
       destination = this.getServer().overworld();
     }
-    destination.noSave();
 
     var players = new ArrayList<>(this.players());
 
