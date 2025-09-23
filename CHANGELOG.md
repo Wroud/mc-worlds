@@ -4,6 +4,8 @@
 
 ### Added
 
+- List Quilt as supported loader (not tested)
+
 ### Changed
 
 ### Deprecated

@@ -71,6 +71,7 @@ publishMods {
 
     type = BETA
     modLoaders.add("fabric")
+    modLoaders.add("quilt")
 
 
     // curseforge {
