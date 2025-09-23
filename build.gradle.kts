@@ -68,7 +68,7 @@ publishMods {
     type.set(STABLE)
     changelog.set(fetchChangelog())
 
-    displayName = "${findProperty("name") as String} ${version.get()}"
+    displayName = "${findProperty("mod_name") as String} ${version.get()}"
     modLoaders.add("fabric")
 
 
@@ -99,7 +99,7 @@ publishing {
             version = project.version.toString()
             
             pom {
-                name.set(findProperty("name") as String)
+                name.set(findProperty("mod_name") as String)
                 description.set(findProperty("description") as String)
                 url.set(findProperty("url") as String)
 
