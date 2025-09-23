@@ -4,8 +4,8 @@ import org.jetbrains.changelog.ChangelogPluginExtension
 plugins {
     id("fabric-loom") version "1.11-SNAPSHOT"
     id("maven-publish")
-    id("me.modmuss50.mod-publish-plugin") version "0.8.4"
-    id("org.jetbrains.changelog")
+    id("me.modmuss50.mod-publish-plugin") version "1.0.0"
+    id("org.jetbrains.changelog") version "2.4.0"
 }
 
 version = findProperty("mod_version") as String + "+" + findProperty("minecraft_version")
@@ -41,7 +41,9 @@ sourceSets {
 
 fabricApi {
     configureDataGeneration() {
+        modId = "mc-worlds-datagen"
         client = false
+        createSourceSet = true
     }
 }
 
@@ -54,7 +56,6 @@ fun DependencyHandlerScope.includeDep(dep: String) {
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${findProperty("minecraft_version")}")
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:${findProperty("loader_version")}")
@@ -64,11 +65,11 @@ dependencies {
 }
 
 publishMods {
-    file.set(tasks.remapJar.get().archiveFile)
-    type.set(STABLE)
-    changelog.set(fetchChangelog())
+    displayName = "${findProperty("mod_name")} ${version.get()}"
+    file = tasks.remapJar.get().archiveFile
+    changelog = fetchChangelog()
 
-    displayName = "${findProperty("mod_name") as String} ${version.get()}"
+    type = BETA
     modLoaders.add("fabric")
 
 
@@ -78,9 +79,9 @@ publishMods {
     //     minecraftVersions.addAll(findProperty("curseforge_minecraft_versions")!!.toString().split(", "))
     // }
     modrinth {
-        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         projectId = findProperty("modrinth_project_id")!!.toString()
-        minecraftVersions.addAll(findProperty("modrinth_minecraft_versions")!!.toString().split(", "))
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add(findProperty("minecraft_version")!!.toString())
     }
     github {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
@@ -154,14 +155,10 @@ tasks {
     }
 }
 
-// Ensure runDatagen completes before other tasks
 afterEvaluate {
     tasks.findByName("runClient")?.dependsOn("runDatagen")
     tasks.findByName("runServer")?.dependsOn("runDatagen")
     tasks.findByName("build")?.dependsOn("runDatagen")
-    tasks.findByName("publishMods")?.dependsOn("runDatagen")
-    tasks.findByName("publish")?.dependsOn("runDatagen")
-    tasks.findByName("publishToMavenLocal")?.dependsOn("runDatagen")
 }
 
 fun fetchChangelog(): String {

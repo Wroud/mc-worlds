@@ -18,7 +18,7 @@
 
 ### Added
 
-- Support for 1.21.9-pr4
+- Support for 1.21.9-pre4
 
 ## 1.4.1 - 2025-09-23
 

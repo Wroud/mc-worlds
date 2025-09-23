@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "mc-worlds-datagen",
+  "version": "${version}",
+  "entrypoints": {
+    "fabric-datagen": ["dev.wroud.mc.worlds.DataGenerator"]
+  }
+}

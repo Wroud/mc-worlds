@@ -20,6 +20,5 @@ public class DimensionTypeTagsProvider extends KeyTagProvider<DimensionType> {
     this.tag(DimensionTypeTags.OVERWORLD_LIKE).add(BuiltinDimensionTypes.OVERWORLD);
     this.tag(DimensionTypeTags.NETHER_LIKE).add(BuiltinDimensionTypes.NETHER);
     this.tag(DimensionTypeTags.END_LIKE).add(BuiltinDimensionTypes.END);
-
   }
 }
