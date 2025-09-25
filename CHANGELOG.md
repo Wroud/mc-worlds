@@ -4,8 +4,6 @@
 
 ### Added
 
-- List Quilt as supported loader (not tested)
-
 ### Changed
 
 ### Deprecated
@@ -15,6 +13,13 @@
 ### Fixed
 
 ### Security
+
+## 1.4.3 - 2025-09-26
+
+### Added
+
+- List Quilt as supported loader (not tested)
+- Support for 1.21.9-rc1
 
 ## 1.4.2 - 2025-09-24
 
