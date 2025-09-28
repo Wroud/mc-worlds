@@ -33,10 +33,4 @@ public interface MinecraftServerAccessor {
 
     @Invoker("isSpawningMonsters")
     boolean invokeSpawningMonsters();
-
-    @Invoker("setInitialSpawn")
-    static void invokeSetInitialSpawn(ServerLevel serverLevel, ServerLevelData serverLevelData,
-            boolean generateBonusChest, boolean debug, LevelLoadListener levelLoadListener) {
-        throw new AssertionError("Mixin invoker should not be called directly");
-    }
 }

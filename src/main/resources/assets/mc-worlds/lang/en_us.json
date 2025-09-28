@@ -1,6 +1,8 @@
 {
   "dev.wroud.mc.worlds.command.create.exception.world_already_exists": "A world with that id already exists!",
   "dev.wroud.mc.worlds.command.exception.unknown_world": "Unknown world id!",
+  "dev.wroud.mc.worlds.command.create.creating": "Creating world ",
+  "dev.wroud.mc.worlds.command.create.creating.progress": " please wait",
   "dev.wroud.mc.worlds.command.create.success": "World ",
   "dev.wroud.mc.worlds.command.create.success.created": " created. ",
   "dev.wroud.mc.worlds.command.create.success.teleport": "Teleport",

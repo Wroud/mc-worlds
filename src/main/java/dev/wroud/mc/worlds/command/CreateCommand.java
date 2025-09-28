@@ -8,6 +8,8 @@ import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
+import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
@@ -15,6 +17,10 @@ import net.minecraft.commands.arguments.ResourceLocationArgument;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
@@ -35,98 +41,124 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 public class CreateCommand {
-	private static final Logger LOGGER = LogUtils.getLogger();
-	private static final DynamicCommandExceptionType ERROR_INVALID_LEVEL_STEM = new DynamicCommandExceptionType(
-			object -> Component.translatableEscape("advancement.advancementNotFound", object));
+  private static final Logger LOGGER = LogUtils.getLogger();
+  private static final DynamicCommandExceptionType ERROR_INVALID_LEVEL_STEM = new DynamicCommandExceptionType(
+      object -> Component.translatableEscape("advancement.advancementNotFound", object));
 
-	public static LiteralArgumentBuilder<CommandSourceStack> build() {
-		return literal("create")
-				.requires(Permissions.require("dev.wroud.mc.worlds.command.create", 2))
-				.then(
-						argument("id", ResourceLocationArgument.id())
-								.executes(
-										context -> createWorld(context.getSource(), ResourceLocationArgument.getId(context, "id"), null,
-												null))
-								.then(
-										argument("type", ResourceKeyArgument.key(Registries.LEVEL_STEM))
-												.executes(
-														context -> createWorld(
-																context.getSource(),
-																ResourceLocationArgument.getId(context, "id"),
-																ResourceKeyArgument.getRegistryKey(context, "type", Registries.LEVEL_STEM,
-																		ERROR_INVALID_LEVEL_STEM),
-																null))
-												.then(
-														argument("seed", LongArgumentType.longArg())
-																.executes(
-																		context -> createWorld(context.getSource(),
-																				ResourceLocationArgument.getId(context, "id"),
-																				ResourceKeyArgument.getRegistryKey(context, "type", Registries.LEVEL_STEM,
-																						ERROR_INVALID_LEVEL_STEM),
-																				LongArgumentType.getLong(context, "seed")))))
-								.then(
-										argument("seed", LongArgumentType.longArg())
-												.executes(
-														context -> createWorld(context.getSource(), ResourceLocationArgument.getId(context, "id"),
-																null,
-																LongArgumentType.getLong(context, "seed")))));
-	}
+  public static LiteralArgumentBuilder<CommandSourceStack> build() {
+    return literal("create")
+        .requires(Permissions.require("dev.wroud.mc.worlds.command.create", 2))
+        .then(
+            argument("id", ResourceLocationArgument.id())
+                .executes(
+                    context -> createWorld(context.getSource(), ResourceLocationArgument.getId(context, "id"), null,
+                        null))
+                .then(
+                    argument("type", ResourceKeyArgument.key(Registries.LEVEL_STEM))
+                        .executes(
+                            context -> createWorld(
+                                context.getSource(),
+                                ResourceLocationArgument.getId(context, "id"),
+                                ResourceKeyArgument.getRegistryKey(context, "type", Registries.LEVEL_STEM,
+                                    ERROR_INVALID_LEVEL_STEM),
+                                null))
+                        .then(
+                            argument("seed", LongArgumentType.longArg())
+                                .executes(
+                                    context -> createWorld(context.getSource(),
+                                        ResourceLocationArgument.getId(context, "id"),
+                                        ResourceKeyArgument.getRegistryKey(context, "type", Registries.LEVEL_STEM,
+                                            ERROR_INVALID_LEVEL_STEM),
+                                        LongArgumentType.getLong(context, "seed")))))
+                .then(
+                    argument("seed", LongArgumentType.longArg())
+                        .executes(
+                            context -> createWorld(context.getSource(), ResourceLocationArgument.getId(context, "id"),
+                                null,
+                                LongArgumentType.getLong(context, "seed")))));
+  }
 
-	public static int createWorld(CommandSourceStack source, ResourceLocation id,
-			@Nullable ResourceKey<LevelStem> type, @Nullable Long seed)
-			throws CommandSyntaxException {
+  public static int createWorld(CommandSourceStack source, ResourceLocation id,
+      @Nullable ResourceKey<LevelStem> type, @Nullable Long seed)
+      throws CommandSyntaxException {
 
-		if (type == null) {
-			type = LevelStem.OVERWORLD;
-		}
+    if (type == null) {
+      type = LevelStem.OVERWORLD;
+    }
 
-		if (seed == null) {
-			seed = WorldOptions.randomSeed();
-		}
+    if (seed == null) {
+      seed = WorldOptions.randomSeed();
+    }
 
-		LOGGER.info("Creating new world with id: {}, seed: {}, type: {}", id, seed, type);
-		var server = source.getServer();
-		validLevelId(id, server);
+    LOGGER.info("Creating new world with id: {}, seed: {}, type: {}", id, seed, type.location());
+    var server = source.getServer();
+    validLevelId(id, server);
 
-		try {
-			var registry = server.registryAccess();
-			var levelStemRegistry = registry.lookupOrThrow(Registries.LEVEL_STEM);
+    try {
+      var registry = server.registryAccess();
+      var levelStemRegistry = registry.lookupOrThrow(Registries.LEVEL_STEM);
 
-			var levelStem = levelStemRegistry.getValue(type);
-			LOGGER.info("Using dimension type: {}", type.location());
-			var levelData = WorldsLevelData.getDefault(id, levelStem, seed, true);
+      var levelStem = levelStemRegistry.getValue(type);
+      LOGGER.info("Using dimension type: {}", type.location());
+      var levelData = WorldsLevelData.getDefault(id, levelStem, seed, true);
 
-			McWorldMod.getMcWorld(server).loadOrCreate(id, levelData);
+      Component creatingMessage = Component.translatable("dev.wroud.mc.worlds.command.create.creating")
+          .append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
+          .append(Component.translatable("dev.wroud.mc.worlds.command.create.creating.progress")
+              .withStyle(ChatFormatting.YELLOW));
+      source.sendSuccess(() -> creatingMessage, false);
 
-			// Create the success message with clickable teleport link
-			Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
-					.append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
-					.append(Component.translatable("dev.wroud.mc.worlds.command.create.success.created"))
-					.append(Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
-							.withStyle(style -> style
-									.withColor(ChatFormatting.AQUA)
-									.withUnderlined(true)
-									.withClickEvent(new ClickEvent.RunCommand(
-											"/worlds tp " + id.toString()))));
+      var worldHandle = McWorldMod.getMcWorld(server).loadOrCreate(id, levelData);
 
-			source.sendSuccess(() -> successMessage, false);
+      scheduleWorldActivationCheck(source, id, worldHandle.getServerLevel());
 
-			return Command.SINGLE_SUCCESS;
-		} catch (Exception e) {
-			LOGGER.error("Error creating world", e);
-			throw new SimpleCommandExceptionType(
-					Component.translatable("dev.wroud.mc.worlds.command.create.exception.generic", e.getMessage()))
-					.create();
-		}
-	}
+      return Command.SINGLE_SUCCESS;
+    } catch (Exception e) {
+      LOGGER.error("Error creating world", e);
+      throw new SimpleCommandExceptionType(
+          Component.translatable("dev.wroud.mc.worlds.command.create.exception.generic", e.getMessage()))
+          .create();
+    }
+  }
 
-	public static void validLevelId(ResourceLocation id, MinecraftServer server) throws CommandSyntaxException {
-		ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-		ServerLevel level = server.getLevel(resourceKey);
-		if (level != null) {
-			throw new SimpleCommandExceptionType(
-					Component.translatable("dev.wroud.mc.worlds.command.create.exception.world_already_exists"))
-					.create();
-		}
-	}
+  public static void validLevelId(ResourceLocation id, MinecraftServer server) throws CommandSyntaxException {
+    ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
+    ServerLevel level = server.getLevel(resourceKey);
+    if (level != null) {
+      throw new SimpleCommandExceptionType(
+          Component.translatable("dev.wroud.mc.worlds.command.create.exception.world_already_exists"))
+          .create();
+    }
+  }
+
+  private static void scheduleWorldActivationCheck(CommandSourceStack source, ResourceLocation id,
+      CustomServerLevel level) {
+    MinecraftServer server = source.getServer();
+    Executor executor = ((MinecraftServerAccessor) server).getExecutor();
+
+    Runnable checkTask = new Runnable() {
+      @Override
+      public void run() {
+        if (level.isActive()) {
+          Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
+              .append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
+              .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.created"))
+              .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
+                  .withStyle(style -> style
+                      .withColor(ChatFormatting.AQUA)
+                      .withUnderlined(true)
+                      .withClickEvent(new ClickEvent.RunCommand(
+                          "/worlds tp " + id.toString()))));
+
+          source.sendSystemMessage(successMessage);
+        } else {
+          CompletableFuture
+              .delayedExecutor(100, TimeUnit.MILLISECONDS)
+              .execute(() -> server.execute(this));
+        }
+      }
+    };
+
+    executor.execute(checkTask);
+  }
 }

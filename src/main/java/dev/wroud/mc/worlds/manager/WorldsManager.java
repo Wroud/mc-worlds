@@ -12,13 +12,10 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 
-import dev.wroud.mc.worlds.abstractions.MinecraftServerAbstraction;
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
-import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
-import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -29,7 +26,6 @@ import net.minecraft.world.entity.npc.WanderingTraderSpawner;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
-import net.minecraft.world.level.storage.LevelData;
 
 public class WorldsManager {
   public static final Logger LOGGER = LogUtils.getLogger();
@@ -104,8 +100,6 @@ public class WorldsManager {
     var worldHandle = new WorldHandle(id, levelData, serverLevel);
     worlds.put(id, worldHandle);
     this.worldsData.addLevelData(id, levelData);
-
-    this.initializeWorld(levelData, serverLevel);
     return worldHandle;
   }
 
@@ -133,12 +127,5 @@ public class WorldsManager {
         this.worldsData.removeLevelData(location);
       }
     }
-  }
-
-  private void initializeWorld(LevelData levelData, CustomServerLevel level) {
-    if (!DimensionDetectionUtil.isOverworldLikeDimension(level)) {
-      return;
-    }
-    MinecraftServerAbstraction.initializeLevel(server, level);
   }
 }

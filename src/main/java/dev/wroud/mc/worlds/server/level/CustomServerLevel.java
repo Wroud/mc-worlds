@@ -7,9 +7,6 @@ import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
 import dev.wroud.mc.worlds.manager.WorldsManager;
@@ -28,17 +25,18 @@ import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.portal.TeleportTransition;
+import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource;
 
 public class CustomServerLevel extends ServerLevel {
   public static final int STOP_AFTER = 1200; // 60 seconds * 20 ticks
-  private static final Logger LOGGER = LogUtils.getLogger();
   private boolean isStopped;
   private boolean isClosed;
   private boolean markedForClose;
   private boolean ticketsActivated;
   private boolean spawnSettingsSet;
   private boolean deleteOnClose;
+  private SpawnPreparationHelper spawnPreparationHelper;
 
   public CustomServerLevel(
       MinecraftServer minecraftServer,
@@ -59,6 +57,7 @@ public class CustomServerLevel extends ServerLevel {
     this.ticketsActivated = false;
     this.spawnSettingsSet = false;
     this.deleteOnClose = false;
+    this.spawnPreparationHelper = !serverLevelData.isInitialized() ? new SpawnPreparationHelper(this) : null;
 
     this.getServer().execute(() -> {
       ((MinecraftServerAccessor) this.getServer()).getLevels().put(resourceKey, this);
@@ -87,6 +86,13 @@ public class CustomServerLevel extends ServerLevel {
       }
       return;
     }
+    if (this.spawnPreparationHelper != null) {
+      this.spawnPreparationHelper.tick();
+      if (this.spawnPreparationHelper.isFinished()) {
+        this.spawnPreparationHelper = null;
+      }
+      return;
+    }
     if (!this.ticketsActivated) {
       TicketStorage ticketStorage = this.getDataStorage().get(TicketStorage.TYPE);
       if (ticketStorage != null) {
@@ -103,6 +109,11 @@ public class CustomServerLevel extends ServerLevel {
       return;
     }
     super.tick(booleanSupplier);
+  }
+
+  public boolean isActive() {
+    return ((WorldsLevelData) this.levelData).isInitialized() && !this.isStopped && this.ticketsActivated
+        && this.spawnSettingsSet;
   }
 
   public boolean isDeleteOnClose() {
@@ -154,5 +165,10 @@ public class CustomServerLevel extends ServerLevel {
       player
           .teleport(TeleportTransitionAbstraction.spawnAt(player, destination, TeleportTransition.PLACE_PORTAL_TICKET));
     }
+  }
+
+  @Override
+  public RespawnData getRespawnData() {
+    return this.getLevelData().getRespawnData();
   }
 }

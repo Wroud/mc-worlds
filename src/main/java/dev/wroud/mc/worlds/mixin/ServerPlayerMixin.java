@@ -16,7 +16,7 @@ public class ServerPlayerMixin {
   private void onTeleport(TeleportTransition teleportTransition, CallbackInfoReturnable<ServerPlayer> cir) {
     var level = teleportTransition.newLevel();
     if (level instanceof CustomServerLevel customServerLevel) {
-      if (customServerLevel.isStopped()) {
+      if (!customServerLevel.isActive()) {
         cir.setReturnValue(null);
       }
     }

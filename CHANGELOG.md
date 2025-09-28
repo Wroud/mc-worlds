@@ -4,6 +4,8 @@
 
 ### Added
 
+- Non-blocking spawn location detection for overworld-like worlds to prevent server thread blocking
+
 ### Changed
 
 ### Deprecated

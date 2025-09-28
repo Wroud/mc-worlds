@@ -33,7 +33,7 @@ public class MinecraftServerMixin {
   @Inject(method = "isAllowedToEnterPortal", at = @At("RETURN"), cancellable = true)
   private void onIsAllowedToEnterPortal(Level level, CallbackInfoReturnable<Boolean> cir) {
     if (level instanceof CustomServerLevel customServerLevel) {
-      if (customServerLevel.isStopped()) {
+      if (!customServerLevel.isActive()) {
         cir.setReturnValue(false);
       }
     }

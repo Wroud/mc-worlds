@@ -94,6 +94,10 @@ public class WorldsLevelData implements ServerLevelData {
     return generator.generateStructures;
   }
 
+  public boolean getPrepareSpawn() {
+    return generator.prepareSpawn;
+  }
+
   public void setLazy(boolean lazy) {
     this.generator.lazy = lazy;
   }
@@ -279,7 +283,7 @@ public class WorldsLevelData implements ServerLevelData {
       LevelStem levelStem, long seed,
       boolean generateStructures) {
     return new WorldsLevelData(
-        new WorldGeneratorData(levelStem, seed, generateStructures, true, provider),
+        new WorldGeneratorData(levelStem, seed, generateStructures, true, true, provider),
         new WorldSettingsData(),
         new WorldWanderingTraderData(),
         new WorldWeatherData());

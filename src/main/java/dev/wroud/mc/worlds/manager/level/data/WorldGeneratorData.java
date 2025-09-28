@@ -14,6 +14,7 @@ public class WorldGeneratorData {
       LevelStem.CODEC.fieldOf("level_stem").forGetter(cd -> cd.levelStem),
       Codec.LONG.optionalFieldOf("seed", 10L).forGetter(cd -> cd.seed),
       Codec.BOOL.optionalFieldOf("generate_structures", true).forGetter(cd -> cd.generateStructures),
+      Codec.BOOL.optionalFieldOf("prepare_spawn", true).forGetter(cd -> cd.prepareSpawn),
       Codec.BOOL.optionalFieldOf("lazy", true).forGetter(cd -> cd.lazy),
       ResourceKey.codec(WorldsRegistries.LEVEL_PROVIDER)
           .optionalFieldOf("provider", DefaultServerLevelProvider.DEFAULT).forGetter(cd -> cd.provider))
@@ -22,14 +23,16 @@ public class WorldGeneratorData {
   public final LevelStem levelStem;
   public final long seed;
   public final boolean generateStructures;
+  public final boolean prepareSpawn;
   public boolean lazy;
   public ResourceKey<ServerLevelProvider<?>> provider;
 
-  public WorldGeneratorData(LevelStem levelStem, long seed, boolean generateStructures, boolean lazy,
+  public WorldGeneratorData(LevelStem levelStem, long seed, boolean generateStructures, boolean prepareSpawn, boolean lazy,
       ResourceKey<ServerLevelProvider<?>> provider) {
     this.levelStem = levelStem;
     this.seed = seed;
     this.generateStructures = generateStructures;
+    this.prepareSpawn = prepareSpawn;
     this.lazy = lazy;
     this.provider = provider;
   }
