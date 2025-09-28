@@ -21,10 +21,12 @@
     "fixes.ServerPlayerTeleportMixin",
     "fixes.TheEndGatewayBlockEntityMixin",
     "fixes.ThrownEnderpearlMixin",
+    "EntityMixin",
     "ExecuteCommandMixin",
     "MinecraftServerAccessor",
     "MinecraftServerMixin",
     "NetherPortalBlockAccessor",
+    "ServerPlayerMixin",
     "TheEndGatewayBlockEntityAccessor"
   ],
   "injectors": {

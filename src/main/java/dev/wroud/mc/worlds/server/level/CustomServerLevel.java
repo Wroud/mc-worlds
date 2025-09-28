@@ -36,6 +36,7 @@ public class CustomServerLevel extends ServerLevel {
   private boolean markedForClose;
   private boolean ticketsActivated;
   private boolean spawnSettingsSet;
+  private boolean deleteOnClose;
 
   public CustomServerLevel(
       MinecraftServer minecraftServer,
@@ -55,6 +56,7 @@ public class CustomServerLevel extends ServerLevel {
     this.markedForClose = false;
     this.ticketsActivated = false;
     this.spawnSettingsSet = false;
+    this.deleteOnClose = false;
 
     this.getServer().execute(() -> {
       ((MinecraftServerAccessor) this.getServer()).getLevels().put(resourceKey, this);
@@ -75,12 +77,13 @@ public class CustomServerLevel extends ServerLevel {
       }
 
       if (this.getChunkSource().chunkMap.hasWork()) {
+        this.noSave = false;
         this.getChunkSource().deactivateTicketsOnClosing();
-				this.getChunkSource().tick(() -> true, false);
+        this.getChunkSource().tick(() -> true, false);
       } else {
         this.markedForClose = true;
       }
-        return;
+      return;
     }
     if (!this.ticketsActivated) {
       TicketStorage ticketStorage = this.getDataStorage().get(TicketStorage.TYPE);
@@ -96,8 +99,16 @@ public class CustomServerLevel extends ServerLevel {
     super.tick(booleanSupplier);
   }
 
+  public boolean isDeleteOnClose() {
+    return deleteOnClose;
+  }
+
   public boolean isManuallyStopped() {
-    return isManuallyStopped && isClosed;
+    return isManuallyStopped;
+  }
+
+  public boolean isClosed() {
+    return this.isClosed;
   }
 
   public boolean isMarkedForClose() {
@@ -115,11 +126,11 @@ public class CustomServerLevel extends ServerLevel {
     return ((WorldsLevelData) this.levelData).getSeed();
   }
 
-  public void stop(boolean noSave) {
+  public void stop(boolean deleteOnClose) {
     if (this.isManuallyStopped) {
       return;
     }
-    this.noSave = noSave;
+    this.deleteOnClose = deleteOnClose;
     this.isManuallyStopped = true;
   }
 

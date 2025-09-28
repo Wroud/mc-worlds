@@ -4,6 +4,8 @@
 
 ### Added
 
+- Prevent players and entities from teleportation to unloading world
+
 ### Changed
 
 ### Deprecated
@@ -11,6 +13,8 @@
 ### Removed
 
 ### Fixed
+
+- World deletion
 
 ### Security
 

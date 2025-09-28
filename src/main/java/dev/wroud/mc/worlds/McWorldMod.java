@@ -60,7 +60,7 @@ public class McWorldMod implements ModInitializer {
                 var level = ((MinecraftServerAccessor) server).getLevels().remove(dimensionKey);
                 if (level instanceof CustomServerLevel customLevel) {
                     LOGGER.info("Saving chunks for level '{}'/{}", customLevel, customLevel.dimension().location());
-                    customLevel.save(null, true, customLevel.noSave);
+                    customLevel.save(null, true, customLevel.isDeleteOnClose());
 
                     try {
                         customLevel.close();
