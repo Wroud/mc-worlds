@@ -97,7 +97,7 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   public boolean isManuallyStopped() {
-    return isManuallyStopped && isClosed;
+    return isManuallyStopped;
   }
 
   public boolean isMarkedForClose() {
