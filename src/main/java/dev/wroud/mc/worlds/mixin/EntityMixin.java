@@ -16,7 +16,7 @@ public class EntityMixin {
   private void onTeleport(TeleportTransition teleportTransition, CallbackInfoReturnable<Entity> cir) {
     var level = teleportTransition.newLevel();
     if (level instanceof CustomServerLevel customServerLevel) {
-      if (customServerLevel.isManuallyStopped()) {
+      if (customServerLevel.isStopped()) {
         cir.setReturnValue(null);
       }
     }

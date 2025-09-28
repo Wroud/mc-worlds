@@ -115,7 +115,7 @@ public class WorldsManager {
       var world = handle.getServerLevel();
 
       if (world.isDeleteOnClose()) {
-        if (world.isManuallyStopped() && world.isClosed()) {
+        if (world.isStopped() && world.isClosed()) {
           var session = ((MinecraftServerAccessor) this.server).getStorageSource();
           File worldDirectory = session.getDimensionPath(world.dimension()).toFile();
           if (worldDirectory.exists()) {

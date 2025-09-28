@@ -26,6 +26,7 @@
     "MinecraftServerAccessor",
     "MinecraftServerMixin",
     "NetherPortalBlockAccessor",
+    "ServerLevelAccessor",
     "ServerPlayerMixin",
     "TheEndGatewayBlockEntityAccessor"
   ],

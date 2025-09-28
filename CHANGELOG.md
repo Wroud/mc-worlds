@@ -4,8 +4,6 @@
 
 ### Added
 
-- Prevent players and entities from teleportation to unloading world
-
 ### Changed
 
 ### Deprecated
@@ -14,9 +12,18 @@
 
 ### Fixed
 
-- World deletion
-
 ### Security
+
+## 1.5.0 - 2025-09-29
+
+### Added
+
+- Prevent players and entities from teleporting to unloading worlds
+- Automatically unload worlds after 1 minute of being empty
+
+### Fixed
+
+- World deletion [#1](https://github.com/Wroud/mc-worlds/issues/1)
 
 ## 1.4.3 - 2025-09-26
 

@@ -15,6 +15,7 @@ import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
 import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
+import dev.wroud.mc.worlds.mixin.ServerLevelAccessor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -30,8 +31,9 @@ import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.LevelStorageSource;
 
 public class CustomServerLevel extends ServerLevel {
+  public static final int STOP_AFTER = 1200; // 60 seconds * 20 ticks
   private static final Logger LOGGER = LogUtils.getLogger();
-  private boolean isManuallyStopped;
+  private boolean isStopped;
   private boolean isClosed;
   private boolean markedForClose;
   private boolean ticketsActivated;
@@ -51,7 +53,7 @@ public class CustomServerLevel extends ServerLevel {
         serverLevelData.getWorldData().isDebugWorld(), BiomeManager.obfuscateSeed(serverLevelData.getSeed()),
         customSpawners, true, randomSequences);
 
-    this.isManuallyStopped = false;
+    this.isStopped = false;
     this.isClosed = false;
     this.markedForClose = false;
     this.ticketsActivated = false;
@@ -69,7 +71,7 @@ public class CustomServerLevel extends ServerLevel {
 
   @Override
   public void tick(BooleanSupplier booleanSupplier) {
-    if (this.isManuallyStopped) {
+    if (this.isStopped) {
       this.kickPlayers(null);
 
       if (this.markedForClose) {
@@ -96,6 +98,10 @@ public class CustomServerLevel extends ServerLevel {
       this.spawnSettingsSet = true;
       WorldsManager.LOGGER.info("World prepared: {}", this.dimension().location());
     }
+    if (((ServerLevelAccessor) this).getEmptyTime() > STOP_AFTER) {
+      this.stop(false);
+      return;
+    }
     super.tick(booleanSupplier);
   }
 
@@ -103,8 +109,8 @@ public class CustomServerLevel extends ServerLevel {
     return deleteOnClose;
   }
 
-  public boolean isManuallyStopped() {
-    return isManuallyStopped;
+  public boolean isStopped() {
+    return isStopped;
   }
 
   public boolean isClosed() {
@@ -127,11 +133,11 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   public void stop(boolean deleteOnClose) {
-    if (this.isManuallyStopped) {
+    if (this.isStopped) {
       return;
     }
     this.deleteOnClose = deleteOnClose;
-    this.isManuallyStopped = true;
+    this.isStopped = true;
   }
 
   protected void kickPlayers(@Nullable ServerLevel destination) {
