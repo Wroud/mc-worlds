@@ -74,15 +74,15 @@ publishMods {
     modLoaders.add("quilt")
 
 
-    // curseforge {
-    //     accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    //     projectId = ""
-    //     minecraftVersions.addAll(findProperty("curseforge_minecraft_versions")!!.toString().split(", "))
-    // }
+    curseforge {
+        projectId = findProperty("curseforge_project_id")!!.toString()
+        minecraftVersions.add(findProperty("minecraft_version")!!.toString())
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+    }
     modrinth {
         projectId = findProperty("modrinth_project_id")!!.toString()
-        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         minecraftVersions.add(findProperty("minecraft_version")!!.toString())
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
     }
     github {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
