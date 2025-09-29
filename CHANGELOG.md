@@ -4,8 +4,6 @@
 
 ### Added
 
-- Non-blocking spawn location detection for overworld-like worlds to prevent server thread blocking
-
 ### Changed
 
 ### Deprecated
@@ -15,6 +13,12 @@
 ### Fixed
 
 ### Security
+
+## 1.6.0 - 2025-09-30
+
+### Added
+
+- Non-blocking spawn location detection for overworld-like worlds to prevent server thread blocking
 
 ## 1.5.0 - 2025-09-29
 
