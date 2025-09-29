@@ -51,7 +51,7 @@ public class McWorldMod implements ModInitializer {
 
             for (var entry : ((MinecraftServerAccessor) server).getLevels().entrySet()) {
                 var level = entry.getValue();
-                if (level instanceof CustomServerLevel customLevel && customLevel.isMarkedForClose()) {
+                if (level instanceof CustomServerLevel customLevel && customLevel.isStopped()) {
                     toRemove.add(entry.getKey());
                 }
             }

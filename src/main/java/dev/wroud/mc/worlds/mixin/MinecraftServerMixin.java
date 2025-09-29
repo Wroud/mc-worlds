@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.util.LevelActivationUtil;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -25,6 +26,7 @@ public class MinecraftServerMixin {
 
       if (worldData != null) {
         var handle = worlds.loadOrCreate(resourceKey.location(), worldData);
+        LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
         cir.setReturnValue(handle.getServerLevel());
       }
     }

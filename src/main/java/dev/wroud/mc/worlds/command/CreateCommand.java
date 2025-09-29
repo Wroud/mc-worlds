@@ -8,8 +8,7 @@ import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
-import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
-import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.util.LevelActivationUtil;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
@@ -17,10 +16,6 @@ import net.minecraft.commands.arguments.ResourceLocationArgument;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
@@ -110,7 +105,19 @@ public class CreateCommand {
 
       var worldHandle = McWorldMod.getMcWorld(server).loadOrCreate(id, levelData);
 
-      scheduleWorldActivationCheck(source, id, worldHandle.getServerLevel());
+      LevelActivationUtil.executeWhenLevelReady(worldHandle.getServerLevel(), () -> {
+        Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
+            .append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
+            .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.created"))
+            .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
+                .withStyle(style -> style
+                    .withColor(ChatFormatting.AQUA)
+                    .withUnderlined(true)
+                    .withClickEvent(new ClickEvent.RunCommand(
+                        "/worlds tp " + id.toString()))));
+
+        source.sendSystemMessage(successMessage);
+      });
 
       return Command.SINGLE_SUCCESS;
     } catch (Exception e) {
@@ -131,34 +138,4 @@ public class CreateCommand {
     }
   }
 
-  private static void scheduleWorldActivationCheck(CommandSourceStack source, ResourceLocation id,
-      CustomServerLevel level) {
-    MinecraftServer server = source.getServer();
-    Executor executor = ((MinecraftServerAccessor) server).getExecutor();
-
-    Runnable checkTask = new Runnable() {
-      @Override
-      public void run() {
-        if (level.isActive()) {
-          Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
-              .append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
-              .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.created"))
-              .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
-                  .withStyle(style -> style
-                      .withColor(ChatFormatting.AQUA)
-                      .withUnderlined(true)
-                      .withClickEvent(new ClickEvent.RunCommand(
-                          "/worlds tp " + id.toString()))));
-
-          source.sendSystemMessage(successMessage);
-        } else {
-          CompletableFuture
-              .delayedExecutor(100, TimeUnit.MILLISECONDS)
-              .execute(() -> server.execute(this));
-        }
-      }
-    };
-
-    executor.execute(checkTask);
-  }
 }

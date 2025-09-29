@@ -1,42 +1,37 @@
 package dev.wroud.mc.worlds.server.level;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
 import org.jetbrains.annotations.Nullable;
 
-import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
-import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
-import dev.wroud.mc.worlds.mixin.ServerLevelAccessor;
+import dev.wroud.mc.worlds.server.level.state.ActivationLevelState;
+import dev.wroud.mc.worlds.server.level.state.ActiveLevelState;
+import dev.wroud.mc.worlds.server.level.state.InitializationLevelState;
+import dev.wroud.mc.worlds.server.level.state.LevelState;
+import dev.wroud.mc.worlds.server.level.state.StoppedLevelState;
+import dev.wroud.mc.worlds.server.level.state.StoppingLevelState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.RandomSequences;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource;
 
 public class CustomServerLevel extends ServerLevel {
   public static final int STOP_AFTER = 1200; // 60 seconds * 20 ticks
-  private boolean isStopped;
   private boolean isClosed;
-  private boolean markedForClose;
-  private boolean ticketsActivated;
-  private boolean spawnSettingsSet;
   private boolean deleteOnClose;
-  private SpawnPreparationHelper spawnPreparationHelper;
+  private LevelState currentState;
 
   public CustomServerLevel(
       MinecraftServer minecraftServer,
@@ -51,13 +46,10 @@ public class CustomServerLevel extends ServerLevel {
         serverLevelData.getWorldData().isDebugWorld(), BiomeManager.obfuscateSeed(serverLevelData.getSeed()),
         customSpawners, true, randomSequences);
 
-    this.isStopped = false;
     this.isClosed = false;
-    this.markedForClose = false;
-    this.ticketsActivated = false;
-    this.spawnSettingsSet = false;
     this.deleteOnClose = false;
-    this.spawnPreparationHelper = !serverLevelData.isInitialized() ? new SpawnPreparationHelper(this) : null;
+    this.currentState = serverLevelData.isInitialized() ? new ActivationLevelState(this)
+        : new InitializationLevelState(this);
 
     this.getServer().execute(() -> {
       ((MinecraftServerAccessor) this.getServer()).getLevels().put(resourceKey, this);
@@ -70,66 +62,31 @@ public class CustomServerLevel extends ServerLevel {
 
   @Override
   public void tick(BooleanSupplier booleanSupplier) {
-    if (this.isStopped) {
-      this.kickPlayers(null);
+    this.currentState.tick(booleanSupplier);
+  }
 
-      if (this.markedForClose) {
-        return;
-      }
-
-      if (this.getChunkSource().chunkMap.hasWork()) {
-        this.noSave = false;
-        this.getChunkSource().deactivateTicketsOnClosing();
-        this.getChunkSource().tick(() -> true, false);
-      } else {
-        this.markedForClose = true;
-      }
-      return;
-    }
-    if (this.spawnPreparationHelper != null) {
-      this.spawnPreparationHelper.tick();
-      if (this.spawnPreparationHelper.isFinished()) {
-        this.spawnPreparationHelper = null;
-      }
-      return;
-    }
-    if (!this.ticketsActivated) {
-      TicketStorage ticketStorage = this.getDataStorage().get(TicketStorage.TYPE);
-      if (ticketStorage != null) {
-        ticketStorage.activateAllDeactivatedTickets();
-      }
-      this.ticketsActivated = true;
-    } else if (!this.spawnSettingsSet) {
-      this.setSpawnSettings(((MinecraftServerAccessor) this.getServer()).invokeSpawningMonsters());
-      this.spawnSettingsSet = true;
-      WorldsManager.LOGGER.info("World prepared: {}", this.dimension().location());
-    }
-    if (((ServerLevelAccessor) this).getEmptyTime() > STOP_AFTER) {
-      this.stop(false);
-      return;
-    }
+  public void superTick(BooleanSupplier booleanSupplier) {
     super.tick(booleanSupplier);
   }
 
   public boolean isActive() {
-    return ((WorldsLevelData) this.levelData).isInitialized() && !this.isStopped && this.ticketsActivated
-        && this.spawnSettingsSet;
+    return this.currentState instanceof ActiveLevelState;
   }
 
   public boolean isDeleteOnClose() {
     return deleteOnClose;
   }
 
-  public boolean isStopped() {
-    return isStopped;
+  public boolean isStopping() {
+    return this.currentState instanceof StoppingLevelState;
   }
 
   public boolean isClosed() {
     return this.isClosed;
   }
 
-  public boolean isMarkedForClose() {
-    return this.markedForClose;
+  public boolean isStopped() {
+    return this.currentState instanceof StoppedLevelState;
   }
 
   @Override
@@ -144,31 +101,23 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   public void stop(boolean deleteOnClose) {
-    if (this.isStopped) {
+    if (this.isStopped() || this.isStopping()) {
       return;
     }
     this.deleteOnClose = deleteOnClose;
-    this.isStopped = true;
+    this.setState(StoppingLevelState::new);
   }
 
-  protected void kickPlayers(@Nullable ServerLevel destination) {
-    if (this.players().isEmpty())
-      return;
-
-    if (destination == null) {
-      destination = this.getServer().overworld();
-    }
-
-    var players = new ArrayList<>(this.players());
-
-    for (ServerPlayer player : players) {
-      player
-          .teleport(TeleportTransitionAbstraction.spawnAt(player, destination, TeleportTransition.PLACE_PORTAL_TICKET));
-    }
+  public void setState(LevelStateFactory<? extends LevelState> factory) {
+    this.currentState = factory.create(this);
   }
 
   @Override
   public RespawnData getRespawnData() {
     return this.getLevelData().getRespawnData();
+  }
+
+  public interface LevelStateFactory<T extends LevelState> {
+    T create(CustomServerLevel level);
   }
 }
