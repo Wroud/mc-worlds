@@ -76,7 +76,7 @@ publishMods {
 
     curseforge {
         projectId = findProperty("curseforge_project_id")!!.toString()
-        minecraftVersions.add(findProperty("minecraft_version")!!.toString())
+        minecraftVersions.add(findProperty("curseforge_minecraft_version")!!.toString())
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
     }
     modrinth {
