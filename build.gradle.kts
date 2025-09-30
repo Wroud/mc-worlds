@@ -69,7 +69,7 @@ publishMods {
     file = tasks.remapJar.get().archiveFile
     changelog = fetchChangelog()
 
-    // type = BETA
+    type = STABLE
     modLoaders.add("fabric")
     modLoaders.add("quilt")
 
