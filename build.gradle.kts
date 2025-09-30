@@ -75,6 +75,9 @@ publishMods {
 
 
     curseforge {
+        javaVersions.add(JavaVersion.VERSION_21)
+        projectSlug = "worlds"
+
         projectId = findProperty("curseforge_project_id")!!.toString()
         minecraftVersions.add(findProperty("curseforge_minecraft_version")!!.toString())
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
