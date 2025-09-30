@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- Level migration from 1.21.8
+
 ### Security
 
 ## 1.6.1 - 2025-09-30

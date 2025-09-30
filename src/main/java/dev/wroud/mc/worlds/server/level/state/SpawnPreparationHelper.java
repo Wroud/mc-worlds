@@ -27,7 +27,7 @@ import net.minecraft.world.level.storage.ServerLevelData;
 
 public class SpawnPreparationHelper {
   private static final Logger LOGGER = LogUtils.getLogger();
-  
+
   private final ServerLevel serverLevel;
   private ArrayList<ChunkPos> spawnChunksToCheck;
   private CompletableFuture<?> processingChunk;
@@ -117,6 +117,15 @@ public class SpawnPreparationHelper {
     var serverLevelData = (ServerLevelData) serverLevel.getLevelData();
     var chunkPos = spawnChunksToCheck.remove(0);
     var chunkSource = serverLevel.getChunkSource();
+
+    if (!serverLevel.getServer().isReady()) {
+      BlockPos blockPos2 = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
+      if (blockPos2 != null) {
+        serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), blockPos2, 0.0F, 0.0F));
+        spawnChunksToCheck.clear();
+      }
+      return;
+    }
 
     processingChunk = chunkSource.addTicketAndLoadWithRadius(
         TicketType.PLAYER_SPAWN, chunkPos, 0)

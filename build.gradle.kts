@@ -76,6 +76,8 @@ publishMods {
 
     curseforge {
         javaVersions.add(JavaVersion.VERSION_21)
+        clientRequired = true
+        serverRequired = true
         projectSlug = "worlds"
         requires("fabric-api")
 
