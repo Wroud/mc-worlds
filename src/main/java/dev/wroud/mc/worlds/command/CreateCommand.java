@@ -94,7 +94,6 @@ public class CreateCommand {
       var levelStemRegistry = registry.lookupOrThrow(Registries.LEVEL_STEM);
 
       var levelStem = levelStemRegistry.getValue(type);
-      LOGGER.info("Using dimension type: {}", type.location());
       var levelData = WorldsLevelData.getDefault(id, levelStem, seed, true);
 
       Component creatingMessage = Component.translatable("dev.wroud.mc.worlds.command.create.creating")

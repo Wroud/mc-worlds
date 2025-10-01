@@ -9,10 +9,13 @@
   ],
   "mixins": [
     "fixes.BaseFireBlockMixin",
+    "fixes.BeeMixin",
     "fixes.ChangeDimensionTriggerMixin",
     "fixes.MinecraftServerMixin",
     "fixes.EndPortalBlockMixin",
     "fixes.EntityMixin",
+    "fixes.FallingBlockEntityMixin",
+    "fixes.FrostedIceBlockMixin",
     "fixes.LegacyStructureDataHandlerMixin",
     "fixes.LocationPredicateMixin",
     "fixes.MapItemSavedDataMixin",

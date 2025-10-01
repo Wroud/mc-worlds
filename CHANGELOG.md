@@ -12,9 +12,19 @@
 
 ### Fixed
 
-- Level migration from 1.21.8
-
 ### Security
+
+## 1.6.3 - 2025-10-02
+
+### Fixed
+
+- Bee, End Portal, Falling block, Frosted Ice block fixes
+
+## 1.6.2 - 2025-10-02
+
+### Fixed
+
+- Level migration from 1.21.8
 
 ## 1.6.1 - 2025-09-30
 
