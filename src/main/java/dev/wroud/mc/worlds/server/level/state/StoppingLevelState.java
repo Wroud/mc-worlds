@@ -29,7 +29,7 @@ public class StoppingLevelState extends LevelState {
     if (this.level.getChunkSource().chunkMap.hasWork()) {
       this.level.noSave = false;
       this.level.getChunkSource().deactivateTicketsOnClosing();
-      this.level.getChunkSource().tick(booleanSupplier, false);
+      this.level.getChunkSource().tick(() -> true, false);
     } else {
       this.level.setState(StoppedLevelState::new);
     }

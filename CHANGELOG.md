@@ -14,6 +14,13 @@
 
 ### Security
 
+## 1.6.4 - 2025-10-03
+
+### Fixed
+
+- Worlds unloading in sprinting mode
+- Concurrency exception
+
 ## 1.6.3 - 2025-10-02
 
 ### Fixed

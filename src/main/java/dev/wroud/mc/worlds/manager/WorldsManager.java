@@ -38,11 +38,11 @@ public class WorldsManager {
     this.worldsData = server.overworld().getDataStorage().computeIfAbsent(WorldsData.TYPE);
   }
 
-  public Collection<ResourceLocation> getWorldIds() {
+  public synchronized Collection<ResourceLocation> getWorldIds() {
     return this.worlds.keySet();
   }
 
-  public WorldHandle getWorld(ResourceLocation location) {
+  public synchronized WorldHandle getWorld(ResourceLocation location) {
     return worlds.get(location);
   }
 
@@ -59,7 +59,7 @@ public class WorldsManager {
     });
   }
 
-  public WorldHandle loadOrCreateWorld(ResourceLocation id, WorldsLevelData levelData) {
+  public synchronized WorldHandle loadOrCreateWorld(ResourceLocation id, WorldsLevelData levelData) {
     if (worlds.containsKey(id)) {
       return worlds.get(id);
     }
@@ -103,7 +103,7 @@ public class WorldsManager {
     return worldHandle;
   }
 
-  public void unloadWorld(ResourceLocation location) {
+  public synchronized void unloadWorld(ResourceLocation location) {
     var handle = worlds.remove(location);
     if (handle != null) {
       var world = handle.getServerLevel();
