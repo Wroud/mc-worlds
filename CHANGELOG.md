@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.7 - 2025-10-08
+
+### Fixed
+
+- Prevent world unloading during save
+
 ## 1.6.6 - 2025-10-07
 
 ### Added
