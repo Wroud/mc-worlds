@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.8 - 2025-10-09
+
+### Changed
+
+- Update fabric version
+
 ## 1.6.7 - 2025-10-08
 
 ### Fixed

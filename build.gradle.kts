@@ -15,10 +15,6 @@ base {
     archivesName = findProperty("maven_artifact_id") as String
 }
 
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(findProperty("java_version") as String)
-}
-
 repositories {
     mavenCentral()
 }
@@ -29,15 +25,22 @@ loom {
     runConfigs.all {
         ideConfigGenerated(true)
     }
-}
 
-sourceSets {
-    main {
-        java {
-            srcDir("versions/${stonecutter.current.version}/src/main/java")
+    mods {
+        create("mc-worlds") {
+            sourceSet(sourceSets["main"])
+            sourceSet(sourceSets["client"])
         }
     }
 }
+
+// sourceSets {
+//     main {
+//         java {
+//             srcDir("versions/${stonecutter.current.version}/src/main/java")
+//         }
+//     }
+// }
 
 fabricApi {
     configureDataGeneration() {
@@ -62,6 +65,26 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
 
     includeMod("me.lucko:fabric-permissions-api:${findProperty("permission_api_version")}")
+}
+
+tasks {
+    processResources {
+        val props = mapOf(
+            "version" to project.version,
+            "javaVersion" to findProperty("java_version")
+        )
+
+        inputs.properties(props)
+
+        filesMatching("fabric.mod.json") {
+            expand(props)
+        }
+    }
+}
+
+java {
+	  withSourcesJar()
+    toolchain.languageVersion = JavaLanguageVersion.of(findProperty("java_version") as String)
 }
 
 publishMods {
@@ -147,27 +170,6 @@ publishing {
             }
         }
     }
-}
-
-tasks {
-    processResources {
-        val props = mapOf(
-            "version" to project.version,
-            "javaVersion" to findProperty("java_version")
-        )
-
-        inputs.properties(props)
-
-        filesMatching(listOf("fabric.mod.json", "*.mixins.json")) {
-            expand(props)
-        }
-    }
-}
-
-afterEvaluate {
-    tasks.findByName("runClient")?.dependsOn("runDatagen")
-    tasks.findByName("runServer")?.dependsOn("runDatagen")
-    tasks.findByName("build")?.dependsOn("runDatagen")
 }
 
 fun fetchChangelog(): String {

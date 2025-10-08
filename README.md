@@ -7,6 +7,8 @@ A Minecraft mod that allows you to create and manage worlds in-game using simple
 - Create new worlds with custom IDs and optional seeds
 - Delete worlds safely (removes all players first)
 - Teleport between worlds easily
+- Lazy worlds loading (support for infinite worlds)
+- Create fully functional Overworld, End and Nether worlds (mod includes fixes to enable End Dragon and other vanilla mechanics in the custom worlds)
 - **API for other mods to register custom level providers**
 
 ## Commands
@@ -16,6 +18,12 @@ All commands use the base `/worlds` command:
 - `/worlds create <id> [seed]` - Creates a new overworld with the specified ID and optional seed
 - `/worlds delete <id>` - Deletes the specified world and kicks all players currently in it
 - `/worlds tp <id> [targets]` - Teleports you (or specified players) to the world
+
+## Importing worlds from World Manager
+
+1. Replace World Manager mod with Worlds
+2. use `/worlds create {world_id_to_import} {world_type} {world_seed}`
+   You need to specify same world id, type and seed that world had when was created with "World Manager", only classic Overworld, End and Nether worlds supported
 
 ## For Mod Developers
 

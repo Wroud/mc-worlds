@@ -5,6 +5,9 @@
   "name": "Worlds",
   "description": "Create and manage worlds in-game, through commands.",
   "authors": ["Wroud"],
+	"contact": {
+		"sources": "https://github.com/Wroud/mc-worlds"
+	},
   "license": "MIT",
   "icon": "assets/mc-worlds/icon.png",
   "environment": "*",
@@ -12,14 +15,14 @@
     "main": ["dev.wroud.mc.worlds.McWorldMod"]
   },
   "mixins": [
-    "server.mixins.json",
+    "worlds.mixins.json",
     {
-      "config": "client.mixins.json",
+      "config": "worlds.client.mixins.json",
       "environment": "client"
     }
   ],
   "depends": {
-    "fabricloader": ">=0.16.10",
+		"fabricloader": ">=0.17.2",
     "java": ">=21",
     "fabric-api": "*"
   }
