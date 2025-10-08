@@ -87,6 +87,10 @@ java {
     toolchain.languageVersion = JavaLanguageVersion.of(findProperty("java_version") as String)
 }
 
+tasks.named("sourcesJar") {
+    dependsOn(tasks.named("runDatagen"))
+}
+
 publishMods {
     displayName = "${findProperty("mod_name")} ${version.get()}"
     file = tasks.remapJar.get().archiveFile
