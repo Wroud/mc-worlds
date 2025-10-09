@@ -46,7 +46,7 @@ public class MinecraftServerMixin {
 
       if (worldData != null) {
         var handle = worlds.loadOrCreate(resourceKey.location(), worldData);
-        LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
+        // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
         cir.setReturnValue(handle.getServerLevel());
       }
     }
@@ -55,7 +55,7 @@ public class MinecraftServerMixin {
   @Inject(method = "isAllowedToEnterPortal", at = @At("RETURN"), cancellable = true)
   private void onIsAllowedToEnterPortal(Level level, CallbackInfoReturnable<Boolean> cir) {
     if (level instanceof CustomServerLevel customServerLevel) {
-      if (!customServerLevel.isActive()) {
+      if (!customServerLevel.canTeleport()) {
         cir.setReturnValue(false);
       }
     }

@@ -69,6 +69,10 @@ public class CustomServerLevel extends ServerLevel {
     super.tick(booleanSupplier);
   }
 
+  public boolean canTeleport() {
+    return !this.isStopping() && !this.isStopped();
+  }
+
   public boolean isActive() {
     return this.currentState instanceof ActiveLevelState;
   }

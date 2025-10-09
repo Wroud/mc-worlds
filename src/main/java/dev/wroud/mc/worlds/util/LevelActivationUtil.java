@@ -14,11 +14,23 @@ import java.util.concurrent.TimeUnit;
  * For regular ServerLevel instances, executes the action immediately.
  */
 public class LevelActivationUtil {
+  private static final long TICK_TIME_NANOS = 50_000_000L; // 50ms per tick (20 TPS)
 
   public static void forceLoadLevel(ServerLevel level) {
     if (level instanceof CustomServerLevel customLevel) {
       while (!customLevel.isActive() && !customLevel.isStopped()) {
+        long nextTickTime = System.nanoTime() + TICK_TIME_NANOS;
         customLevel.tick(() -> false);
+        
+        long waitTime = nextTickTime - System.nanoTime();
+        if (waitTime > 0) {
+          try {
+            Thread.sleep(waitTime / 1_000_000L, (int)(waitTime % 1_000_000L));
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            break;
+          }
+        }
       }
     }
   }

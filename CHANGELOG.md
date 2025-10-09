@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.9 - 2025-10-10
+
+### Fixed
+
+- Watchdog killing server if level initialization is too long
+
 ## 1.6.8 - 2025-10-09
 
 ### Changed
