@@ -4,7 +4,6 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import com.mojang.logging.LogUtils;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
@@ -33,10 +32,8 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 public class CreateCommand {
-  private static final Logger LOGGER = LogUtils.getLogger();
   private static final DynamicCommandExceptionType ERROR_INVALID_LEVEL_STEM = new DynamicCommandExceptionType(
       object -> Component.translatableEscape("advancement.advancementNotFound", object));
 
@@ -85,7 +82,7 @@ public class CreateCommand {
       seed = WorldOptions.randomSeed();
     }
 
-    LOGGER.info("Creating new world with id: {}, seed: {}, type: {}", id, seed, type.location());
+    McWorldMod.LOGGER.info("Creating new world with id: {}, seed: {}, type: {}", id, seed, type.location());
     var server = source.getServer();
     validLevelId(id, server);
 
@@ -120,7 +117,7 @@ public class CreateCommand {
 
       return Command.SINGLE_SUCCESS;
     } catch (Exception e) {
-      LOGGER.error("Error creating world", e);
+      McWorldMod.LOGGER.error("Error creating world", e);
       throw new SimpleCommandExceptionType(
           Component.translatable("dev.wroud.mc.worlds.command.create.exception.generic", e.getMessage()))
           .create();

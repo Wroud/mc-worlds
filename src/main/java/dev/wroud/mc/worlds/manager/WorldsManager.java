@@ -7,11 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.logging.LogUtils;
 
+import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
@@ -28,7 +27,6 @@ import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
 
 public class WorldsManager {
-  public static final Logger LOGGER = LogUtils.getLogger();
   private Map<ResourceLocation, WorldHandle> worlds = new HashMap<>();
   private MinecraftServer server;
   private WorldsData worldsData;
@@ -68,9 +66,9 @@ public class WorldsManager {
     var session = ((MinecraftServerAccessor) this.server).getStorageSource();
     File worldDirectory = session.getDimensionPath(resourceKey).toFile();
     if (worldDirectory.exists()) {
-      LOGGER.info("Loading world: {}", id);
+      McWorldMod.LOGGER.info("Loading world: {}", id);
     } else {
-      LOGGER.info("Creating new world: {}", id);
+      McWorldMod.LOGGER.info("Creating new world: {}", id);
     }
 
     levelData.setWorldData(server.getWorldData());
@@ -116,7 +114,7 @@ public class WorldsManager {
             try {
               FileUtils.deleteDirectory(worldDirectory);
             } catch (IOException e) {
-              LOGGER.warn("Failed to delete world directory for dimension {}", world.dimension(), e);
+              McWorldMod.LOGGER.warn("Failed to delete world directory for dimension {}", world.dimension(), e);
               try {
                 FileUtils.forceDeleteOnExit(worldDirectory);
               } catch (IOException ignored) {

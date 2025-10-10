@@ -3,10 +3,7 @@ package dev.wroud.mc.worlds.server.level.state;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
+import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.SharedConstants;
@@ -26,8 +23,6 @@ import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.ServerLevelData;
 
 public class SpawnPreparationHelper {
-  private static final Logger LOGGER = LogUtils.getLogger();
-
   private final ServerLevel serverLevel;
   private ArrayList<ChunkPos> spawnChunksToCheck;
   private CompletableFuture<?> processingChunk;
@@ -79,7 +74,7 @@ public class SpawnPreparationHelper {
     } else {
       ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
       ChunkPos chunkPos = new ChunkPos(serverChunkCache.randomState().sampler().findSpawnPosition());
-      LOGGER.info("Preparing spawn: {}", serverLevel.dimension().location());
+      McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().location());
       int i = serverChunkCache.getGenerator().getSpawnHeight(serverLevel);
       if (i < serverLevel.getMinY()) {
         BlockPos blockPos = chunkPos.getWorldPosition();
@@ -137,7 +132,7 @@ public class SpawnPreparationHelper {
               spawnChunksToCheck.clear();
             }
           } else {
-            LOGGER.error("Failed to load spawn chunk at {}: {}", chunkPos, throwable.getMessage());
+            McWorldMod.LOGGER.error("Failed to load spawn chunk at {}: {}", chunkPos, throwable.getMessage());
           }
           processingChunk = null;
         }, serverLevel.getServer());
@@ -175,6 +170,6 @@ public class SpawnPreparationHelper {
       serverLevelData.setGameType(GameType.SPECTATOR);
     }
     spawnChunksToCheck = null;
-    LOGGER.info("Spawn prepared: {}", serverLevel.dimension().location());
+    McWorldMod.LOGGER.info("Spawn prepared: {}", serverLevel.dimension().location());
   }
 }

@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.10 - 2025-10-11
+
+### Changed
+
+- Consistent logging
+
 ## 1.6.9 - 2025-10-10
 
 ### Fixed

@@ -25,17 +25,13 @@ import net.minecraft.world.level.portal.TeleportTransition;
 
 import org.jetbrains.annotations.Nullable;
 
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
+import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import dev.wroud.mc.worlds.util.EndGatewayUtil;
 import dev.wroud.mc.worlds.util.NetherPortalUtil;
 
 public record WorldLocation(ServerLevel level, TeleportTransition transition) {
-    private static final Logger LOGGER = LogUtils.getLogger();
 
     public static WorldLocation findSpawn(ServerLevel level, Entity entity) {
         if (DimensionDetectionUtil.isEndLikeDimension(level)) {
@@ -66,7 +62,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
         BlockPos blockPos = entity.blockPosition();
         BlockPos blockPos2 = EndGatewayUtil.findOrCreateValidTeleportPos(level, blockPos);
         blockPos2 = blockPos2.above(10);
-        LOGGER.debug("Creating portal at {}", blockPos2);
+        McWorldMod.LOGGER.debug("Creating portal at {}", blockPos2);
         EndGatewayUtil.spawnGatewayPortal(level, blockPos2, EndGatewayConfiguration.knownExit(blockPos, false));
 
         blockPos2 = EndGatewayUtil.findExitPosition(level, blockPos2);
@@ -104,7 +100,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
                     .orElse(Axis.X);
             Optional<FoundRectangle> optional2 = serverLevel.getPortalForcer().createPortal(blockPos2, axis);
             if (optional2.isEmpty()) {
-                LOGGER.error("Unable to create a portal, likely target out of worldborder");
+                McWorldMod.LOGGER.error("Unable to create a portal, likely target out of worldborder");
                 return null;
             }
 
