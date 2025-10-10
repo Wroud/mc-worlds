@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.11 - 2025-10-11
+
+### Fixed
+
+- Include datagen in jar
+
 ## 1.6.10 - 2025-10-11
 
 ### Changed

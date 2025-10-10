@@ -80,21 +80,11 @@ tasks {
             expand(props)
         }
     }
-    
-    // Ensure datagen runs before creating JARs (for distribution builds)
-    // For development, run datagen manually when you change data generators
-    named("jar") {
-        dependsOn("runDatagen")
-    }
 }
 
 java {
 	  withSourcesJar()
     toolchain.languageVersion = JavaLanguageVersion.of(findProperty("java_version") as String)
-}
-
-tasks.named("sourcesJar") {
-    dependsOn(tasks.named("runDatagen"))
 }
 
 publishMods {
