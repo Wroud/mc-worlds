@@ -29,7 +29,8 @@ public class MinecraftServerMixin {
 
   /**
    * @author Wroud
-   * @reason Prevent ConcurrentModificationException by returning a copy of the levels collection
+   * @reason Prevent ConcurrentModificationException by returning a copy of the
+   *         levels collection
    */
   @Overwrite
   public Iterable<ServerLevel> getAllLevels() {
@@ -42,12 +43,15 @@ public class MinecraftServerMixin {
 
     if (level == null) {
       var worlds = McWorldMod.getMcWorld(((MinecraftServer) (Object) this));
-      var worldData = worlds.getManadger().getWorldsData().getLevelData(resourceKey.location());
 
-      if (worldData != null) {
-        var handle = worlds.loadOrCreate(resourceKey.location(), worldData);
-        // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
-        cir.setReturnValue(handle.getServerLevel());
+      if (worlds != null) {
+        var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.location());
+
+        if (worldData != null) {
+          var handle = worlds.loadOrCreate(resourceKey.location(), worldData);
+          // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
+          cir.setReturnValue(handle.getServerLevel());
+        }
       }
     }
   }

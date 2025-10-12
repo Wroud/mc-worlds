@@ -13,7 +13,7 @@ public class McWorld {
     this.worldsManager = new WorldsManager(server);
   }
 
-  public WorldsManager getManadger() {
+  public WorldsManager getManager() {
     return worldsManager;
   }
 

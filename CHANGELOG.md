@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.12 - 2025-10-13
+
+### Fixed
+
+- Null pointer exception when accessing server levels before overworld initialization [#3](https://github.com/Wroud/mc-worlds/issues/3)
+
 ## 1.6.11 - 2025-10-11
 
 ### Fixed
