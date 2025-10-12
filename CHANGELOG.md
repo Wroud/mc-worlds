@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.6.13 - 2025-10-13
+
+### Changed
+
+- Better stability in unexpected cases
+
 ## 1.6.12 - 2025-10-13
 
 ### Fixed

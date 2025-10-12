@@ -42,9 +42,7 @@ public class MinecraftServerMixin {
     ServerLevel level = cir.getReturnValue();
 
     if (level == null) {
-      var worlds = McWorldMod.getMcWorld(((MinecraftServer) (Object) this));
-
-      if (worlds != null) {
+      McWorldMod.getMcWorld(((MinecraftServer) (Object) this)).ifPresent(worlds -> {
         var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.location());
 
         if (worldData != null) {
@@ -52,7 +50,7 @@ public class MinecraftServerMixin {
           // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
           cir.setReturnValue(handle.getServerLevel());
         }
-      }
+      });
     }
   }
 

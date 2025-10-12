@@ -18,38 +18,39 @@ import static net.minecraft.commands.Commands.literal;
 
 public class WorldsCommands {
 
-	public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = (context,
-			builder) -> {
-		var server = context.getSource().getServer();
-		var serverLevels = server.levelKeys().stream().map(ResourceKey::location);
-		var customWorlds = McWorldMod.getMcWorld(server).getManager().getWorldsData().getLevelsData().keySet().stream();
+  public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = (context,
+      builder) -> {
+    var server = context.getSource().getServer();
+    var serverLevels = server.levelKeys().stream().map(ResourceKey::location);
+    var customWorlds = McWorldMod.getMcWorld(server).orElseThrow().getManager().getWorldsData().getLevelsData().keySet()
+        .stream();
 
-		var allWorlds = Stream.concat(serverLevels, customWorlds)
-				.collect(java.util.stream.Collectors.toSet())
-				.stream();
+    var allWorlds = Stream.concat(serverLevels, customWorlds)
+        .collect(java.util.stream.Collectors.toSet())
+        .stream();
 
-		return SharedSuggestionProvider.suggestResource(allWorlds, builder);
-	};
+    return SharedSuggestionProvider.suggestResource(allWorlds, builder);
+  };
 
-	public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = (context,
-			builder) -> SharedSuggestionProvider.suggestResource(
-					McWorldMod.getMcWorld(context.getSource().getServer()).getManager().getWorldIds(), builder);
+  public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = (context,
+      builder) -> SharedSuggestionProvider.suggestResource(
+          McWorldMod.getMcWorld(context.getSource().getServer()).orElseThrow().getManager().getWorldIds(), builder);
 
-	public static final SimpleCommandExceptionType UNKNOWN_WORLD_EXCEPTION = new SimpleCommandExceptionType(
-			Component.translatable("dev.wroud.mc.worlds.command.exception.unknown_world"));
+  public static final SimpleCommandExceptionType UNKNOWN_WORLD_EXCEPTION = new SimpleCommandExceptionType(
+      Component.translatable("dev.wroud.mc.worlds.command.exception.unknown_world"));
 
-	public static void register(CommandDispatcher<CommandSourceStack> dispatcher,
-			CommandBuildContext commandBuildContext) {
-		var root = dispatcher.register(
-				literal("worlds")
-						.requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
-						.then(DeleteCommand.build())
-						.then(TeleportCommand.build())
-						.then(CreateCommand.build()));
+  public static void register(CommandDispatcher<CommandSourceStack> dispatcher,
+      CommandBuildContext commandBuildContext) {
+    var root = dispatcher.register(
+        literal("worlds")
+            .requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
+            .then(DeleteCommand.build())
+            .then(TeleportCommand.build())
+            .then(CreateCommand.build()));
 
-		dispatcher.register(
-				literal("worlds")
-						.requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
-						.redirect(root));
-	}
+    dispatcher.register(
+        literal("worlds")
+            .requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
+            .redirect(root));
+  }
 }

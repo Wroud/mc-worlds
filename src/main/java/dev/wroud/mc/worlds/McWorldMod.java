@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,8 +88,8 @@ public class McWorldMod implements ModInitializer {
         return worlds.keySet().stream().findFirst().orElse(null);
     }
 
-    public static McWorld getMcWorld(MinecraftServer server) {
-        return worlds.get(server);
+    public static Optional<McWorld> getMcWorld(MinecraftServer server) {
+        return Optional.ofNullable(worlds.get(server));
     }
 
     public static ResourceLocation id(String path) {

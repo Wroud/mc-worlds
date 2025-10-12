@@ -17,6 +17,9 @@ base {
 
 repositories {
     mavenCentral()
+    maven("https://api.modrinth.com/maven") {
+        content { includeGroup("maven.modrinth") }
+    }
 }
 
 loom {
@@ -30,6 +33,12 @@ loom {
         create("mc-worlds") {
             sourceSet(sourceSets["main"])
             sourceSet(sourceSets["client"])
+        }
+    }
+
+    runs {
+        named("client") {
+            programArgs("--username", "Wroud")
         }
     }
 }
@@ -65,6 +74,8 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
 
     includeMod("me.lucko:fabric-permissions-api:${findProperty("permission_api_version")}")
+    
+    // modRuntimeOnly("maven.modrinth:<slug>:<version>") // Example mod from Modrinth
 }
 
 tasks {

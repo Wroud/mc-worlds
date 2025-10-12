@@ -99,7 +99,7 @@ public class CreateCommand {
               .withStyle(ChatFormatting.YELLOW));
       source.sendSuccess(() -> creatingMessage, false);
 
-      var worldHandle = McWorldMod.getMcWorld(server).loadOrCreate(id, levelData);
+      var worldHandle = McWorldMod.getMcWorld(server).orElseThrow().loadOrCreate(id, levelData);
 
       LevelActivationUtil.executeWhenLevelReady(worldHandle.getServerLevel(), () -> {
         Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
@@ -111,7 +111,6 @@ public class CreateCommand {
                     .withUnderlined(true)
                     .withClickEvent(new ClickEvent.RunCommand(
                         "/worlds tp " + id.toString()))));
-
         source.sendSystemMessage(successMessage);
       });
 
