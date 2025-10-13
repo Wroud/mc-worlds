@@ -14,6 +14,13 @@
 
 ### Security
 
+## 1.7.0 - 2025-10-14
+
+### Added
+
+- Creating worlds from presets (you can create a flat world from a normal world and vice versa now)
+- By default `/worlds create name` will create a normal overworld
+
 ## 1.6.13 - 2025-10-13
 
 ### Changed

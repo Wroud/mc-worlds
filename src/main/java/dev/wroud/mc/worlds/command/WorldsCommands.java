@@ -3,20 +3,37 @@ package dev.wroud.mc.worlds.command;
 import java.util.stream.Stream;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.mixin.WorldPresetAccessor;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.ResourceKeyArgument;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 
 import static net.minecraft.commands.Commands.literal;
 
 public class WorldsCommands {
+  private static final DynamicCommandExceptionType ERROR_INVALID_PRESET = new DynamicCommandExceptionType(
+      object -> Component.translatableEscape("advancement.advancementNotFound", object));
+
+  public static final SuggestionProvider<CommandSourceStack> PRESET_DIMENSION_SUGGESTIONS = (context,
+      builder) -> {
+    var preset = ResourceKeyArgument.getRegistryKey(context, "preset", Registries.WORLD_PRESET,
+        ERROR_INVALID_PRESET);
+    var worldPreset = context.getSource().registryAccess().lookupOrThrow(Registries.WORLD_PRESET).getOrThrow(preset)
+        .value();
+    var dimensions = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream().map(ResourceKey::location);
+
+    return SharedSuggestionProvider.suggestResource(dimensions, builder);
+  };
 
   public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = (context,
       builder) -> {

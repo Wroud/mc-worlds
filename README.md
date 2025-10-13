@@ -5,6 +5,8 @@ A Minecraft mod that allows you to create and manage worlds in-game using simple
 ## Features
 
 - Create new worlds with custom IDs and optional seeds
+- Create worlds from presets (flat world, amplified, large biomes, etc.)
+- Default world creation uses normal overworld dimensions
 - Delete worlds safely (removes all players first)
 - Teleport between worlds easily
 - Lazy worlds loading (support for infinite worlds)
@@ -15,7 +17,36 @@ A Minecraft mod that allows you to create and manage worlds in-game using simple
 
 All commands use the base `/worlds` command:
 
-- `/worlds create <id> [seed]` - Creates a new overworld with the specified ID and optional seed
+### Create Command
+
+The `/worlds create` command allows you to create new worlds with various options:
+
+**Basic usage:**
+- `/worlds create <id>` - Creates a new normal overworld with the specified ID and a random seed
+- `/worlds create <id> <seed>` - Creates a new normal overworld with the specified ID and seed
+
+**Create from preset:**
+- `/worlds create <id> from-preset <preset>` - Creates a world using a specific world preset (e.g., `minecraft:flat`, `minecraft:amplified`, `minecraft:large_biomes`)
+- `/worlds create <id> from-preset <preset> <seed>` - Creates a world from a preset with a specific seed
+- `/worlds create <id> from-preset <preset> <dimension>` - Creates a world from a preset using a specific dimension from that preset
+- `/worlds create <id> from-preset <preset> <dimension> <seed>` - Combines preset, dimension, and seed options
+
+**Create from dimension:**
+- `/worlds create <id> from-dimension <dimension>` - Creates a world using an existing dimension type (e.g., `minecraft:overworld`, `minecraft:the_nether`, `minecraft:the_end`)
+- `/worlds create <id> from-dimension <dimension> <seed>` - Creates a world from a dimension with a specific seed
+
+**Examples:**
+```
+/worlds create myworld
+/worlds create myworld 12345
+/worlds create flatworld from-preset minecraft:flat
+/worlds create amplified from-preset minecraft:amplified 67890
+/worlds create nether from-dimension minecraft:the_nether
+/worlds create custom_end from-dimension minecraft:the_end 11111
+```
+
+### Other Commands
+
 - `/worlds delete <id>` - Deletes the specified world and kicks all players currently in it
 - `/worlds tp <id> [targets]` - Teleports you (or specified players) to the world
 

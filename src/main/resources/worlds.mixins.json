@@ -31,7 +31,8 @@
     "NetherPortalBlockAccessor",
     "ServerLevelAccessor",
     "ServerPlayerMixin",
-    "TheEndGatewayBlockEntityAccessor"
+    "TheEndGatewayBlockEntityAccessor",
+    "WorldPresetAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
