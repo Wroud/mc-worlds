@@ -1,4 +1,4 @@
-# MC Worlds
+# Worlds
 
 A Minecraft mod that allows you to create and manage worlds in-game using simple commands.
 

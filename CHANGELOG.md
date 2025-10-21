@@ -14,6 +14,13 @@
 
 ### Security
 
+## 1.7.1 - 2025-10-22
+
+### Changed
+
+- Hide Nether and The End dimensions in the preset suggestion
+- Prepare level spawn on the same thread
+
 ## 1.7.0 - 2025-10-14
 
 ### Added

@@ -48,7 +48,7 @@ public class SpawnPreparationHelper {
       prepareForInitializing();
     }
 
-    if (spawnChunksToCheck.isEmpty()) {
+    if (this.processingChunk == null && spawnChunksToCheck.isEmpty()) {
       finishInitialization();
       isFinished = true;
     } else {
@@ -124,7 +124,7 @@ public class SpawnPreparationHelper {
 
     processingChunk = chunkSource.addTicketAndLoadWithRadius(
         TicketType.PLAYER_SPAWN, chunkPos, 0)
-        .whenCompleteAsync((result, throwable) -> {
+        .whenComplete((result, throwable) -> {
           if (throwable == null) {
             BlockPos blockPos2 = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
             if (blockPos2 != null) {
@@ -135,7 +135,7 @@ public class SpawnPreparationHelper {
             McWorldMod.LOGGER.error("Failed to load spawn chunk at {}: {}", chunkPos, throwable.getMessage());
           }
           processingChunk = null;
-        }, serverLevel.getServer());
+        });
   }
 
   private void finishInitialization() {

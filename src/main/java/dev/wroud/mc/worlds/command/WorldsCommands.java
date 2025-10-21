@@ -17,6 +17,7 @@ import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.LevelStem;
 
 import static net.minecraft.commands.Commands.literal;
 
@@ -30,7 +31,8 @@ public class WorldsCommands {
         ERROR_INVALID_PRESET);
     var worldPreset = context.getSource().registryAccess().lookupOrThrow(Registries.WORLD_PRESET).getOrThrow(preset)
         .value();
-    var dimensions = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream().map(ResourceKey::location);
+    var dimensions = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream()
+        .filter(key -> !key.equals(LevelStem.NETHER) && !key.equals(LevelStem.END)).map(ResourceKey::location);
 
     return SharedSuggestionProvider.suggestResource(dimensions, builder);
   };
