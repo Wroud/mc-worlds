@@ -4,8 +4,6 @@
 
 ### Added
 
-- Compatibility with [worldthreader](https://github.com/2No2Name/worldthreader)
-
 ### Changed
 
 ### Deprecated
@@ -15,6 +13,12 @@
 ### Fixed
 
 ### Security
+
+## 1.7.2 - 2025-10-25
+
+### Added
+
+- Compatibility with [worldthreader](https://github.com/2No2Name/worldthreader)
 
 ## 1.7.1 - 2025-10-22
 
