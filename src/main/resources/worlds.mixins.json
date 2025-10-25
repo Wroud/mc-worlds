@@ -30,6 +30,7 @@
     "MinecraftServerMixin",
     "NetherPortalBlockAccessor",
     "ServerLevelAccessor",
+    "ServerLevelExtraMixin",
     "ServerPlayerMixin",
     "TheEndGatewayBlockEntityAccessor",
     "WorldPresetAccessor"

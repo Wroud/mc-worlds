@@ -1,12 +1,8 @@
 package dev.wroud.mc.worlds.util;
 
-import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.IScheduledTasksLevel;
 import net.minecraft.server.level.ServerLevel;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Utility class for scheduling actions to be executed when a level is ready.
@@ -21,11 +17,11 @@ public class LevelActivationUtil {
       while (!customLevel.isActive() && !customLevel.isStopped()) {
         long nextTickTime = System.nanoTime() + TICK_TIME_NANOS;
         customLevel.tick(() -> false);
-        
+
         long waitTime = nextTickTime - System.nanoTime();
         if (waitTime > 0) {
           try {
-            Thread.sleep(waitTime / 1_000_000L, (int)(waitTime % 1_000_000L));
+            Thread.sleep(waitTime / 1_000_000L, (int) (waitTime % 1_000_000L));
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             break;
@@ -47,8 +43,7 @@ public class LevelActivationUtil {
     if (level instanceof CustomServerLevel customLevel) {
       scheduleCustomLevelActivationCheck(customLevel, action);
     } else {
-      // For regular ServerLevel, execute immediately
-      action.run();
+      scheduleServerLevelTask(level, action);
     }
   }
 
@@ -60,22 +55,23 @@ public class LevelActivationUtil {
    * @param action The action to execute when the level becomes active
    */
   private static void scheduleCustomLevelActivationCheck(CustomServerLevel level, Runnable action) {
-    Executor executor = ((MinecraftServerAccessor) level.getServer()).getExecutor();
-
+    IScheduledTasksLevel schedulableLevel = (IScheduledTasksLevel) level;
     Runnable checkTask = new Runnable() {
       @Override
       public void run() {
         if (level.isActive()) {
           action.run();
-        } else {
-          // Schedule another check after 100ms
-          CompletableFuture
-              .delayedExecutor(100, TimeUnit.MILLISECONDS)
-              .execute(() -> level.getServer().execute(this));
+        } else if (!level.isStopped()) {
+          schedulableLevel.schedule(this);
         }
       }
     };
 
-    executor.execute(checkTask);
+    schedulableLevel.schedule(checkTask);
+  }
+
+  private static void scheduleServerLevelTask(ServerLevel level, Runnable action) {
+    IScheduledTasksLevel schedulableLevel = (IScheduledTasksLevel) level;
+    schedulableLevel.schedule(action);
   }
 }

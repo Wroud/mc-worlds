@@ -63,9 +63,6 @@ public class CustomServerLevel extends ServerLevel {
   @Override
   public void tick(BooleanSupplier booleanSupplier) {
     this.currentState.tick(booleanSupplier);
-  }
-
-  public void superTick(BooleanSupplier booleanSupplier) {
     super.tick(booleanSupplier);
   }
 

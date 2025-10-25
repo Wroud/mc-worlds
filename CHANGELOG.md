@@ -4,6 +4,8 @@
 
 ### Added
 
+- Compatibility with [worldthreader](https://github.com/2No2Name/worldthreader)
+
 ### Changed
 
 ### Deprecated

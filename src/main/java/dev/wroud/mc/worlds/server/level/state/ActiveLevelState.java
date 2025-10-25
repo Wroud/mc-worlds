@@ -23,6 +23,5 @@ public class ActiveLevelState extends LevelState {
       this.level.stop(false);
       return;
     }
-    this.level.superTick(booleanSupplier);
   }
 }
