@@ -65,7 +65,8 @@ public class WorldsCommands {
             .requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
             .then(DeleteCommand.build())
             .then(TeleportCommand.build())
-            .then(CreateCommand.build()));
+            .then(CreateCommand.build())
+            .then(SettingsCommand.build()));
 
     dispatcher.register(
         literal("worlds")

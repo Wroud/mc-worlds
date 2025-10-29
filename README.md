@@ -45,10 +45,40 @@ The `/worlds create` command allows you to create new worlds with various option
 /worlds create custom_end from-dimension minecraft:the_end 11111
 ```
 
-### Other Commands
+### Delete Command
 
 - `/worlds delete <id>` - Deletes the specified world and kicks all players currently in it
+
+### Teleport Command
+
 - `/worlds tp <id> [targets]` - Teleports you (or specified players) to the world
+
+### Settings Command
+
+The `/worlds settings` command allows you to view and modify settings for the current world you're in. Similar to Minecraft's `/gamerule` command, you can query the current value by omitting the new value parameter.
+
+**Load on Startup:**
+- `/worlds settings loadOnStartup` - Displays whether the world loads automatically on server start
+- `/worlds settings loadOnStartup <true|false>` - Enable or disable automatic loading on server start
+  - When enabled (`true`), the world will load automatically when the server starts
+  - When disabled (`false`), the world will only load when a player enters it (lazy loading)
+
+**Spawn Point:**
+- `/worlds settings spawn` - Displays the current spawn point and rotation
+- `/worlds settings spawn here` - Sets the spawn point to your current position and rotation
+- `/worlds settings spawn <x> <y> <z>` - Sets the spawn point to specific coordinates (rotation defaults to 0, 0)
+
+**Examples:**
+```
+/worlds settings loadOnStartup
+/worlds settings loadOnStartup true
+/worlds settings loadOnStartup false
+/worlds settings spawn
+/worlds settings spawn here
+/worlds settings spawn 100 64 200
+```
+
+**Note:** These commands affect the world you're currently in. Navigate to the world you want to configure before running the command.
 
 ## Importing worlds from World Manager
 

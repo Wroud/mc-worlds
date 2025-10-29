@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.7.4 - 2025-10-29
+
+### Added
+
+- `/worlds settings` command to configure world loading behavior and spawn point for the current world
+
 ## 1.7.3 - 2025-10-29
 
 ### Fixed
