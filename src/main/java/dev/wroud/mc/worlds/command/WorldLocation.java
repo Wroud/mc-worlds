@@ -33,87 +33,94 @@ import dev.wroud.mc.worlds.util.NetherPortalUtil;
 
 public record WorldLocation(ServerLevel level, TeleportTransition transition) {
 
-    public static WorldLocation findSpawn(ServerLevel level, Entity entity) {
-        if (DimensionDetectionUtil.isEndLikeDimension(level)) {
-            return new WorldLocation(level, getEndSpawn(level, entity));
-        } else if (DimensionDetectionUtil.isNetherLikeDimension(level)) {
-            return new WorldLocation(level, getNetherSpawn(level, entity));
-        }
-        
-        return new WorldLocation(level, TeleportTransitionAbstraction.spawnAt(entity, level, TeleportTransition.PLACE_PORTAL_TICKET));
+  public static WorldLocation findSpawn(ServerLevel level, Entity entity) {
+    var respawnData = level.getServer().getRespawnData();
+
+    if (respawnData.dimension().equals(level.dimension())) {
+      return new WorldLocation(level, TeleportTransitionAbstraction.spawnAtRespawn(entity, level, TeleportTransition.PLACE_PORTAL_TICKET));
     }
 
-    private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {
-        BlockPos blockPos2 = ServerLevel.END_SPAWN_POINT;
-        Vec3 vec3 = blockPos2.getBottomCenter();
-
-        EndPlatformFeature.createEndPlatform(level, BlockPos.containing(vec3).below(), true);
-        var f = Direction.WEST.toYRot();
-        var set = Relative.union(Relative.DELTA, Set.of(Relative.X_ROT));
-        if (entity instanceof ServerPlayer) {
-            vec3 = vec3.subtract(0.0, 1.0, 0.0);
-        }
-
-        return new TeleportTransition(level, vec3, Vec3.ZERO, f, 0.0F, set,
-                TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET));
+    if (DimensionDetectionUtil.isEndLikeDimension(level)) {
+      return new WorldLocation(level, getEndSpawn(level, entity));
+    } else if (DimensionDetectionUtil.isNetherLikeDimension(level)) {
+      return new WorldLocation(level, getNetherSpawn(level, entity));
     }
 
-    private static TeleportTransition getEndGatewaySpawn(ServerLevel level, Entity entity) {
-        BlockPos blockPos = entity.blockPosition();
-        BlockPos blockPos2 = EndGatewayUtil.findOrCreateValidTeleportPos(level, blockPos);
-        blockPos2 = blockPos2.above(10);
-        McWorldMod.LOGGER.debug("Creating portal at {}", blockPos2);
-        EndGatewayUtil.spawnGatewayPortal(level, blockPos2, EndGatewayConfiguration.knownExit(blockPos, false));
+    return new WorldLocation(level,
+        TeleportTransitionAbstraction.spawnAt(entity, level, TeleportTransition.PLACE_PORTAL_TICKET));
+  }
 
-        blockPos2 = EndGatewayUtil.findExitPosition(level, blockPos2);
-        Vec3 vec3 = blockPos2.getBottomCenter();
-        return new TeleportTransition(
-                level, vec3, Vec3.ZERO, 0.0F, 0.0F, Relative.union(Relative.DELTA, Relative.ROTATION),
-                TeleportTransition.PLACE_PORTAL_TICKET);
+  private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {
+    BlockPos blockPos2 = ServerLevel.END_SPAWN_POINT;
+    Vec3 vec3 = blockPos2.getBottomCenter();
+
+    EndPlatformFeature.createEndPlatform(level, BlockPos.containing(vec3).below(), true);
+    var f = Direction.WEST.toYRot();
+    var set = Relative.union(Relative.DELTA, Set.of(Relative.X_ROT));
+    if (entity instanceof ServerPlayer) {
+      vec3 = vec3.subtract(0.0, 1.0, 0.0);
     }
 
-    private static TeleportTransition getNetherSpawn(ServerLevel serverLevel2, Entity entity) {
-        BlockPos blockPos = entity.blockPosition();
-        WorldBorder worldBorder = serverLevel2.getWorldBorder();
-        double d = DimensionType.getTeleportationScale(entity.level().dimensionType(), serverLevel2.dimensionType());
-        BlockPos blockPos2 = worldBorder.clampToBounds(entity.getX() * d, entity.getY(), entity.getZ() * d);
-        return getExitPortal(serverLevel2, entity, blockPos, blockPos2, true, worldBorder);
+    return new TeleportTransition(level, vec3, Vec3.ZERO, f, 0.0F, set,
+        TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET));
+  }
+
+  private static TeleportTransition getEndGatewaySpawn(ServerLevel level, Entity entity) {
+    BlockPos blockPos = entity.blockPosition();
+    BlockPos blockPos2 = EndGatewayUtil.findOrCreateValidTeleportPos(level, blockPos);
+    blockPos2 = blockPos2.above(10);
+    McWorldMod.LOGGER.debug("Creating portal at {}", blockPos2);
+    EndGatewayUtil.spawnGatewayPortal(level, blockPos2, EndGatewayConfiguration.knownExit(blockPos, false));
+
+    blockPos2 = EndGatewayUtil.findExitPosition(level, blockPos2);
+    Vec3 vec3 = blockPos2.getBottomCenter();
+    return new TeleportTransition(
+        level, vec3, Vec3.ZERO, 0.0F, 0.0F, Relative.union(Relative.DELTA, Relative.ROTATION),
+        TeleportTransition.PLACE_PORTAL_TICKET);
+  }
+
+  private static TeleportTransition getNetherSpawn(ServerLevel serverLevel2, Entity entity) {
+    BlockPos blockPos = entity.blockPosition();
+    WorldBorder worldBorder = serverLevel2.getWorldBorder();
+    double d = DimensionType.getTeleportationScale(entity.level().dimensionType(), serverLevel2.dimensionType());
+    BlockPos blockPos2 = worldBorder.clampToBounds(entity.getX() * d, entity.getY(), entity.getZ() * d);
+    return getExitPortal(serverLevel2, entity, blockPos, blockPos2, true, worldBorder);
+  }
+
+  @Nullable
+  private static TeleportTransition getExitPortal(ServerLevel serverLevel, Entity entity, BlockPos blockPos,
+      BlockPos blockPos2, boolean bl, WorldBorder worldBorder) {
+    Optional<BlockPos> optional = serverLevel.getPortalForcer().findClosestPortalPosition(blockPos2, bl,
+        worldBorder);
+    FoundRectangle foundRectangle;
+    TeleportTransition.PostTeleportTransition postTeleportTransition;
+    if (optional.isPresent()) {
+      BlockPos blockPos3 = (BlockPos) optional.get();
+      BlockState blockState = serverLevel.getBlockState(blockPos3);
+      foundRectangle = BlockUtil.getLargestRectangleAround(
+          blockPos3, blockState.getValue(BlockStateProperties.HORIZONTAL_AXIS), 21, Axis.Y, 21,
+          blockPosx -> serverLevel.getBlockState(blockPosx) == blockState);
+      postTeleportTransition = TeleportTransition.PLAY_PORTAL_SOUND
+          .then(entityx -> entityx.placePortalTicket(blockPos3));
+    } else {
+      Axis axis = (Axis) entity.level().getBlockState(blockPos).getOptionalValue(NetherPortalBlock.AXIS)
+          .orElse(Axis.X);
+      Optional<FoundRectangle> optional2 = serverLevel.getPortalForcer().createPortal(blockPos2, axis);
+      if (optional2.isEmpty()) {
+        McWorldMod.LOGGER.error("Unable to create a portal, likely target out of worldborder");
+        return null;
+      }
+
+      foundRectangle = (FoundRectangle) optional2.get();
+      postTeleportTransition = TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET);
     }
 
-    @Nullable
-    private static TeleportTransition getExitPortal(ServerLevel serverLevel, Entity entity, BlockPos blockPos,
-            BlockPos blockPos2, boolean bl, WorldBorder worldBorder) {
-        Optional<BlockPos> optional = serverLevel.getPortalForcer().findClosestPortalPosition(blockPos2, bl,
-                worldBorder);
-        FoundRectangle foundRectangle;
-        TeleportTransition.PostTeleportTransition postTeleportTransition;
-        if (optional.isPresent()) {
-            BlockPos blockPos3 = (BlockPos) optional.get();
-            BlockState blockState = serverLevel.getBlockState(blockPos3);
-            foundRectangle = BlockUtil.getLargestRectangleAround(
-                    blockPos3, blockState.getValue(BlockStateProperties.HORIZONTAL_AXIS), 21, Axis.Y, 21,
-                    blockPosx -> serverLevel.getBlockState(blockPosx) == blockState);
-            postTeleportTransition = TeleportTransition.PLAY_PORTAL_SOUND
-                    .then(entityx -> entityx.placePortalTicket(blockPos3));
-        } else {
-            Axis axis = (Axis) entity.level().getBlockState(blockPos).getOptionalValue(NetherPortalBlock.AXIS)
-                    .orElse(Axis.X);
-            Optional<FoundRectangle> optional2 = serverLevel.getPortalForcer().createPortal(blockPos2, axis);
-            if (optional2.isEmpty()) {
-                McWorldMod.LOGGER.error("Unable to create a portal, likely target out of worldborder");
-                return null;
-            }
+    return NetherPortalUtil.getDimensionTransitionFromExit(entity, blockPos, foundRectangle, serverLevel,
+        postTeleportTransition);
+  }
 
-            foundRectangle = (FoundRectangle) optional2.get();
-            postTeleportTransition = TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET);
-        }
-
-        return NetherPortalUtil.getDimensionTransitionFromExit(entity, blockPos, foundRectangle, serverLevel,
-                postTeleportTransition);
-    }
-
-    public void teleport(Entity entity) {
-        entity.setPortalCooldown();
-        entity.teleport(transition);
-    }
+  public void teleport(Entity entity) {
+    entity.setPortalCooldown();
+    entity.teleport(transition);
+  }
 }

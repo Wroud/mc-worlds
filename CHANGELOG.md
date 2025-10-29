@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.7.3 - 2025-10-29
+
+### Fixed
+
+- respect world spawn when teleporting with `/worlds tp` command
+
 ## 1.7.2 - 2025-10-25
 
 ### Added

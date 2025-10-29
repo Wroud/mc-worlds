@@ -26,7 +26,7 @@ public class ServerLevelExtraMixin implements IScheduledTasksLevel {
     private void onTickHead(BooleanSupplier booleanSupplier, CallbackInfo ci) {
         List<Runnable> tasksToExecute = new ArrayList<>();
         Runnable task;
-        while ((task = worlds$scheduledTasks.poll()) != null) {
+        while ((task = this.worlds$scheduledTasks.poll()) != null) {
             tasksToExecute.add(task);
         }
 

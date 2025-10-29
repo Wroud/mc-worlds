@@ -24,7 +24,6 @@ import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource;
 
 public class CustomServerLevel extends ServerLevel {
@@ -111,11 +110,6 @@ public class CustomServerLevel extends ServerLevel {
 
   public void setState(LevelStateFactory<? extends LevelState> factory) {
     this.currentState = factory.create(this);
-  }
-
-  @Override
-  public RespawnData getRespawnData() {
-    return this.getLevelData().getRespawnData();
   }
 
   public interface LevelStateFactory<T extends LevelState> {
