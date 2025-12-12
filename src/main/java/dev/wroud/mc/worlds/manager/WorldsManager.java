@@ -17,17 +17,17 @@ import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.ai.village.VillageSiege;
 import net.minecraft.world.entity.npc.CatSpawner;
-import net.minecraft.world.entity.npc.WanderingTraderSpawner;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTraderSpawner;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
 
 public class WorldsManager {
-  private Map<ResourceLocation, WorldHandle> worlds = new HashMap<>();
+  private Map<Identifier, WorldHandle> worlds = new HashMap<>();
   private MinecraftServer server;
   private WorldsData worldsData;
 
@@ -36,11 +36,11 @@ public class WorldsManager {
     this.worldsData = server.overworld().getDataStorage().computeIfAbsent(WorldsData.TYPE);
   }
 
-  public synchronized Collection<ResourceLocation> getWorldIds() {
+  public synchronized Collection<Identifier> getWorldIds() {
     return this.worlds.keySet();
   }
 
-  public synchronized WorldHandle getWorld(ResourceLocation location) {
+  public synchronized WorldHandle getWorld(Identifier location) {
     return worlds.get(location);
   }
 
@@ -57,7 +57,7 @@ public class WorldsManager {
     });
   }
 
-  public synchronized WorldHandle loadOrCreateWorld(ResourceLocation id, WorldsLevelData levelData) {
+  public synchronized WorldHandle loadOrCreateWorld(Identifier id, WorldsLevelData levelData) {
     if (worlds.containsKey(id)) {
       return worlds.get(id);
     }
@@ -101,7 +101,7 @@ public class WorldsManager {
     return worldHandle;
   }
 
-  public synchronized void unloadWorld(ResourceLocation location) {
+  public synchronized void unloadWorld(Identifier location) {
     var handle = worlds.remove(location);
     if (handle != null) {
       var world = handle.getServerLevel();

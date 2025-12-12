@@ -30,7 +30,4 @@ public interface MinecraftServerAccessor {
 
     @Invoker("setupDebugLevel")
     void invokeSetupDebugLevel(WorldData worldData);
-
-    @Invoker("isSpawningMonsters")
-    boolean invokeSpawningMonsters();
 }

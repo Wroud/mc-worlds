@@ -6,11 +6,11 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static dev.wroud.mc.worlds.command.WorldsCommands.CUSTOM_WORLD_SUGGESTIONS;
 import static dev.wroud.mc.worlds.command.WorldsCommands.UNKNOWN_WORLD_EXCEPTION;
@@ -22,13 +22,13 @@ public class DeleteCommand {
 		return literal("delete")
 				.requires(Permissions.require("dev.wroud.mc.worlds.command.delete", 2))
 				.then(
-						argument("id", ResourceLocationArgument.id())
+						argument("id", IdentifierArgument.id())
 								.suggests(CUSTOM_WORLD_SUGGESTIONS)
 								.executes(context -> delete(context.getSource(),
-										ResourceLocationArgument.getId(context, "id"))));
+										IdentifierArgument.getId(context, "id"))));
 	}
 
-	public static int delete(CommandSourceStack source, ResourceLocation id) throws CommandSyntaxException {
+	public static int delete(CommandSourceStack source, Identifier id) throws CommandSyntaxException {
 		var resourceKey = ResourceKey.create(Registries.DIMENSION, id);
 		var serverLevel = source.getServer().getLevel(resourceKey);
 

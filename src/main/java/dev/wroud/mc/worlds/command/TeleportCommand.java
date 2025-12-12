@@ -7,11 +7,11 @@ import dev.wroud.mc.worlds.abstractions.ServerPlayerAbstraction;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -29,19 +29,19 @@ public class TeleportCommand {
 		return literal("tp")
 				.requires(Permissions.require("dev.wroud.mc.worlds.command.teleport", 2))
 				.then(
-						argument("id", ResourceLocationArgument.id())
+						argument("id", IdentifierArgument.id())
 								.suggests(WORLD_SUGGESTIONS)
 								.executes(context -> teleport(context.getSource(),
-										ResourceLocationArgument.getId(context, "id"),
+										IdentifierArgument.getId(context, "id"),
 										List.of(context.getSource().getPlayerOrException())))
 								.then(
 										argument("targets", EntityArgument.players())
 												.executes(context -> teleport(context.getSource(),
-														ResourceLocationArgument.getId(context, "id"),
+														IdentifierArgument.getId(context, "id"),
 														EntityArgument.getPlayers(context, "targets")))));
 	}
 
-	public static int teleport(CommandSourceStack source, ResourceLocation id, Collection<ServerPlayer> targets)
+	public static int teleport(CommandSourceStack source, Identifier id, Collection<ServerPlayer> targets)
 			throws CommandSyntaxException {
 		ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
 		ServerLevel serverLevel = source.getServer().getLevel(resourceKey);
@@ -56,7 +56,7 @@ public class TeleportCommand {
 		return 1;
 	}
 
-	public static boolean teleport(ServerPlayer player, ResourceLocation id) {
+	public static boolean teleport(ServerPlayer player, Identifier id) {
 		ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
 		ServerLevel serverLevel = ServerPlayerAbstraction.getServer(player).getLevel(resourceKey);
 		if (serverLevel == null || player.level() == serverLevel)

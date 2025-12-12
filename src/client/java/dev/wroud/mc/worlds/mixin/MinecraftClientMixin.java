@@ -15,6 +15,11 @@ public abstract class MinecraftClientMixin {
     @Shadow
     public LocalPlayer player;
 
+    /**
+     * Modifies the End dimension check in getSituationalMusic to also match End-like dimensions.
+     * This allows custom dimensions with End-like properties to play the End boss music
+     * when the dragon boss bar is showing.
+     */
     @ModifyExpressionValue(
         method = "getSituationalMusic",
         at = @At(
@@ -22,37 +27,12 @@ public abstract class MinecraftClientMixin {
             target = "Lnet/minecraft/world/level/Level;END:Lnet/minecraft/resources/ResourceKey;"
         )
     )
-    private ResourceKey<Level> getSituationalMusicEndKey(
-        ResourceKey<Level> original
-    ) {
+    private ResourceKey<Level> getSituationalMusicEndKey(ResourceKey<Level> original) {
         if (this.player != null) {
             Level level = this.player.level();
-            ResourceKey<Level> currentDimension = level.dimension();
             
             if (DimensionDetectionUtil.isEndLikeDimension(level)) {
-                return currentDimension;
-            }
-        }
-
-        return original;
-    }
-
-    @ModifyExpressionValue(
-        method = "getSituationalMusic",
-        at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/world/level/Level;NETHER:Lnet/minecraft/resources/ResourceKey;"
-        )
-    )
-    private ResourceKey<Level> getSituationalMusicNetherKey(
-        ResourceKey<Level> original
-    ) {
-        if (this.player != null) {
-            Level level = this.player.level();
-            ResourceKey<Level> currentDimension = level.dimension();
-            
-            if (DimensionDetectionUtil.isNetherLikeDimension(level)) {
-                return currentDimension;
+                return level.dimension();
             }
         }
 

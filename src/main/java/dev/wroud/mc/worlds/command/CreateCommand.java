@@ -11,7 +11,7 @@ import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
@@ -21,7 +21,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import static net.minecraft.commands.Commands.argument;
@@ -37,13 +37,13 @@ public class CreateCommand {
     return literal("create")
         .requires(Permissions.require("dev.wroud.mc.worlds.command.create", 2))
         .then(
-            argument("id", ResourceLocationArgument.id())
+            argument("id", IdentifierArgument.id())
                 .executes(
-                    context -> createWorld(context.getSource(), ResourceLocationArgument.getId(context, "id")))
+                    context -> createWorld(context.getSource(), IdentifierArgument.getId(context, "id")))
                 .then(
                     argument("seed", LongArgumentType.longArg())
                         .executes(
-                            context -> createWorld(context.getSource(), ResourceLocationArgument.getId(context, "id"),
+                            context -> createWorld(context.getSource(), IdentifierArgument.getId(context, "id"),
                                 null,
                                 null,
                                 LongArgumentType.getLong(context, "seed"))))
@@ -52,7 +52,7 @@ public class CreateCommand {
                         .executes(
                             context -> createWorld(
                                 context.getSource(),
-                                ResourceLocationArgument.getId(context, "id"),
+                                IdentifierArgument.getId(context, "id"),
                                 ResourceKeyArgument.getRegistryKey(context, "preset", Registries.WORLD_PRESET,
                                     ERROR_INVALID_LEVEL_STEM),
                                 null,
@@ -62,39 +62,39 @@ public class CreateCommand {
                                 .executes(
                                     context -> createWorld(
                                         context.getSource(),
-                                        ResourceLocationArgument.getId(context, "id"),
+                                        IdentifierArgument.getId(context, "id"),
                                         ResourceKeyArgument.getRegistryKey(context, "preset", Registries.WORLD_PRESET,
                                             ERROR_INVALID_LEVEL_STEM),
                                         null,
                                         LongArgumentType.getLong(context, "seed"))))
                         .then(
-                            argument("dimension", ResourceLocationArgument.id())
+                            argument("dimension", IdentifierArgument.id())
                                 .suggests(WorldsCommands.PRESET_DIMENSION_SUGGESTIONS)
                                 .executes(
                                     context -> createWorld(
                                         context.getSource(),
-                                        ResourceLocationArgument.getId(context, "id"),
+                                        IdentifierArgument.getId(context, "id"),
                                         ResourceKeyArgument.getRegistryKey(context, "preset", Registries.WORLD_PRESET,
                                             ERROR_INVALID_LEVEL_STEM),
-                                        ResourceLocationArgument.getId(context, "dimension"),
+                                        IdentifierArgument.getId(context, "dimension"),
                                         null))
                                 .then(
                                     argument("seed", LongArgumentType.longArg())
                                         .executes(
                                             context -> createWorld(
                                                 context.getSource(),
-                                                ResourceLocationArgument.getId(context, "id"),
+                                                IdentifierArgument.getId(context, "id"),
                                                 ResourceKeyArgument.getRegistryKey(context, "preset",
                                                     Registries.WORLD_PRESET,
                                                     ERROR_INVALID_LEVEL_STEM),
-                                                ResourceLocationArgument.getId(context, "dimension"),
+                                                IdentifierArgument.getId(context, "dimension"),
                                                 LongArgumentType.getLong(context, "seed")))))))
                 .then(literal("from-dimension").then(
                     argument("dimension", ResourceKeyArgument.key(Registries.LEVEL_STEM))
                         .executes(
                             context -> createWorld(
                                 context.getSource(),
-                                ResourceLocationArgument.getId(context, "id"),
+                                IdentifierArgument.getId(context, "id"),
                                 ResourceKeyArgument.getRegistryKey(context, "dimension", Registries.LEVEL_STEM,
                                     ERROR_INVALID_LEVEL_STEM),
                                 null))
@@ -103,33 +103,33 @@ public class CreateCommand {
                                 .executes(
                                     context -> createWorld(
                                         context.getSource(),
-                                        ResourceLocationArgument.getId(context, "id"),
+                                        IdentifierArgument.getId(context, "id"),
                                         ResourceKeyArgument.getRegistryKey(context, "dimension", Registries.LEVEL_STEM,
                                             ERROR_INVALID_LEVEL_STEM),
                                         LongArgumentType.getLong(context, "seed")))))));
   }
 
-  public static int createWorld(CommandSourceStack source, ResourceLocation id)
+  public static int createWorld(CommandSourceStack source, Identifier id)
       throws CommandSyntaxException {
     return createWorld(source, id, null, null, null, null);
   }
 
-  public static int createWorld(CommandSourceStack source, ResourceLocation id,
+  public static int createWorld(CommandSourceStack source, Identifier id,
       @Nullable ResourceKey<LevelStem> levelStemKey,
       @Nullable Long seed)
       throws CommandSyntaxException {
     return createWorld(source, id, null, null, levelStemKey, seed);
   }
 
-  public static int createWorld(CommandSourceStack source, ResourceLocation id,
-      @Nullable ResourceKey<WorldPreset> preset, @Nullable ResourceLocation dimension,
+  public static int createWorld(CommandSourceStack source, Identifier id,
+      @Nullable ResourceKey<WorldPreset> preset, @Nullable Identifier dimension,
       @Nullable Long seed)
       throws CommandSyntaxException {
     return createWorld(source, id, preset, dimension, null, seed);
   }
 
-  public static int createWorld(CommandSourceStack source, ResourceLocation id,
-      @Nullable ResourceKey<WorldPreset> preset, @Nullable ResourceLocation dimension,
+  public static int createWorld(CommandSourceStack source, Identifier id,
+      @Nullable ResourceKey<WorldPreset> preset, @Nullable Identifier dimension,
       @Nullable ResourceKey<LevelStem> levelStemKey,
       @Nullable Long seed)
       throws CommandSyntaxException {
@@ -138,7 +138,7 @@ public class CreateCommand {
     try {
       WorldsCreator.createWorld(server, new WorldsCreator.CreationCallbacks() {
         @Override
-        public void onCreating(ResourceLocation id, long seed, LevelStem dimension) {
+        public void onCreating(Identifier id, long seed, LevelStem dimension) {
 
           Component creatingMessage = Component.translatable("dev.wroud.mc.worlds.command.create.creating")
               .append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))

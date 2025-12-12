@@ -9,7 +9,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 
 import dev.wroud.mc.worlds.command.WorldsCommands;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.server.commands.ExecuteCommand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,7 +25,7 @@ public abstract class ExecuteCommandMixin {
         at = @At("MIXINEXTRAS:EXPRESSION")
     )
     private static <T> RequiredArgumentBuilder<CommandSourceStack, T> useServerLevels(String string, ArgumentType<T> argumentType, Operation<RequiredArgumentBuilder<CommandSourceStack, T>> original) {
-        return original.call(string, ResourceLocationArgument.id()).suggests(WorldsCommands.WORLD_SUGGESTIONS);
+        return original.call(string, IdentifierArgument.id()).suggests(WorldsCommands.WORLD_SUGGESTIONS);
     }
 
 }

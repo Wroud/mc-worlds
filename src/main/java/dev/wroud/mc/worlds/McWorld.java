@@ -3,7 +3,7 @@ package dev.wroud.mc.worlds;
 import dev.wroud.mc.worlds.manager.WorldHandle;
 import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 
 public class McWorld {
@@ -21,11 +21,11 @@ public class McWorld {
     worldsManager.loadSavedWorlds();
   }
 
-  public WorldHandle loadOrCreate(ResourceLocation location, WorldsLevelData levelData) {
+  public WorldHandle loadOrCreate(Identifier location, WorldsLevelData levelData) {
     return worldsManager.loadOrCreateWorld(location, levelData);
   }
 
-  public void handleWorldUnload(ResourceLocation level) {
+  public void handleWorldUnload(Identifier level) {
     worldsManager.unloadWorld(level);
   }
 }

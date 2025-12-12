@@ -36,7 +36,7 @@ public class ServerLevelExtraMixin implements IScheduledTasksLevel {
                 taskToRun.run();
             } catch (Exception e) {
                 McWorldMod.LOGGER
-                    .error("Error executing scheduled task in " + level.dimension().location() + ": " + e.getMessage());
+                    .error("Error executing scheduled task in " + level.dimension().identifier() + ": " + e.getMessage());
             }
         }
     }

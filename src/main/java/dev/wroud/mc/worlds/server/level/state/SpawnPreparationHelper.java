@@ -74,7 +74,7 @@ public class SpawnPreparationHelper {
     } else {
       ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
       ChunkPos chunkPos = new ChunkPos(serverChunkCache.randomState().sampler().findSpawnPosition());
-      McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().location());
+      McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().identifier());
       int i = serverChunkCache.getGenerator().getSpawnHeight(serverLevel);
       if (i < serverLevel.getMinY()) {
         BlockPos blockPos = chunkPos.getWorldPosition();
@@ -170,6 +170,6 @@ public class SpawnPreparationHelper {
       serverLevelData.setGameType(GameType.SPECTATOR);
     }
     spawnChunksToCheck = null;
-    McWorldMod.LOGGER.info("Spawn prepared: {}", serverLevel.dimension().location());
+    McWorldMod.LOGGER.info("Spawn prepared: {}", serverLevel.dimension().identifier());
   }
 }

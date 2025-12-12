@@ -39,6 +39,6 @@ public class WorldsRegistries {
    */
   public static void bootstrap() {
     // Register the default level provider
-    Registry.register(LEVEL_PROVIDER_REGISTRY, DefaultServerLevelProvider.DEFAULT.location(), new DefaultServerLevelProvider());
+    Registry.register(LEVEL_PROVIDER_REGISTRY, DefaultServerLevelProvider.DEFAULT.identifier(), new DefaultServerLevelProvider());
   }
 }

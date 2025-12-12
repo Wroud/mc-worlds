@@ -14,6 +14,16 @@
 
 ### Security
 
+## 1.8.0 - 2025-12-12
+
+### Added
+
+- Support for Minecraft 1.21.11
+
+### Changed
+
+- Some mixins updated and fixed
+
 ## 1.7.4 - 2025-10-29
 
 ### Added

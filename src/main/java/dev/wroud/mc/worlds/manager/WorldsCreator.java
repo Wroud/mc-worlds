@@ -9,7 +9,7 @@ import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.util.LevelActivationUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -23,16 +23,16 @@ public class WorldsCreator {
   public static void createWorld(
       MinecraftServer server,
       CreationCallbacks callbacks,
-      ResourceLocation id) throws InvalidLevelIdException {
+      Identifier id) throws InvalidLevelIdException {
     createWorld(server, callbacks, id, null, null, null);
   }
 
   public static void createWorld(
       MinecraftServer server,
       CreationCallbacks callbacks,
-      ResourceLocation id,
+      Identifier id,
       @Nullable ResourceKey<WorldPreset> preset,
-      @Nullable ResourceLocation dimension,
+      @Nullable Identifier dimension,
       @Nullable ResourceKey<LevelStem> levelStemKey,
       @Nullable Long seed) throws InvalidLevelIdException {
 
@@ -46,7 +46,7 @@ public class WorldsCreator {
   public static void createWorld(
       MinecraftServer server,
       CreationCallbacks callbacks,
-      ResourceLocation id,
+      Identifier id,
       @Nullable ResourceKey<LevelStem> levelStemKey,
       @Nullable Long seed) throws InvalidLevelIdException {
     var registry = server.registryAccess();
@@ -57,9 +57,9 @@ public class WorldsCreator {
   public static void createWorld(
       MinecraftServer server,
       CreationCallbacks callbacks,
-      ResourceLocation id,
+      Identifier id,
       @Nullable ResourceKey<WorldPreset> preset,
-      @Nullable ResourceLocation dimension,
+      @Nullable Identifier dimension,
       @Nullable Long seed) throws InvalidLevelIdException {
     var registry = server.registryAccess();
 
@@ -72,12 +72,12 @@ public class WorldsCreator {
     if (dimension == null) {
       dimension = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream().findFirst()
           .orElseThrow()
-          .location();
+          .identifier();
     }
 
-    final ResourceLocation finalDimension = dimension;
+    final Identifier finalDimension = dimension;
     var levelStem = ((WorldPresetAccessor) worldPreset).getDimensions().entrySet().stream()
-        .filter(e -> e.getKey().location().equals(finalDimension))
+        .filter(e -> e.getKey().identifier().equals(finalDimension))
         .map(e -> e.getValue())
         .findFirst().orElseThrow();
 
@@ -87,7 +87,7 @@ public class WorldsCreator {
   public static void createWorld(
       MinecraftServer server,
       CreationCallbacks callbacks,
-      ResourceLocation id,
+      Identifier id,
       LevelStem levelStem,
       @Nullable Long seed) throws InvalidLevelIdException {
     validLevelId(id, server);
@@ -96,7 +96,7 @@ public class WorldsCreator {
       seed = WorldOptions.randomSeed();
     }
 
-    var dimension = levelStem.type().unwrapKey().orElseThrow().location();
+    var dimension = levelStem.type().unwrapKey().orElseThrow().identifier();
     McWorldMod.LOGGER.info("Creating new world with id: {}, seed: {}, type: {}", id, seed, dimension);
 
     var levelData = WorldsLevelData.getDefault(id, levelStem, seed, true);
@@ -109,7 +109,7 @@ public class WorldsCreator {
         () -> callbacks.onReady(worldHandle.getServerLevel()));
   }
 
-  public static void validLevelId(ResourceLocation id, MinecraftServer server) throws InvalidLevelIdException {
+  public static void validLevelId(Identifier id, MinecraftServer server) throws InvalidLevelIdException {
     ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
     ServerLevel level = server.getLevel(resourceKey);
     if (level != null) {
@@ -124,7 +124,7 @@ public class WorldsCreator {
   }
 
   public interface CreationCallbacks {
-    void onCreating(ResourceLocation id, long seed, LevelStem dimension);
+    void onCreating(Identifier id, long seed, LevelStem dimension);
 
     void onReady(CustomServerLevel level);
   }

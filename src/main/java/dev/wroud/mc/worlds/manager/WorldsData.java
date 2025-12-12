@@ -7,15 +7,15 @@ import com.mojang.serialization.Codec;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 public class WorldsData extends SavedData {
 
-  private final Map<ResourceLocation, WorldsLevelData> levels;
+  private final Map<Identifier, WorldsLevelData> levels;
   private static final Codec<WorldsData> CODEC = Codec
-      .unboundedMap(ResourceLocation.CODEC, WorldsLevelData.CODEC)
+      .unboundedMap(Identifier.CODEC, WorldsLevelData.CODEC)
       .xmap(WorldsData::new, wd -> wd.levels);
 
   public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.MOD_ID,
@@ -25,7 +25,7 @@ public class WorldsData extends SavedData {
     this.levels = new HashMap<>();
   }
 
-  private WorldsData(Map<ResourceLocation, WorldsLevelData> worlds) {
+  private WorldsData(Map<Identifier, WorldsLevelData> worlds) {
     this.levels = new HashMap<>(worlds);
   }
 
@@ -39,22 +39,22 @@ public class WorldsData extends SavedData {
     super.setDirty(true);
   }
 
-  public void addLevelData(ResourceLocation id, WorldsLevelData data) {
+  public void addLevelData(Identifier id, WorldsLevelData data) {
     levels.put(id, data);
   }
 
-  public boolean removeLevelData(ResourceLocation id) {
+  public boolean removeLevelData(Identifier id) {
     if (levels.remove(id) != null) {
       return true;
     }
     return false;
   }
 
-  public WorldsLevelData getLevelData(ResourceLocation id) {
+  public WorldsLevelData getLevelData(Identifier id) {
     return levels.get(id);
   }
 
-  public Map<ResourceLocation, WorldsLevelData> getLevelsData() {
+  public Map<Identifier, WorldsLevelData> getLevelsData() {
     return new HashMap<>(levels);
   }
 

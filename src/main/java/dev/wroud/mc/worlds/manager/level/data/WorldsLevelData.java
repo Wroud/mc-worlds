@@ -13,10 +13,10 @@ import dev.wroud.mc.worlds.manager.DefaultServerLevelProvider;
 import dev.wroud.mc.worlds.manager.ServerLevelProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.border.WorldBorder.Settings;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -279,7 +279,7 @@ public class WorldsLevelData implements ServerLevelData {
     return Optional.empty();
   }
 
-  public static WorldsLevelData getDefault(ResourceKey<ServerLevelProvider<?>> provider, ResourceLocation id,
+  public static WorldsLevelData getDefault(ResourceKey<ServerLevelProvider<?>> provider, Identifier id,
       LevelStem levelStem, long seed,
       boolean generateStructures) {
     return new WorldsLevelData(
@@ -289,7 +289,7 @@ public class WorldsLevelData implements ServerLevelData {
         new WorldWeatherData());
   }
 
-  public static WorldsLevelData getDefault(ResourceLocation id, LevelStem levelStem, long seed,
+  public static WorldsLevelData getDefault(Identifier id, LevelStem levelStem, long seed,
       boolean generateStructures) {
     return getDefault(DefaultServerLevelProvider.DEFAULT, id, levelStem, seed, generateStructures);
   }

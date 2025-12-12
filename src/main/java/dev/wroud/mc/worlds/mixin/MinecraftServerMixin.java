@@ -11,8 +11,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.wroud.mc.worlds.McWorldMod;
-import dev.wroud.mc.worlds.server.level.CustomServerLevel;
-import dev.wroud.mc.worlds.util.LevelActivationUtil;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -43,23 +41,14 @@ public class MinecraftServerMixin {
 
     if (level == null) {
       McWorldMod.getMcWorld(((MinecraftServer) (Object) this)).ifPresent(worlds -> {
-        var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.location());
+        var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.identifier());
 
         if (worldData != null) {
-          var handle = worlds.loadOrCreate(resourceKey.location(), worldData);
+          var handle = worlds.loadOrCreate(resourceKey.identifier(), worldData);
           // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
           cir.setReturnValue(handle.getServerLevel());
         }
       });
-    }
-  }
-
-  @Inject(method = "isAllowedToEnterPortal", at = @At("RETURN"), cancellable = true)
-  private void onIsAllowedToEnterPortal(Level level, CallbackInfoReturnable<Boolean> cir) {
-    if (level instanceof CustomServerLevel customServerLevel) {
-      if (!customServerLevel.canTeleport()) {
-        cir.setReturnValue(false);
-      }
     }
   }
 }

@@ -16,7 +16,7 @@ To register your own level provider, follow these steps:
 public class MyCustomLevelProvider implements ServerLevelProvider<MyCustomServerLevel> {
     public static final ResourceKey<ServerLevelProvider<?>> MY_PROVIDER = 
         ResourceKey.create(WorldsRegistries.LEVEL_PROVIDER, 
-            ResourceLocation.fromNamespaceAndPath("mymod", "my_provider"));
+            Identifier.fromNamespaceAndPath("mymod", "my_provider"));
 
     @Override
     public MyCustomServerLevel create(
@@ -52,7 +52,7 @@ public class MyCustomLevelProvider implements ServerLevelProvider<MyCustomServer
 @Override
 public void onInitialize() {
     Registry.register(WorldsRegistries.LEVEL_PROVIDER_REGISTRY, 
-        MyCustomLevelProvider.MY_PROVIDER.location(), 
+        MyCustomLevelProvider.MY_PROVIDER.identifier(), 
         new MyCustomLevelProvider());
 }
 ```

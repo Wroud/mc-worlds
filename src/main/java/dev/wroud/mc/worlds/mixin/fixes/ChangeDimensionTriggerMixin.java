@@ -2,7 +2,7 @@ package dev.wroud.mc.worlds.mixin.fixes;
 
 import dev.wroud.mc.worlds.abstractions.ServerPlayerAbstraction;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
-import net.minecraft.advancements.critereon.ChangeDimensionTrigger;
+import net.minecraft.advancements.criterion.ChangeDimensionTrigger;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

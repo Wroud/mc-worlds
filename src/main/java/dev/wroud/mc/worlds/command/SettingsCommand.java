@@ -51,7 +51,7 @@ public class SettingsCommand {
 
   public static int getLoadOnStartup(CommandSourceStack source)
       throws CommandSyntaxException {
-    var id = source.getLevel().dimension().location();
+    var id = source.getLevel().dimension().identifier();
     
     var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
     var levelData = worlds.getManager().getWorldsData().getLevelData(id);
@@ -73,7 +73,7 @@ public class SettingsCommand {
 
   public static int setLoadOnStartup(CommandSourceStack source, boolean loadOnStartup)
       throws CommandSyntaxException {
-    var id = source.getLevel().dimension().location();
+    var id = source.getLevel().dimension().identifier();
     
     var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
     var levelData = worlds.getManager().getWorldsData().getLevelData(id);
@@ -95,7 +95,7 @@ public class SettingsCommand {
 
   public static int getSpawn(CommandSourceStack source)
       throws CommandSyntaxException {
-    var id = source.getLevel().dimension().location();
+    var id = source.getLevel().dimension().identifier();
     
     var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
     var levelData = worlds.getManager().getWorldsData().getLevelData(id);
@@ -129,7 +129,7 @@ public class SettingsCommand {
 
   public static int setSpawn(CommandSourceStack source, Vec3 position)
       throws CommandSyntaxException {
-    var id = source.getLevel().dimension().location();
+    var id = source.getLevel().dimension().identifier();
     
     var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
     var levelData = worlds.getManager().getWorldsData().getLevelData(id);

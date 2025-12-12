@@ -32,7 +32,7 @@ public class WorldsCommands {
     var worldPreset = context.getSource().registryAccess().lookupOrThrow(Registries.WORLD_PRESET).getOrThrow(preset)
         .value();
     var dimensions = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream()
-        .filter(key -> !key.equals(LevelStem.NETHER) && !key.equals(LevelStem.END)).map(ResourceKey::location);
+        .filter(key -> !key.equals(LevelStem.NETHER) && !key.equals(LevelStem.END)).map(ResourceKey::identifier);
 
     return SharedSuggestionProvider.suggestResource(dimensions, builder);
   };
@@ -40,7 +40,7 @@ public class WorldsCommands {
   public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = (context,
       builder) -> {
     var server = context.getSource().getServer();
-    var serverLevels = server.levelKeys().stream().map(ResourceKey::location);
+    var serverLevels = server.levelKeys().stream().map(ResourceKey::identifier);
     var customWorlds = McWorldMod.getMcWorld(server).orElseThrow().getManager().getWorldsData().getLevelsData().keySet()
         .stream();
 

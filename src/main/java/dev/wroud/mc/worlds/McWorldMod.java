@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 
@@ -60,7 +60,7 @@ public class McWorldMod implements ModInitializer {
             for (var dimensionKey : toRemove) {
                 var level = ((MinecraftServerAccessor) server).getLevels().remove(dimensionKey);
                 if (level instanceof CustomServerLevel customLevel) {
-                    LOGGER.info("Saving chunks for level '{}'/{}", customLevel, customLevel.dimension().location());
+                    LOGGER.info("Saving chunks for level '{}'/{}", customLevel, customLevel.dimension().identifier());
                     customLevel.save(null, true, customLevel.isDeleteOnClose());
 
                     try {
@@ -75,7 +75,7 @@ public class McWorldMod implements ModInitializer {
 
         ServerWorldEvents.UNLOAD.register((server, level) -> {
             if (level instanceof CustomServerLevel) {
-                worlds.get(server).handleWorldUnload(level.dimension().location());
+                worlds.get(server).handleWorldUnload(level.dimension().identifier());
             }
         });
 
@@ -92,7 +92,7 @@ public class McWorldMod implements ModInitializer {
         return Optional.ofNullable(worlds.get(server));
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 }

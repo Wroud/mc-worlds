@@ -1,6 +1,6 @@
 package dev.wroud.mc.worlds.mixin;
 
-import net.minecraft.BlockUtil.FoundRectangle;
+import net.minecraft.util.BlockUtil.FoundRectangle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
