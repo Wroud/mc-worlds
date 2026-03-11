@@ -4,8 +4,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import dev.wroud.mc.worlds.abstractions.ServerPlayerAbstraction;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.registries.Registries;
@@ -27,7 +27,7 @@ import static net.minecraft.commands.Commands.literal;
 public class TeleportCommand {
 	public static LiteralArgumentBuilder<CommandSourceStack> build() {
 		return literal("tp")
-				.requires(Permissions.require("dev.wroud.mc.worlds.command.teleport", 2))
+        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
 				.then(
 						argument("id", IdentifierArgument.id())
 								.suggests(WORLD_SUGGESTIONS)

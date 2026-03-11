@@ -4,8 +4,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -20,7 +20,7 @@ import static net.minecraft.commands.Commands.literal;
 public class DeleteCommand {
 	public static LiteralArgumentBuilder<CommandSourceStack> build() {
 		return literal("delete")
-				.requires(Permissions.require("dev.wroud.mc.worlds.command.delete", 2))
+				.requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
 				.then(
 						argument("id", IdentifierArgument.id())
 								.suggests(CUSTOM_WORLD_SUGGESTIONS)

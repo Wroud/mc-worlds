@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.util.Mth;
+import net.minecraft.world.clock.ClockTimeMarkers;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
@@ -73,7 +74,8 @@ public class SpawnPreparationHelper {
       serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), BlockPos.ZERO.above(80), 0.0F, 0.0F));
     } else {
       ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
-      ChunkPos chunkPos = new ChunkPos(serverChunkCache.randomState().sampler().findSpawnPosition());
+      var spawnPosition = serverChunkCache.randomState().sampler().findSpawnPosition();
+      ChunkPos chunkPos = ChunkPos.containing(spawnPosition);
       McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().identifier());
       int i = serverChunkCache.getGenerator().getSpawnHeight(serverLevel);
       if (i < serverLevel.getMinY()) {
@@ -90,7 +92,7 @@ public class SpawnPreparationHelper {
 
       for (int n = 0; n < Mth.square(11); n++) {
         if (j >= -5 && j <= 5 && k >= -5 && k <= 5) {
-          spawnChunksToCheck.add(new ChunkPos(chunkPos.x + j, chunkPos.z + k));
+          spawnChunksToCheck.add(new ChunkPos(chunkPos.x() + j, chunkPos.z() + k));
         }
 
         if (j == k || j < 0 && j == -k || j > 0 && j == 1 - k) {
@@ -145,8 +147,9 @@ public class SpawnPreparationHelper {
       return;
     }
     var worldData = serverLevel.getServer().getWorldData();
+    var worldGenSettings = serverLevel.getServer().getWorldGenSettings();
     var debug = worldData.isDebugWorld();
-    var worldOptions = worldData.worldGenOptions();
+    var worldOptions = worldGenSettings.options();
     var generateBonusChest = worldOptions.generateBonusChest();
 
     var serverChunkCache = serverLevel.getChunkSource();
@@ -157,16 +160,20 @@ public class SpawnPreparationHelper {
           .flatMap(registry -> registry.get(MiscOverworldFeatures.BONUS_CHEST))
           .ifPresent(
               reference -> ((ConfiguredFeature<?, ?>) reference.value())
-                  .place(serverLevel, serverChunkCache.getGenerator(), serverLevel.random,
+                  .place(serverLevel, serverChunkCache.getGenerator(), serverLevel.getRandom(),
                       serverLevelData.getRespawnData().pos()));
     }
 
     serverLevelData.setInitialized(true);
     if (debug) {
-      serverLevelData.setRaining(false);
-      serverLevelData.setThundering(false);
-      serverLevelData.setClearWeatherTime(1000000000);
-      serverLevelData.setDayTime(6000L);
+      var server = this.serverLevel.getServer();
+      var defaultClock = serverLevel.dimensionType().defaultClock();
+
+      if (defaultClock.isPresent()) {
+        server.clockManager().moveToTimeMarker(
+            defaultClock.get(),
+            ClockTimeMarkers.NOON);
+      }
       serverLevelData.setGameType(GameType.SPECTATOR);
     }
     spawnChunksToCheck = null;

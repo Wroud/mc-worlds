@@ -2,7 +2,7 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.ChangelogPluginExtension
 
 plugins {
-    id("fabric-loom") version "1.13-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version "1.15-SNAPSHOT"
     id("maven-publish")
     id("me.modmuss50.mod-publish-plugin") version "1.0.0"
     id("org.jetbrains.changelog") version "2.4.0"
@@ -59,22 +59,10 @@ fabricApi {
     }
 }
 
-fun DependencyHandlerScope.includeMod(dep: String) {
-    include(modImplementation(dep)!!)
-}
-
-fun DependencyHandlerScope.includeDep(dep: String) {
-    include(implementation(dep)!!)
-}
-
 dependencies {
     minecraft("com.mojang:minecraft:${findProperty("minecraft_version")}")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${findProperty("loader_version")}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
-
-    includeMod("me.lucko:fabric-permissions-api:${findProperty("permission_api_version")}")
-    
+    implementation("net.fabricmc:fabric-loader:${findProperty("loader_version")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
     // modRuntimeOnly("maven.modrinth:<slug>:<version>") // Example mod from Modrinth
 }
 
@@ -93,9 +81,15 @@ tasks {
     }
 }
 
+tasks.withType<JavaCompile>().configureEach {
+	options.release = 25
+}
+
 java {
 	  withSourcesJar()
     toolchain.languageVersion = JavaLanguageVersion.of(findProperty("java_version") as String)
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 tasks.named("sourcesJar") {
@@ -104,7 +98,7 @@ tasks.named("sourcesJar") {
 
 publishMods {
     displayName = "${findProperty("mod_name")} ${version.get()}"
-    file = tasks.remapJar.get().archiveFile
+    file = tasks.jar.get().archiveFile
     changelog = fetchChangelog()
 
     type = STABLE
@@ -113,7 +107,7 @@ publishMods {
 
 
     curseforge {
-        javaVersions.add(JavaVersion.VERSION_21)
+        javaVersions.add(JavaVersion.VERSION_25)
         clientRequired = true
         serverRequired = true
         projectSlug = "worlds"

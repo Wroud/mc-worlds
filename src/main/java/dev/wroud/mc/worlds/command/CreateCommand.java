@@ -8,8 +8,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.WorldsCreator;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
 
@@ -35,7 +35,7 @@ public class CreateCommand {
 
   public static LiteralArgumentBuilder<CommandSourceStack> build() {
     return literal("create")
-        .requires(Permissions.require("dev.wroud.mc.worlds.command.create", 2))
+        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
         .then(
             argument("id", IdentifierArgument.id())
                 .executes(

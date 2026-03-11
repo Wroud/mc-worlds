@@ -26,7 +26,7 @@ public class WorldsRegistries {
   
   static {
     // Create the registry during class loading so it's available for other mods
-    LEVEL_PROVIDER_REGISTRY = FabricRegistryBuilder.createSimple(LEVEL_PROVIDER).buildAndRegister();
+    LEVEL_PROVIDER_REGISTRY = FabricRegistryBuilder.create(LEVEL_PROVIDER).buildAndRegister();
   }
 
   private static <T> ResourceKey<Registry<T>> createRegistryKey(String string) {

@@ -33,7 +33,7 @@ public class WorldsManager {
 
   public WorldsManager(MinecraftServer server) {
     this.server = server;
-    this.worldsData = server.overworld().getDataStorage().computeIfAbsent(WorldsData.TYPE);
+    this.worldsData = server.getDataStorage().computeIfAbsent(WorldsData.TYPE);
   }
 
   public synchronized Collection<Identifier> getWorldIds() {
@@ -78,7 +78,7 @@ public class WorldsManager {
     if (levelData.getLevelStem().type().is(DimensionTypeTags.OVERWORLD_LIKE)) {
       list = ImmutableList.of(
           new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(),
-          new WanderingTraderSpawner(levelData));
+          new WanderingTraderSpawner(null));
     }
 
     var serverLevelProvider = this.server.registryAccess()
@@ -92,8 +92,7 @@ public class WorldsManager {
         levelData,
         resourceKey,
         levelData.getLevelStem(),
-        list,
-        null);
+        list);
 
     var worldHandle = new WorldHandle(id, levelData, serverLevel);
     worlds.put(id, worldHandle);

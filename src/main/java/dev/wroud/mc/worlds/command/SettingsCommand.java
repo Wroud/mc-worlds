@@ -5,8 +5,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 
 import dev.wroud.mc.worlds.McWorldMod;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 
 import com.mojang.brigadier.Command;
@@ -28,7 +28,7 @@ public class SettingsCommand {
 
   public static LiteralArgumentBuilder<CommandSourceStack> build() {
     return literal("settings")
-        .requires(Permissions.require("dev.wroud.mc.worlds.command.settings", 2))
+        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
         .then(literal("loadOnStartup")
             .executes(context -> getLoadOnStartup(context.getSource()))
             .then(

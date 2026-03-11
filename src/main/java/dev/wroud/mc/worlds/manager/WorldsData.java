@@ -18,7 +18,7 @@ public class WorldsData extends SavedData {
       .unboundedMap(Identifier.CODEC, WorldsLevelData.CODEC)
       .xmap(WorldsData::new, wd -> wd.levels);
 
-  public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.MOD_ID,
+  public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.id("worlds_data"),
       WorldsData::new, CODEC, null);
 
   private WorldsData() {
@@ -32,11 +32,6 @@ public class WorldsData extends SavedData {
   @Override
   public boolean isDirty() {
     return true;
-  }
-
-  @Override
-  public void setDirty(boolean bl) {
-    super.setDirty(true);
   }
 
   public void addLevelData(Identifier id, WorldsLevelData data) {

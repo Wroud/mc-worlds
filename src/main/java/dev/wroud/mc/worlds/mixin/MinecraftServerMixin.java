@@ -36,7 +36,7 @@ public class MinecraftServerMixin {
   }
 
   @Inject(method = "getLevel", at = @At("RETURN"), cancellable = true)
-  private void onGetLevelReturn(ResourceKey<Level> resourceKey, CallbackInfoReturnable<ServerLevel> cir) {
+  private void onGetLevelReturn(final ResourceKey<Level> resourceKey, CallbackInfoReturnable<ServerLevel> cir) {
     ServerLevel level = cir.getReturnValue();
 
     if (level == null) {

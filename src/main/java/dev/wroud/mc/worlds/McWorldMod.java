@@ -4,7 +4,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -33,9 +33,10 @@ public class McWorldMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        
         WorldsRegistries.bootstrap();
 
-        ServerWorldEvents.LOAD.register((serverInstance, world) -> {
+        ServerLevelEvents.LOAD.register((serverInstance, world) -> {
             if (world.dimension() == Level.OVERWORLD && !worlds.containsKey(serverInstance)) {
                 var mcWorld = new McWorld(serverInstance);
                 worlds.put(serverInstance, mcWorld);
@@ -65,7 +66,7 @@ public class McWorldMod implements ModInitializer {
 
                     try {
                         customLevel.close();
-                        ServerWorldEvents.UNLOAD.invoker().onWorldUnload(server, customLevel);
+                        ServerLevelEvents.UNLOAD.invoker().onLevelUnload(server, customLevel);
                     } catch (IOException e) {
                         LOGGER.error("Exception closing the level", e);
                     }
@@ -73,7 +74,7 @@ public class McWorldMod implements ModInitializer {
             }
         });
 
-        ServerWorldEvents.UNLOAD.register((server, level) -> {
+        ServerLevelEvents.UNLOAD.register((server, level) -> {
             if (level instanceof CustomServerLevel) {
                 worlds.get(server).handleWorldUnload(level.dimension().identifier());
             }

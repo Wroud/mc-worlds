@@ -9,9 +9,9 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.mixin.WorldPresetAccessor;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.core.registries.Registries;
@@ -62,7 +62,7 @@ public class WorldsCommands {
       CommandBuildContext commandBuildContext) {
     var root = dispatcher.register(
         literal("worlds")
-            .requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
+            .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
             .then(DeleteCommand.build())
             .then(TeleportCommand.build())
             .then(CreateCommand.build())
@@ -70,7 +70,7 @@ public class WorldsCommands {
 
     dispatcher.register(
         literal("worlds")
-            .requires(Permissions.require("dev.wroud.mc.worlds.commands", 2))
+            .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
             .redirect(root));
   }
 }
