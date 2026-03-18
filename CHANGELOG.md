@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.8.3 - 2026-03-18
+
+### Added
+
+- Support for Minecraft 26.1 Pre-Release 3
+
 ## 1.8.2 - 2026-03-17
 
 ### Added
