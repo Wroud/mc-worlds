@@ -4,15 +4,7 @@
 
 ### Added
 
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
+- Support for Minecraft 26.1 Release candidate 1
 
 ## 1.8.4 - 2026-03-20
 
