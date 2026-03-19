@@ -69,6 +69,15 @@ public class TimeCommandMixin {
         else mgr.setPaused(clock, paused);
     }
 
+    @Redirect(method = "setRate",
+              at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;setRate(Lnet/minecraft/core/Holder;F)V"))
+    private static void redirectSetRate(ServerClockManager mgr, Holder<WorldClock> clock, float rate,
+            CommandSourceStack source) {
+        PerWorldClockManager pwcm = getPerWorld(source);
+        if (pwcm != null) pwcm.setRate(clock, rate);
+        else mgr.setRate(clock, rate);
+    }
+
     @Redirect(method = "queryTime",
               at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;getTotalTicks(Lnet/minecraft/core/Holder;)J"))
     private static long redirectGetTotalTicksInQuery(ServerClockManager mgr, Holder<WorldClock> clock,

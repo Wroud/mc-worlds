@@ -14,6 +14,13 @@
 
 ### Security
 
+## 1.8.4 - 2026-03-20
+
+### Fixed
+
+- Rain in custom worlds no longer stops when a player enters or when the weather changes in another world.
+- Setting time speed (`/time rate`) in a custom world now correctly applies only to that world and no longer reverts.
+
 ## 1.8.3 - 2026-03-18
 
 ### Added

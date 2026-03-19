@@ -110,12 +110,17 @@ public class PerWorldClockManager extends SavedData implements ClockManager {
 		this.modifyClock(clock, instance -> instance.paused = paused);
   }
 
+  public void setRate(Holder<WorldClock> clock, float rate) {
+    this.modifyClock(clock, instance -> instance.rate = rate);
+  }
+
   private void modifyClock(final Holder<WorldClock> clock, final Consumer<? super ClockInstance> action) {
     ClockInstance instance = this.getInstance(clock);
     action.accept(instance);
     Map<Holder<WorldClock>, ClockNetworkState> updates = Map.of(clock, instance.packNetworkState(this.serverLevel));
     this.serverLevel.getServer().getPlayerList().broadcastAll(new ClientboundSetTimePacket(this.getGameTime(), updates),
         this.serverLevel.dimension());
+    this.serverLevel.environmentAttributes().invalidateTickCache();
     this.setDirty();
   }
 
