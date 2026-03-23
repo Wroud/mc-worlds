@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.8.7 - 2026-03-24
+
+### Added
+
+- Support for Minecraft 26.1 Release candidate 3
+
 ## 1.8.6 - 2026-03-21
 
 ### Added
