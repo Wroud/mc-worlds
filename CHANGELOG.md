@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.8.8 - 2026-03-25
+
+### Added
+
+- Support for Minecraft 26.1
+
 ## 1.8.7 - 2026-03-24
 
 ### Added
