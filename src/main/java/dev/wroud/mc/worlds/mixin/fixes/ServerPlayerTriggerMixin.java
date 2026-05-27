@@ -1,7 +1,7 @@
 package dev.wroud.mc.worlds.mixin.fixes;
 
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,7 +26,7 @@ public abstract class ServerPlayerTriggerMixin {
   @Inject(
       method = "triggerDimensionChangeTriggers",
       at = @At(value = "INVOKE", 
-               target = "Lnet/minecraft/advancements/CriteriaTriggers;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/phys/Vec3;)V",
+               target = "Lnet/minecraft/advancements/triggers/CriteriaTriggers;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/phys/Vec3;)V",
                shift = At.Shift.AFTER)
   )
   private void handleCustomDimensionNetherTravel(ServerLevel fromLevel, CallbackInfo ci) {

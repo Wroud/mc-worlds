@@ -27,13 +27,13 @@ public class TeleportTransitionAbstraction {
   }
 
   private static Vec3 findAdjustedSharedSpawnPos(ServerLevel serverLevel, Entity entity) {
-    return entity.adjustSpawnLocation(serverLevel, serverLevel.getRespawnData().pos()).getBottomCenter();
+    return Vec3.atBottomCenterOf(entity.adjustSpawnLocation(serverLevel, serverLevel.getRespawnData().pos()));
   }
 
   private static Vec3 adjustSpawnLocation(ServerLevel serverLevel, BlockPos blockPos) {
-    var vec3 = blockPos.getCenter();
+    var vec3 = Vec3.atCenterOf(blockPos);
     int i = serverLevel.getChunkAt(blockPos).getHeight(Types.MOTION_BLOCKING_NO_LEAVES, blockPos.getX(),
         blockPos.getZ()) + 1;
-    return BlockPos.containing(vec3.x, i, vec3.z).getBottomCenter();
+    return Vec3.atBottomCenterOf(BlockPos.containing(vec3.x, i, vec3.z));
   }
 }

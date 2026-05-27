@@ -52,7 +52,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
 
   private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {
     BlockPos blockPos2 = ServerLevel.END_SPAWN_POINT;
-    Vec3 vec3 = blockPos2.getBottomCenter();
+    Vec3 vec3 = Vec3.atBottomCenterOf(blockPos2);
 
     EndPlatformFeature.createEndPlatform(level, BlockPos.containing(vec3).below(), true);
     var f = Direction.WEST.toYRot();
@@ -73,7 +73,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
     EndGatewayUtil.spawnGatewayPortal(level, blockPos2, EndGatewayConfiguration.knownExit(blockPos, false));
 
     blockPos2 = EndGatewayUtil.findExitPosition(level, blockPos2);
-    Vec3 vec3 = blockPos2.getBottomCenter();
+    Vec3 vec3 = Vec3.atBottomCenterOf(blockPos2);
     return new TeleportTransition(
         level, vec3, Vec3.ZERO, 0.0F, 0.0F, Relative.union(Relative.DELTA, Relative.ROTATION),
         TeleportTransition.PLACE_PORTAL_TICKET);
