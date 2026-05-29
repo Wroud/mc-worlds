@@ -106,17 +106,17 @@ publishMods {
     modLoaders.add("quilt")
 
 
-    curseforge {
-        javaVersions.add(JavaVersion.VERSION_25)
-        clientRequired = true
-        serverRequired = true
-        projectSlug = "worlds"
-        requires("fabric-api")
+    // curseforge {
+    //     javaVersions.add(JavaVersion.VERSION_25)
+    //     clientRequired = true
+    //     serverRequired = true
+    //     projectSlug = "worlds"
+    //     requires("fabric-api")
 
-        projectId = findProperty("curseforge_project_id")!!.toString()
-        minecraftVersions.add(findProperty("curseforge_minecraft_version")!!.toString())
-        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    }
+    //     projectId = findProperty("curseforge_project_id")!!.toString()
+    //     minecraftVersions.add(findProperty("curseforge_minecraft_version")!!.toString())
+    //     accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+    // }
     modrinth {
         requires("fabric-api")
 
