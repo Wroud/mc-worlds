@@ -125,6 +125,10 @@ public class WorldsLevelData implements ServerLevelData {
   }
 
   @Override
+  public void setAllowCommands(boolean bl) {
+  }
+
+  @Override
   public void setGameType(GameType gameType) {
   }
 
