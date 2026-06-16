@@ -24,9 +24,8 @@ public class DataFixersMixin {
     
     @Inject(method = "addFixers", at = @At("TAIL"))
     private static void mcworlds$addFileFixers(DataFixerBuilder fixerUpper, FileFixerUpper.Builder fileFixerUpper, CallbackInfo ci) {
-        // Add a new schema version for our mod's file fix
-        // This runs after all vanilla file fixes (the last one is at version 4773)
-        Schema schema = fileFixerUpper.addSchema(fixerUpper, 4774, NamespacedSchema::new);
+        int version = fileFixerUpper.fileFixes.getLast().getVersion() + 1;
+        Schema schema = fileFixerUpper.addSchema(fixerUpper, version, NamespacedSchema::new);
         fileFixerUpper.addFixer(new McWorldsDataFileFix(schema));
     }
 }
