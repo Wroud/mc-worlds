@@ -13,18 +13,18 @@ import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 public class DimensionDetectionUtil {
 
     public static boolean isEndLikeDimension(Level level) {
-        return level.dimensionTypeRegistration().is(BuiltinDimensionTypes.END)
-                || level.dimensionTypeRegistration().is(DimensionTypeTags.END_LIKE);
+        Holder<DimensionType> type = level.dimensionTypeRegistration();
+        return type.is(BuiltinDimensionTypes.END) || type.is(DimensionTypeTags.END_LIKE);
     }
 
     public static boolean isNetherLikeDimension(Level level) {
-        return level.dimensionTypeRegistration().is(BuiltinDimensionTypes.NETHER)
-                || level.dimensionTypeRegistration().is(DimensionTypeTags.NETHER_LIKE);
+        Holder<DimensionType> type = level.dimensionTypeRegistration();
+        return type.is(BuiltinDimensionTypes.NETHER) || type.is(DimensionTypeTags.NETHER_LIKE);
     }
 
     public static boolean isOverworldLikeDimension(Level level) {
-        return level.dimensionTypeRegistration().is(BuiltinDimensionTypes.OVERWORLD)
-                || level.dimensionTypeRegistration().is(DimensionTypeTags.OVERWORLD_LIKE);
+        Holder<DimensionType> type = level.dimensionTypeRegistration();
+        return type.is(BuiltinDimensionTypes.OVERWORLD) || type.is(DimensionTypeTags.OVERWORLD_LIKE);
     }
 
     public static ResourceKey<Level> getVanillaDimensionMapping(Level level) {
@@ -54,7 +54,6 @@ public class DimensionDetectionUtil {
     }
 
     public static boolean shouldTreatAsVanillaDimension(Level level, ResourceKey<Level> vanillaDimension) {
-        ResourceKey<Level> mappedDimension = getVanillaDimensionMapping(level);
-        return mappedDimension != null && mappedDimension.equals(vanillaDimension);
+        return getVanillaDimensionMapping(level).equals(vanillaDimension);
     }
 }

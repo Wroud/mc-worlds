@@ -9,11 +9,6 @@ import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * After the global time sync packet is broadcast every 20 ticks, send
- * per-world clock states to players currently in a CustomServerLevel so
- * their client sky/moon rendering stays correct.
- */
 @Mixin(MinecraftServer.class)
 public class MinecraftServerTimeSyncMixin {
 
@@ -21,7 +16,7 @@ public class MinecraftServerTimeSyncMixin {
     private void onForceGameTimeSynchronization(CallbackInfo ci) {
         MinecraftServer server = (MinecraftServer) (Object) this;
         for (ServerLevel level : server.getAllLevels()) {
-            if (level instanceof CustomServerLevel csl) {
+            if (level instanceof CustomServerLevel csl && !csl.players().isEmpty()) {
                 server.getPlayerList().broadcastAll(csl.clockManager().createFullSyncPacket(), csl.dimension());
             }
         }

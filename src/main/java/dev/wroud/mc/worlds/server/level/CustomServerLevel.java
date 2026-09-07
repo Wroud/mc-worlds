@@ -2,7 +2,6 @@ package dev.wroud.mc.worlds.server.level;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
@@ -16,7 +15,6 @@ import dev.wroud.mc.worlds.server.level.state.LevelState;
 import dev.wroud.mc.worlds.server.level.state.StoppedLevelState;
 import dev.wroud.mc.worlds.server.level.state.StoppingLevelState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -38,8 +36,8 @@ public class CustomServerLevel extends ServerLevel {
   private boolean deleteOnClose;
   private LevelState currentState;
   private final WeatherData weatherData;
-  private @Nullable ServerClockManager perWorldClockManager;
-  private @Nullable EnvironmentAttributeSystem perWorldEnvironmentAttributes;
+  private final @Nullable ServerClockManager perWorldClockManager;
+  private final @Nullable EnvironmentAttributeSystem perWorldEnvironmentAttributes;
 
   public CustomServerLevel(
       MinecraftServer server,
@@ -92,7 +90,7 @@ public class CustomServerLevel extends ServerLevel {
   public void tick(BooleanSupplier booleanSupplier) {
     this.currentState.tick(booleanSupplier);
     ServerClockManager clock = this.perWorldClockManager;
-    if (clock != null && this.tickRateManager().runsNormally() && this.getGameRules().get(GameRules.ADVANCE_TIME)) {
+    if (clock != null && this.tickRateManager().runsNormally()) {
       clock.tick();
     }
     super.tick(booleanSupplier);

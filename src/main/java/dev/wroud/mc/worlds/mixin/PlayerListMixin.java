@@ -9,12 +9,6 @@ import net.minecraft.world.clock.ServerClockManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/**
- * Replaces the global full clock sync packet sent in sendLevelInfo() with
- * the per-world clock states when the player is entering a CustomServerLevel.
- * This covers initial join, dimension teleport, and respawn — all paths that
- * call sendLevelInfo().
- */
 @Mixin(PlayerList.class)
 public class PlayerListMixin {
 

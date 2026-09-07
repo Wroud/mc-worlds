@@ -7,10 +7,6 @@ import net.minecraft.world.clock.ServerClockManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/**
- * Redirects the sleep-wake time skip in ServerLevel.tick() so custom levels
- * advance their per-world clock to dawn instead of the global clock.
- */
 @Mixin(ServerLevel.class)
 public class ServerLevelTimeMixin {
 

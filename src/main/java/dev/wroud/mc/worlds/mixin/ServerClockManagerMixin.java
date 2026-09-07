@@ -26,11 +26,6 @@ public class ServerClockManagerMixin implements WorldClockOwner {
         this.mcworlds$owner = level;
     }
 
-    @Override
-    public @Nullable ServerLevel mcworlds$getOwner() {
-        return this.mcworlds$owner;
-    }
-
     @ModifyExpressionValue(
         method = "getGameTime",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;overworld()Lnet/minecraft/server/level/ServerLevel;"))
