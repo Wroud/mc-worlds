@@ -21,8 +21,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.attribute.EnvironmentAttributeSystem;
-import net.minecraft.world.clock.WorldClock;
-import net.minecraft.world.clock.WorldClocks;
+import net.minecraft.world.clock.ServerClockManager;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -39,7 +38,7 @@ public class CustomServerLevel extends ServerLevel {
   private boolean deleteOnClose;
   private LevelState currentState;
   private final WeatherData weatherData;
-  private @Nullable PerWorldClockManager perWorldClockManager;
+  private @Nullable ServerClockManager perWorldClockManager;
   private @Nullable EnvironmentAttributeSystem perWorldEnvironmentAttributes;
 
   public CustomServerLevel(
@@ -58,8 +57,7 @@ public class CustomServerLevel extends ServerLevel {
     this.deleteOnClose = false;
     this.weatherData = (WeatherData) this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
     ((ServerLevelAccessor) this).invokePrepareWeather(this.weatherData);
-    this.perWorldClockManager = this.getDataStorage().computeIfAbsent(PerWorldClockManager.TYPE);
-    this.perWorldClockManager.init(this);
+    this.perWorldClockManager = PerWorldClocks.create(this);
     this.perWorldEnvironmentAttributes = EnvironmentAttributeSystem.builder().addDefaultLayers(this).build();
     this.currentState = levelData.isInitialized() ? new ActivationLevelState(this)
         : new InitializationLevelState(this);
@@ -78,8 +76,10 @@ public class CustomServerLevel extends ServerLevel {
     return this.weatherData;
   }
 
-  public @Nullable PerWorldClockManager getPerWorldClockManager() {
-    return this.perWorldClockManager;
+  @Override
+  public ServerClockManager clockManager() {
+    ServerClockManager clock = this.perWorldClockManager;
+    return clock != null ? clock : super.clockManager();
   }
 
   @Override
@@ -89,31 +89,9 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   @Override
-	public long getOverworldClockTime() {
-		return this.getClockTimeTicks(this.registryAccess().get(WorldClocks.OVERWORLD));
-	}
-
-  @Override
-	public long getDefaultClockTime() {
-		return this.getClockTimeTicks(this.dimensionType().defaultClock());
-	}
-
-	private long getClockTimeTicks(final Optional<? extends Holder<WorldClock>> clock) {
-		return (Long)clock.map(holder -> {
-      var clockManager = this.getPerWorldClockManager();
-
-      if(clockManager != null) {
-        return clockManager.getTotalTicks(holder);
-      }
-
-      return this.clockManager().getTotalTicks(holder);
-    }).orElse(0L);
-	}
-
-  @Override
   public void tick(BooleanSupplier booleanSupplier) {
     this.currentState.tick(booleanSupplier);
-    PerWorldClockManager clock = this.perWorldClockManager;
+    ServerClockManager clock = this.perWorldClockManager;
     if (clock != null && this.tickRateManager().runsNormally() && this.getGameRules().get(GameRules.ADVANCE_TIME)) {
       clock.tick();
     }

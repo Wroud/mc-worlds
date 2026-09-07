@@ -14,6 +14,17 @@
 
 ### Security
 
+## 1.8.17 - 2026-09-08
+
+### Added
+
+- Support for Minecraft 26.3 Pre-Release 2
+
+### Fixed
+
+- Weather no longer occurs in End-like custom dimensions
+- The Nether travel advancement now triggers when leaving Nether-like custom dimensions
+
 ## 1.8.16 - 2026-06-17
 
 ### Added

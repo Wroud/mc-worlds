@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.feature.EndPlatformFeature;
-import net.minecraft.world.level.levelgen.feature.configurations.EndGatewayConfiguration;
+import net.minecraft.world.level.levelgen.feature.EndGatewayFeature;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
@@ -70,7 +70,7 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
     BlockPos blockPos2 = EndGatewayUtil.findOrCreateValidTeleportPos(level, blockPos);
     blockPos2 = blockPos2.above(10);
     McWorldMod.LOGGER.debug("Creating portal at {}", blockPos2);
-    EndGatewayUtil.spawnGatewayPortal(level, blockPos2, EndGatewayConfiguration.knownExit(blockPos, false));
+    EndGatewayUtil.spawnGatewayPortal(level, blockPos2, EndGatewayFeature.knownExit(blockPos, false));
 
     blockPos2 = EndGatewayUtil.findExitPosition(level, blockPos2);
     Vec3 vec3 = Vec3.atBottomCenterOf(blockPos2);

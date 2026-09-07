@@ -1,64 +1,47 @@
 package dev.wroud.mc.worlds.mixin.fixes;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
+
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
-import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Maps the two dimension keys triggerDimensionChangeTriggers compares so that
+ * NETHER_TRAVEL fires when leaving a NETHER-like dimension for an OVERWORLD-like
+ * one, and enteredNetherPosition is only retained while still in a NETHER-like
+ * dimension.
+ */
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerTriggerMixin {
+public class ServerPlayerTriggerMixin {
 
-  @Shadow
-  public abstract ServerLevel level();
-
-  @Shadow
-  private Vec3 enteredNetherPosition;
-
-  @Inject(
+  @ModifyExpressionValue(
       method = "triggerDimensionChangeTriggers",
-      at = @At(value = "INVOKE", 
-               target = "Lnet/minecraft/advancements/triggers/CriteriaTriggers;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/phys/Vec3;)V",
-               shift = At.Shift.AFTER)
-  )
-  private void handleCustomDimensionNetherTravel(ServerLevel fromLevel, CallbackInfo ci) {
-    ServerPlayer player = (ServerPlayer) (Object) this;
-    ServerLevel toLevel = level();
-
-    ResourceKey<Level> fromDimension = fromLevel.dimension();
-    ResourceKey<Level> toDimension = toLevel.dimension();
-
-    if (fromDimension == Level.OVERWORLD && toDimension == Level.NETHER) {
-      return;
-    }
-
-    boolean isFromOverworldLike = DimensionDetectionUtil.isOverworldLikeDimension(fromLevel);
-    boolean isToNetherLike = DimensionDetectionUtil.isNetherLikeDimension(toLevel);
-
-    if (isFromOverworldLike && isToNetherLike && this.enteredNetherPosition != null) {
-      CriteriaTriggers.NETHER_TRAVEL.trigger(player, this.enteredNetherPosition);
-    }
+      at = @At(
+          value = "INVOKE",
+          target = "Lnet/minecraft/server/level/ServerLevel;dimension()Lnet/minecraft/resources/ResourceKey;",
+          ordinal = 0))
+  private ResourceKey<Level> mcworlds$mapOldDimension(
+      ResourceKey<Level> original,
+      @Local(argsOnly = true) ServerLevel oldLevel) {
+    ResourceKey<Level> mapped = DimensionDetectionUtil.getVanillaDimensionMapping(oldLevel);
+    return mapped != null ? mapped : original;
   }
 
-  @Redirect(
+  @ModifyExpressionValue(
       method = "triggerDimensionChangeTriggers",
-      at = @At(value = "FIELD", 
-               target = "Lnet/minecraft/server/level/ServerPlayer;enteredNetherPosition:Lnet/minecraft/world/phys/Vec3;",
-               opcode = org.objectweb.asm.Opcodes.PUTFIELD)
-  )
-  private void redirectNetherPositionClearing(ServerPlayer instance, Vec3 value) {
-    ServerLevel currentLevel = level();
-
-    if (!DimensionDetectionUtil.isNetherLikeDimension(currentLevel) && currentLevel.dimension() != Level.NETHER) {
-      this.enteredNetherPosition = value;
-    }
+      at = @At(
+          value = "INVOKE",
+          target = "Lnet/minecraft/server/level/ServerLevel;dimension()Lnet/minecraft/resources/ResourceKey;",
+          ordinal = 1))
+  private ResourceKey<Level> mcworlds$mapNewDimension(ResourceKey<Level> original) {
+    ResourceKey<Level> mapped = DimensionDetectionUtil
+        .getVanillaDimensionMapping(((ServerPlayer) (Object) this).level());
+    return mapped != null ? mapped : original;
   }
 }

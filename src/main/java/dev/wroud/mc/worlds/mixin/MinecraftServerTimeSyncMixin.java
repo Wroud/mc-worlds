@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
-import dev.wroud.mc.worlds.server.level.PerWorldClockManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
@@ -23,10 +22,7 @@ public class MinecraftServerTimeSyncMixin {
         MinecraftServer server = (MinecraftServer) (Object) this;
         for (ServerLevel level : server.getAllLevels()) {
             if (level instanceof CustomServerLevel csl) {
-                PerWorldClockManager mgr = csl.getPerWorldClockManager();
-                if (mgr != null) {
-                    server.getPlayerList().broadcastAll(mgr.createFullSyncPacket(), csl.dimension());
-                }
+                server.getPlayerList().broadcastAll(csl.clockManager().createFullSyncPacket(), csl.dimension());
             }
         }
     }

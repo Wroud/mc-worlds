@@ -3,7 +3,7 @@ package dev.wroud.mc.worlds.util;
 import dev.wroud.mc.worlds.mixin.TheEndGatewayBlockEntityAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.levelgen.feature.configurations.EndGatewayConfiguration;
+import net.minecraft.world.level.levelgen.feature.EndGatewayFeature;
 
 public class EndGatewayUtil {
     
@@ -11,8 +11,8 @@ public class EndGatewayUtil {
         return TheEndGatewayBlockEntityAccessor.invokeFindOrCreateValidTeleportPos(serverLevel, blockPos);
     }
     
-    public static void spawnGatewayPortal(ServerLevel serverLevel, BlockPos blockPos, EndGatewayConfiguration endGatewayConfiguration) {
-        TheEndGatewayBlockEntityAccessor.invokeSpawnGatewayPortal(serverLevel, blockPos, endGatewayConfiguration);
+    public static void spawnGatewayPortal(ServerLevel serverLevel, BlockPos blockPos, EndGatewayFeature feature) {
+        TheEndGatewayBlockEntityAccessor.invokeSpawnGatewayPortal(serverLevel, blockPos, feature);
     }
 
     public static BlockPos findExitPosition(ServerLevel serverLevel, BlockPos blockPos) {

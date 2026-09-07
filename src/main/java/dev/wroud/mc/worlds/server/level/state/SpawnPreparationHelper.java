@@ -19,7 +19,6 @@ import net.minecraft.world.clock.ClockTimeMarkers;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.ServerLevelData;
 
@@ -74,8 +73,7 @@ public class SpawnPreparationHelper {
       serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), BlockPos.ZERO.above(80), 0.0F, 0.0F));
     } else {
       ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
-      var spawnPosition = serverChunkCache.randomState().sampler().findSpawnPosition();
-      ChunkPos chunkPos = ChunkPos.containing(spawnPosition);
+      ChunkPos chunkPos = serverChunkCache.getGeneratorState().getDimensionOrigin();
       McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().identifier());
       int i = serverChunkCache.getGenerator().getSpawnHeight(serverLevel);
       if (i < serverLevel.getMinY()) {
@@ -156,10 +154,10 @@ public class SpawnPreparationHelper {
 
     if (generateBonusChest) {
       serverLevel.registryAccess()
-          .lookup(Registries.CONFIGURED_FEATURE)
+          .lookup(Registries.FEATURE)
           .flatMap(registry -> registry.get(MiscOverworldFeatures.BONUS_CHEST))
           .ifPresent(
-              reference -> ((ConfiguredFeature<?, ?>) reference.value())
+              feature -> feature.value()
                   .place(serverLevel, serverChunkCache.getGenerator(), serverLevel.getRandom(),
                       serverLevelData.getRespawnData().pos()));
     }
