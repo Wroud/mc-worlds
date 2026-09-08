@@ -11,9 +11,14 @@ import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import org.jspecify.annotations.Nullable;
 
 @FunctionalInterface
 public interface ServerLevelProvider<T extends CustomServerLevel> {
+
+  default @Nullable LevelStem createLevelStem(MinecraftServer server, ResourceKey<Level> resourceKey, long seed) {
+    return null;
+  }
 
   T create(
       MinecraftServer minecraftServer,

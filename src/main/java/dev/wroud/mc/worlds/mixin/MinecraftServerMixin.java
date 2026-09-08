@@ -39,16 +39,27 @@ public class MinecraftServerMixin {
   private void onGetLevelReturn(final ResourceKey<Level> resourceKey, CallbackInfoReturnable<ServerLevel> cir) {
     ServerLevel level = cir.getReturnValue();
 
-    if (level == null) {
-      McWorldMod.getMcWorld(((MinecraftServer) (Object) this)).ifPresent(worlds -> {
-        var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.identifier());
+    if (level != null) {
+      return;
+    }
 
-        if (worldData != null) {
-          var handle = worlds.loadOrCreate(resourceKey.identifier(), worldData);
-          // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
-          cir.setReturnValue(handle.getServerLevel());
-        }
-      });
+    var worlds = McWorldMod.getMcWorld(((MinecraftServer) (Object) this)).orElse(null);
+
+    if (worlds == null) {
+      return;
+    }
+
+    var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.identifier());
+
+    if (worldData == null) {
+      return;
+    }
+
+    var handle = worlds.loadOrCreate(resourceKey.identifier(), worldData);
+
+    if (handle != null) {
+      // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
+      cir.setReturnValue(handle.getServerLevel());
     }
   }
 }
