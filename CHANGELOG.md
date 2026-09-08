@@ -18,6 +18,7 @@
 
 ### Added
 
+- Support for Minecraft 26.3 Pre-Release 3 (Fabric API 0.160.1+26.3).
 - `ServerLevelProvider.createLevelStem`, a recovery hook called only when a world's stored generator could not be read. A provider whose generation is determined by the world id and seed can rebuild one there instead of the world being skipped. `mc-worlds:default` does not implement it.
 
 ### Fixed
