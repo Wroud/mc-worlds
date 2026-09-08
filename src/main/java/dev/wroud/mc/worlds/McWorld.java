@@ -1,5 +1,7 @@
 package dev.wroud.mc.worlds;
 
+import org.jspecify.annotations.Nullable;
+
 import dev.wroud.mc.worlds.manager.WorldHandle;
 import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
@@ -21,7 +23,7 @@ public class McWorld {
     worldsManager.loadSavedWorlds();
   }
 
-  public WorldHandle loadOrCreate(Identifier location, WorldsLevelData levelData) {
+  public @Nullable WorldHandle loadOrCreate(Identifier location, WorldsLevelData levelData) {
     return worldsManager.loadOrCreateWorld(location, levelData);
   }
 

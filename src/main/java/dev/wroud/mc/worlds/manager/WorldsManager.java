@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
+import org.jspecify.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 
@@ -30,6 +33,7 @@ public class WorldsManager {
   private Map<Identifier, WorldHandle> worlds = new HashMap<>();
   private MinecraftServer server;
   private WorldsData worldsData;
+  private final Set<Identifier> unreadableGenerators = new HashSet<>();
 
   public WorldsManager(MinecraftServer server) {
     this.server = server;
@@ -57,12 +61,33 @@ public class WorldsManager {
     });
   }
 
-  public synchronized WorldHandle loadOrCreateWorld(Identifier id, WorldsLevelData levelData) {
-    if (worlds.containsKey(id)) {
-      return worlds.get(id);
+  public synchronized @Nullable WorldHandle loadOrCreateWorld(Identifier id, WorldsLevelData levelData) {
+    var loaded = worlds.get(id);
+    if (loaded != null) {
+      return loaded;
+    }
+
+    if (unreadableGenerators.contains(id)) {
+      return null;
     }
 
     var resourceKey = ResourceKey.create(Registries.DIMENSION, id);
+    var serverLevelProvider = this.server.registryAccess()
+        .lookupOrThrow(WorldsRegistries.LEVEL_PROVIDER)
+        .getOrThrow(levelData.getProvider());
+
+    var storedStem = levelData.getLevelStem();
+    var levelStem = storedStem != null ? storedStem
+        : serverLevelProvider.value().createLevelStem(this.server, resourceKey, levelData.getSeed());
+
+    if (levelStem == null) {
+      unreadableGenerators.add(id);
+      McWorldMod.LOGGER.error(
+          "Skipping world {}: its stored generator could not be read and provider {} cannot rebuild one",
+          id, levelData.getProvider().identifier());
+      return null;
+    }
+
     var session = ((MinecraftServerAccessor) this.server).getStorageSource();
     File worldDirectory = session.getDimensionPath(resourceKey).toFile();
     if (worldDirectory.exists()) {
@@ -75,15 +100,11 @@ public class WorldsManager {
 
     List<CustomSpawner> list = ImmutableList.of();
 
-    if (levelData.getLevelStem().type().is(DimensionTypeTags.OVERWORLD_LIKE)) {
+    if (levelStem.type().is(DimensionTypeTags.OVERWORLD_LIKE)) {
       list = ImmutableList.of(
           new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(),
           new WanderingTraderSpawner(null));
     }
-
-    var serverLevelProvider = this.server.registryAccess()
-        .lookupOrThrow(WorldsRegistries.LEVEL_PROVIDER)
-        .getOrThrow(levelData.getProvider());
 
     var serverLevel = serverLevelProvider.value().create(
         this.server,
@@ -91,7 +112,7 @@ public class WorldsManager {
         ((MinecraftServerAccessor) this.server).getStorageSource(),
         levelData,
         resourceKey,
-        levelData.getLevelStem(),
+        levelStem,
         list);
 
     var worldHandle = new WorldHandle(id, levelData, serverLevel);

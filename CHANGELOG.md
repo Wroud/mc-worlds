@@ -14,6 +14,16 @@
 
 ### Security
 
+## 1.8.18 - 2026-09-09
+
+### Added
+
+- `ServerLevelProvider.createLevelStem`, a recovery hook called only when a world's stored generator could not be read. A provider whose generation is determined by the world id and seed can rebuild one there instead of the world being skipped. `mc-worlds:default` does not implement it.
+
+### Fixed
+
+- A world whose stored generator cannot be decoded no longer loses it. The undecodable `level_stem` is kept as-is and written back unchanged, so the world recovers once whatever supplied that generator is present again. Such a world is skipped with an error in the log if its provider cannot rebuild a generator, instead of failing server startup and `MinecraftServer.getLevel`.
+
 ## 1.8.17 - 2026-09-08
 
 ### Added
