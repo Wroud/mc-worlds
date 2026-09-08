@@ -1,5 +1,7 @@
 package dev.wroud.mc.worlds.manager.level.data;
 
+import org.jspecify.annotations.Nullable;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -45,8 +47,8 @@ public class WorldsLevelData implements ServerLevelData {
     return generator.provider;
   }
 
-  public LevelStem getLevelStem() {
-    return generator.levelStem;
+  public @Nullable LevelStem getLevelStem() {
+    return generator.getLevelStem();
   }
 
   public long getSeed() {
