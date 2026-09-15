@@ -1,6 +1,6 @@
 # MC-Worlds Agent Instructions
 
-Fabric Minecraft mod for managing multiple per-server worlds via in-game commands. Mod ID `mc-worlds`. Published to Modrinth and CurseForge (see `build.gradle.kts` `publishMods`). Versions in `gradle.properties` (mod) and `versions/latest/gradle.properties` (MC/Java).
+Fabric Minecraft mod for managing multiple per-server worlds via in-game commands. Mod ID `mc-worlds`. Published to Modrinth, CurseForge, GitHub Releases and GitHub Packages from CI (`.github/workflows/release.yml`, `build.gradle.kts` `publishMods`; `platforms` and `dry_run` inputs). Versions in `gradle.properties` (mod) and `versions/latest/gradle.properties` (MC/Java).
 
 ## Architecture
 

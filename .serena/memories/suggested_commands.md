@@ -21,6 +21,17 @@ The publication and several tasks exist only on the `:latest` subproject, not th
 
 `:latest:publishMavenPublicationToGitHubPackagesRepository` needs `GITHUB_ACTOR`/`GITHUB_TOKEN` (or `gpr.user`/`gpr.key`).
 
+## Releasing
+
+```bash
+gh workflow run release.yml                               # all: Modrinth + GitHub, Maven, then CurseForge (continue-on-error)
+gh workflow run release.yml -f dry_run=true               # build and validate, upload nothing
+gh workflow run release.yml -f platforms=curseforge       # retry one platform: curseforge | modrinth | github
+gh workflow run publish-registry.yml                      # GitHub Packages only
+```
+
+`checkModrinthVersion` / `checkGithubRelease` run before `publishModrinth` / `publishGithub` and fail if the version already exists — a partial release is finished by retrying only the missing platform, never a full re-run. Locally `./gradlew publishModrinth publishGithub publishCurseforge` is a dry run (tokens absent) and still runs the checks.
+
 ## Dev-run hazards
 
 - Client and server share `versions/latest/run/` — **never run both at once**.
