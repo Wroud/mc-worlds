@@ -21,4 +21,8 @@ State which gates ran, and separate **observed** from **derived**. Some state is
 
 ## Release chores
 
-Only when cutting a version: `CHANGELOG.md` entry under `## <mod_version> - <YYYY-MM-DD>` (the publish plugin reads it), and check `curseforge_minecraft_version` — CurseForge labels pre-releases `<major.minor>-Snapshot`, not the raw MC version string.
+Only when cutting a version: `CHANGELOG.md` entry under `## <mod_version> - <YYYY-MM-DD>` (the publish plugin reads it), and check `curseforge_minecraft_version` — CurseForge labels pre-releases `<major.minor>-Snapshot`, not the raw MC version string; a stable bump uses the plain version, which CurseForge may not list yet on release day.
+
+Release type is derived from `minecraft_version` in `build.gradle.kts` (`-snapshot` → ALPHA, `-pre`/`-rc` → BETA, else STABLE) — do not hardcode it.
+
+Publishing runs in CI via `release.yml` (see `mem:suggested_commands`), never from a local machine — no tokens exist locally, and `publishMods` dry-runs without them. mc-stargate consumes this mod from GitHub Packages: release mc-worlds first, confirm the run succeeded, then push and release mc-stargate.
