@@ -11,6 +11,10 @@ on:
           - curseforge
           - modrinth
           - github
+      dry_run:
+        description: 'Build and validate without uploading anything.'
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -21,6 +25,7 @@ jobs:
       MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REF_NAME: ${{ github.ref_name }}
+      DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK 25
@@ -32,9 +37,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
       - name: Run Datagen
         run: ./gradlew runDatagen
-      - name: Publish Modrinth, GitHub and Maven
+      - name: Publish Modrinth and GitHub
         if: inputs.platforms == 'all'
-        run: ./gradlew publishModrinth publishGithub publish
+        run: ./gradlew publishModrinth publishGithub
+      - name: Publish Maven
+        if: inputs.platforms == 'all' && !inputs.dry_run
+        run: ./gradlew publish
       - name: Publish Modrinth
         if: inputs.platforms == 'modrinth'
         run: ./gradlew publishModrinth

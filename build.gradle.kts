@@ -1,5 +1,7 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.ChangelogPluginExtension
+import java.net.HttpURLConnection
+import java.net.URI
 
 plugins {
     id("net.fabricmc.fabric-loom") version "1.17-SNAPSHOT"
@@ -96,12 +98,21 @@ tasks.named("sourcesJar") {
     dependsOn(tasks.named("runDatagen"))
 }
 
+val minecraftVersion = findProperty("minecraft_version")!!.toString()
+val githubRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("wroud/mc-worlds")
+
 publishMods {
+    dryRun = providers.environmentVariable("DRY_RUN").orNull == "true" ||
+        listOf("CURSEFORGE_TOKEN", "MODRINTH_TOKEN").any { providers.environmentVariable(it).orNull.isNullOrEmpty() }
     displayName = "${findProperty("mod_name")} ${version.get()}"
     file = tasks.jar.get().archiveFile
     changelog = fetchChangelog()
 
-    type = STABLE
+    type = when {
+        "-snapshot" in minecraftVersion -> ALPHA
+        "-pre" in minecraftVersion || "-rc" in minecraftVersion -> BETA
+        else -> STABLE
+    }
     modLoaders.add("fabric")
     modLoaders.add("quilt")
 
@@ -121,15 +132,50 @@ publishMods {
         requires("fabric-api")
 
         projectId = findProperty("modrinth_project_id")!!.toString()
-        minecraftVersions.add(findProperty("minecraft_version")!!.toString())
+        minecraftVersions.add(minecraftVersion)
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
     }
     github {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
-        repository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("wroud/mc-worlds")
+        repository = githubRepository
         commitish = providers.environmentVariable("GITHUB_REF_NAME").getOrElse("main")
     }
 }
+
+fun registerPublishedCheck(name: String, platform: String, url: String, headers: Map<String, String>) =
+    tasks.register(name) {
+        val modVersion = version.toString()
+        doLast {
+            val connection = URI(url).toURL().openConnection() as HttpURLConnection
+            connection.setRequestProperty("User-Agent", githubRepository)
+            headers.forEach(connection::setRequestProperty)
+            when (val code = connection.responseCode) {
+                404 -> logger.lifecycle("$modVersion is not yet on $platform")
+                200 -> throw GradleException("$modVersion is already published on $platform")
+                else -> throw GradleException("Could not check $platform for $modVersion: HTTP $code from $url")
+            }
+        }
+    }
+
+val checkModrinthVersion = registerPublishedCheck(
+    "checkModrinthVersion",
+    "Modrinth",
+    "https://api.modrinth.com/v2/project/${findProperty("modrinth_project_id")}/version/$version",
+    emptyMap(),
+)
+
+val githubToken = providers.environmentVariable("GITHUB_TOKEN").orNull
+
+val checkGithubRelease = registerPublishedCheck(
+    "checkGithubRelease",
+    "GitHub",
+    "https://api.github.com/repos/$githubRepository/releases/tags/$version",
+    githubToken?.let { mapOf("Authorization" to "Bearer $it") } ?: emptyMap(),
+)
+checkGithubRelease.configure { onlyIf("GITHUB_TOKEN is set") { githubToken != null } }
+
+tasks.named("publishModrinth") { dependsOn(checkModrinthVersion) }
+tasks.named("publishGithub") { dependsOn(checkGithubRelease) }
 
 publishing {
     publications {
