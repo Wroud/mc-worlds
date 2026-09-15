@@ -1,25 +1,47 @@
 name: release
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Where to publish. "all" tolerates a CurseForge failure; pick a single platform to retry it.'
+        type: choice
+        default: all
+        options:
+          - all
+          - curseforge
+          - modrinth
+          - github
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REF_NAME: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 25
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Run Datagen
         run: ./gradlew runDatagen
-      - name: Publish mods
-        run: ./gradlew publishMods publish
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
+      - name: Publish Modrinth, GitHub and Maven
+        if: inputs.platforms == 'all'
+        run: ./gradlew publishModrinth publishGithub publish
+      - name: Publish Modrinth
+        if: inputs.platforms == 'modrinth'
+        run: ./gradlew publishModrinth
+      - name: Publish GitHub
+        if: inputs.platforms == 'github'
+        run: ./gradlew publishGithub
+      - name: Publish CurseForge
+        if: inputs.platforms == 'all' || inputs.platforms == 'curseforge'
+        continue-on-error: ${{ inputs.platforms == 'all' }}
+        run: ./gradlew publishCurseforge
