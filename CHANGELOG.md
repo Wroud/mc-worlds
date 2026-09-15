@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.8.22 - 2026-09-15
+
+### Added
+
+- Support for Minecraft 26.3 (Fabric API 0.160.5+26.3).
+
 ## 1.8.21 - 2026-09-14
 
 ### Added
