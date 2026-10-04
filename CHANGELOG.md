@@ -14,6 +14,12 @@
 
 ### Security
 
+## 1.8.23 - 2026-10-05
+
+### Fixed
+
+- With Iris shader packs such as Complementary, worlds with a Nether-like dimension type now use the pack's Nether shaders. Before, they got its Overworld shaders, with a sky, clouds and daylight. This covers any extra world that uses the vanilla Nether dimension type and Nether-like dimensions from other mods, such as Stargate's Melted.
+
 ## 1.8.22 - 2026-09-15
 
 ### Added

@@ -50,6 +50,7 @@ ASM bytecode injection patching closed-source MC classes.
 | `mixin/fixes/` | Vanilla mechanics fixes for custom dimensions (portals, maps, entities) |
 | `mixin/filefix/` | Data format migration (DataFixers) |
 | `client/mixin/` | Client packet handling, dimension context |
+| `client/mixin/compat/` | Optional compatibility with other mods (Iris shader dimension mapping); applied only when that mod is loaded, via `compat/ClientMixinPlugin` |
 
 Add a mixin: create class under `src/main/java/dev/wroud/mc/worlds/mixin/`, register in `worlds.mixins.json` (or client equivalent), annotate with `@Mixin` + `@Inject`/`@Redirect`/`@ModifyVariable`.
 

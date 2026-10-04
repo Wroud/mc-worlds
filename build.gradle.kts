@@ -65,6 +65,7 @@ dependencies {
     minecraft("com.mojang:minecraft:${findProperty("minecraft_version")}")
     implementation("net.fabricmc:fabric-loader:${findProperty("loader_version")}")
     implementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
+    compileOnly("maven.modrinth:iris:${findProperty("iris_version")}")
     // modRuntimeOnly("maven.modrinth:<slug>:<version>") // Example mod from Modrinth
 }
 
