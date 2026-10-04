@@ -1,6 +1,7 @@
 {
   "required": true,
   "package": "dev.wroud.mc.worlds.mixin",
+  "plugin": "dev.wroud.mc.worlds.compat.ClientMixinPlugin",
   "compatibilityLevel": "JAVA_25",
   "mixinextras": {
     "minVersion": "0.5.0-rc.1"
@@ -8,7 +9,8 @@
   "client": [
     "ClientPacketListenerMixin",
     "ContextDimensionMixin",
-    "MinecraftClientMixin"
+    "MinecraftClientMixin",
+    "compat.IrisMixin"
   ],
   "injectors": {
     "defaultRequire": 1
