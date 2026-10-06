@@ -53,6 +53,14 @@ The `/worlds create` command allows you to create new worlds with various option
 
 - `/worlds tp <id> [targets]` - Teleports you (or specified players) to the world
 
+### List Command
+
+- `/worlds list` - Lists all worlds, loaded ones in green and unloaded (lazy) ones in gray
+- `/worlds list loaded` - Lists only the worlds that are loaded right now
+- `/worlds list unloaded` - Lists only the worlds that are not loaded (listing never loads them)
+
+Hover over a world to see its dimension type, provider, whether it loads on startup, whether it holds the world spawn and which players are in it. Click it to fill in `/worlds tp <id>`.
+
 ### Settings Command
 
 The `/worlds settings` command allows you to view and modify settings for the current world you're in. Similar to Minecraft's `/gamerule` command, you can query the current value by omitting the new value parameter.

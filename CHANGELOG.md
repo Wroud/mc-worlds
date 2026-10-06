@@ -4,6 +4,8 @@
 
 ### Added
 
+- A new `/worlds list` command shows every world on the server, loaded worlds in green and unloaded ones in gray. Hover over a world to see its type, whether it loads on startup, whether it holds the world spawn and who is in it, and click it to get its teleport command ready in chat. Listing never loads an unloaded world.
+
 ### Changed
 
 ### Deprecated

@@ -15,5 +15,18 @@
   "dev.wroud.mc.worlds.command.settings.spawn.query": "World %s spawn point is:",
   "dev.wroud.mc.worlds.command.settings.spawn.query.rotation": "rotation:",
   "dev.wroud.mc.worlds.command.settings.spawn.query.none": "World %s has no custom spawn point set",
-  "dev.wroud.mc.worlds.command.settings.spawn.success": "World %s spawn point set to:"
+  "dev.wroud.mc.worlds.command.settings.spawn.success": "World %s spawn point set to:",
+  "dev.wroud.mc.worlds.command.list.loaded.success": "There are %s loaded world(s): %s",
+  "dev.wroud.mc.worlds.command.list.loaded.none": "There are no loaded worlds",
+  "dev.wroud.mc.worlds.command.list.unloaded.success": "There are %s unloaded world(s): %s",
+  "dev.wroud.mc.worlds.command.list.unloaded.none": "There are no unloaded worlds",
+  "dev.wroud.mc.worlds.command.list.status.loaded": "Loaded",
+  "dev.wroud.mc.worlds.command.list.status.unloaded": "Unloaded, loads when a player enters",
+  "dev.wroud.mc.worlds.command.list.dimension_type": "Dimension type: %s",
+  "dev.wroud.mc.worlds.command.list.provider": "Provider: %s",
+  "dev.wroud.mc.worlds.command.list.load_on_startup": "Load on startup: %s",
+  "dev.wroud.mc.worlds.command.list.world_spawn": "Holds the world spawn",
+  "dev.wroud.mc.worlds.command.list.players": "Players: %s",
+  "dev.wroud.mc.worlds.command.list.players.none": "none",
+  "dev.wroud.mc.worlds.command.list.click": "Click to put %s in chat"
 }
