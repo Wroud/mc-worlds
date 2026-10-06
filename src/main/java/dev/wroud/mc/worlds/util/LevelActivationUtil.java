@@ -60,7 +60,7 @@ public class LevelActivationUtil {
       @Override
       public void run() {
         if (level.isActive()) {
-          action.run();
+          level.getServer().execute(action);
         } else if (!level.isStopped()) {
           schedulableLevel.schedule(this);
         }
@@ -72,6 +72,6 @@ public class LevelActivationUtil {
 
   private static void scheduleServerLevelTask(ServerLevel level, Runnable action) {
     IScheduledTasksLevel schedulableLevel = (IScheduledTasksLevel) level;
-    schedulableLevel.schedule(action);
+    schedulableLevel.schedule(() -> level.getServer().execute(action));
   }
 }
