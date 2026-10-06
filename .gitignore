@@ -47,7 +47,9 @@ versions/*/src/main/generated/
 # minecraft
 minecraft-client/
 minecraft-server/
-# local probe workspace (server universes, game dirs, screenshots)
 .probe/
-# machine-specific Claude Code settings
 .claude/settings.local.json
+.claude/skills/mc-server-probe
+.claude/skills/mc-client
+.claude/skills/mod-release
+.claude/skills/fabric-mod-migration

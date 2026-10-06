@@ -86,6 +86,8 @@ What is *not* derivable, and is the real value here:
 
 Run `fabric-mod-migration` §6's gates. The mc-worlds-specific part is creating one world of each shape, which exercises the classifier and any constructor-time gate (`ServerLevel.<init>` calls `canHaveWeather()`):
 
+Run through the shared mc-server-probe skill (from `../mc-mod-skills`; link it per its README if `.claude/skills/mc-server-probe` is missing):
+
 ```bash
 .claude/skills/mc-server-probe/scripts/run.sh --fresh --cmd "worlds create end_test from-dimension minecraft:the_end; worlds create nether_test from-dimension minecraft:the_nether; worlds create over_test; wait:40; @levels"
 ```
