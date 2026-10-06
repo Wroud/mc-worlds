@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- Players who were offline when their world was deleted now return at world spawn instead of their old coordinates in the Overworld
+
 ### Security
 
 ## 1.8.24 - 2026-10-06
