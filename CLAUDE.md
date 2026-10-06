@@ -34,12 +34,14 @@ McWorldMod (ModInitializer) → McWorld (per-server facade) → WorldsManager
 
 ## Build & Run
 ```bash
-./gradlew build         # build JAR → build/libs/worlds-<version>.jar
+./gradlew build         # build JAR → versions/latest/build/libs/worlds-<mod_version>+<mc_version>.jar
 ./gradlew runClient     # dev client
 ./gradlew runServer     # dev server (also: manual QA — no test suite)
 ./gradlew runDatagen    # data generation
 ./gradlew genSources    # regenerate decompiled MC sources after MC upgrade
 ```
+
+Runtime checks (reproduce a bug, prove a fix, create worlds, read loaded levels and the world spawn) go through the `mc-server-probe` skill's `--cmd` mode; releases through `mod-release`. These shared skills live in `../mc-mod-skills`, symlinked into `.claude/skills/`; per-mod values are in `.claude/mod-skills.env`.
 
 ## Mixins
 ASM bytecode injection patching closed-source MC classes.
@@ -56,7 +58,8 @@ Add a mixin: create class under `src/main/java/dev/wroud/mc/worlds/mixin/`, regi
 
 ## Patterns
 - **Codec:** `Codec<T>` via `RecordCodecBuilder` for persisted data.
-- **State machine:** `CustomServerLevel` auto-unloads after 1200 ticks (60s) without players.
+- **State machine:** `CustomServerLevel` auto-unloads after 1200 ticks (60s) without players, except the level holding the world spawn (`CustomServerLevel.isRespawnLevel`).
+- **Lazy world loading:** `server.getLevel(key)` loads a saved custom world (`MinecraftServerMixin`). Never call it per tick or for data-only lookups — it reloads an auto-unloaded world every minute; use `DimensionDetectionUtil.getVanillaDimensionMapping(server, key)`.
 - **Registry:** `WorldsRegistries.SERVER_LEVEL_PROVIDER.register(id, provider)`.
 - **Commands:** Brigadier; require `ServerLevel.LEVEL_ADMINS`; one class per command, registered in `WorldsCommands.java`.
 - **i18n:** `Component.translatable("...")`; keys in `src/main/resources/assets/mc-worlds/lang/en_us.json`.
@@ -73,6 +76,6 @@ Fabric Loom decompiles MC into source JARs in:
   minecraft-common-<hash>/<version>/...-sources.jar     # server + shared
   minecraft-clientOnly-<hash>/<version>/...-sources.jar # client-only
 ```
-IDE attaches these automatically (Cmd/Ctrl+Click any MC class). Manual extract: `unzip .../minecraft-common-*-sources.jar -d /tmp/mc-src`.
+IDE attaches these automatically (Cmd/Ctrl+Click any MC class). Manual extract: `unzip .../minecraft-common-*-sources.jar -d /tmp/mc-src`. If the stable version has no `-sources.jar` (only `-pre`/`-rc` ones), run `./gradlew genSources` or use the newest `-rc` jar and say so.
 
 Relevant packages: `net.minecraft.server.level` (`ServerLevel`, `ServerPlayer`), `net.minecraft.server` (`MinecraftServer`), `net.minecraft.commands` (Brigadier), `net.minecraft.world.level` (`LevelData`, `WeatherData`, `SavedData`), `net.minecraft.world.level.storage`.

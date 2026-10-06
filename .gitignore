@@ -47,3 +47,5 @@ versions/*/src/main/generated/
 # minecraft
 minecraft-client/
 minecraft-server/
+# local probe workspace (server universes, game dirs, screenshots)
+.probe/
