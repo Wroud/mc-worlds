@@ -8,6 +8,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.NetherPortalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -27,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
+import dev.wroud.mc.worlds.server.level.state.SpawnPreparationHelper;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import dev.wroud.mc.worlds.util.EndGatewayUtil;
 import dev.wroud.mc.worlds.util.NetherPortalUtil;
@@ -44,6 +46,11 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
       return new WorldLocation(level, getEndSpawn(level, entity));
     } else if (DimensionDetectionUtil.isNetherLikeDimension(level)) {
       return new WorldLocation(level, getNetherSpawn(level, entity));
+    }
+
+    if (Level.OVERWORLD.equals(level.dimension())) {
+      return new WorldLocation(level, TeleportTransitionAbstraction.spawnNear(entity, level,
+          SpawnPreparationHelper.findInitialSpawn(level), TeleportTransition.PLACE_PORTAL_TICKET));
     }
 
     return new WorldLocation(level,

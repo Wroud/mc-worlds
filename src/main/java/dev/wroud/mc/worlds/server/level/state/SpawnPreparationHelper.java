@@ -81,16 +81,20 @@ public class SpawnPreparationHelper {
     }
   }
 
-  public static BlockPos findInitialSpawn(ServerLevel serverLevel) {
+  public static RespawnData findInitialSpawn(ServerLevel serverLevel) {
     ChunkPos origin = serverLevel.getChunkSource().getGeneratorState().getDimensionOrigin();
+    BlockPos spawnPos = null;
     for (ChunkPos chunkPos : getSpawnSearchChunks(origin)) {
-      BlockPos spawnPos = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
+      spawnPos = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
       if (spawnPos != null) {
-        return spawnPos;
+        break;
       }
     }
 
-    return getDefaultSpawnPos(serverLevel, origin);
+    if (spawnPos == null) {
+      spawnPos = getDefaultSpawnPos(serverLevel, origin);
+    }
+    return RespawnData.of(serverLevel.dimension(), spawnPos, 0.0F, 0.0F);
   }
 
   private static ArrayList<ChunkPos> getSpawnSearchChunks(ChunkPos origin) {

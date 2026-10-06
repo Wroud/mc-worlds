@@ -27,7 +27,6 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.saveddata.WeatherData;
-import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -147,8 +146,7 @@ public class CustomServerLevel extends ServerLevel {
     if (deleteOnClose && !this.deleteOnClose) {
       this.deleteOnClose = true;
       if (this.isRespawnLevel()) {
-        var spawnPos = SpawnPreparationHelper.findInitialSpawn(this.getServer().overworld());
-        this.getServer().setRespawnData(RespawnData.of(Level.OVERWORLD, spawnPos, 0.0F, 0.0F));
+        this.getServer().setRespawnData(SpawnPreparationHelper.findInitialSpawn(this.getServer().overworld()));
       }
     }
 
