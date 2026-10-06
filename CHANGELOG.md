@@ -12,9 +12,13 @@
 
 ### Fixed
 
-- `/worlds tp minecraft:overworld` now lands at the Overworld's own spawn while the world spawn is in another world, instead of at that world's coordinates.
-
 ### Security
+
+## 1.8.27 - 2026-10-07
+
+### Fixed
+
+- Teleporting to the Overworld while the world spawn is in another world now lands at the Overworld's own spawn, inside its world border, instead of at the other world's coordinates.
 
 ## 1.8.26 - 2026-10-07
 
