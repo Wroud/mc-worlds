@@ -71,6 +71,11 @@ public class WorldsManager {
       return null;
     }
 
+    if (!this.server.isSameThread()) {
+      this.server.execute(() -> loadOrCreateWorld(id, levelData));
+      return null;
+    }
+
     var resourceKey = ResourceKey.create(Registries.DIMENSION, id);
     var serverLevelProvider = this.server.registryAccess()
         .lookupOrThrow(WorldsRegistries.LEVEL_PROVIDER)

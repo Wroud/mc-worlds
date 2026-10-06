@@ -14,6 +14,14 @@
 
 ### Security
 
+## 1.8.24 - 2026-10-06
+
+### Fixed
+
+- The sky no longer flickers to the Overworld's time in worlds that keep their own time.
+- Works with Worldthreader: opening or creating a world no longer freezes the server, and worlds that keep their own time tick in parallel again.
+- Scheduled functions no longer run a second time on an extra world's clock.
+
 ## 1.8.23 - 2026-10-05
 
 ### Fixed

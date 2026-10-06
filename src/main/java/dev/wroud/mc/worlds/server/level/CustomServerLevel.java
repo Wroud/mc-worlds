@@ -96,6 +96,12 @@ public class CustomServerLevel extends ServerLevel {
     super.tick(booleanSupplier);
   }
 
+  @Override
+  protected void tickTime() {
+    WorldsLevelData worldsLevelData = (WorldsLevelData) this.levelData;
+    worldsLevelData.setGameTime(worldsLevelData.getGameTime() + 1L);
+  }
+
   public boolean canTeleport() {
     return !this.isStopping() && !this.isStopped();
   }

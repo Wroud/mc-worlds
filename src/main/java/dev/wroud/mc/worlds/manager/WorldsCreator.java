@@ -102,11 +102,14 @@ public class WorldsCreator {
     var levelData = WorldsLevelData.getDefault(id, levelStem, seed, true);
 
     callbacks.onCreating(id, seed, levelStem);
-    var worldHandle = McWorldMod.getMcWorld(server).orElseThrow().loadOrCreate(id, levelData);
-
-    LevelActivationUtil.executeWhenLevelReady(
-        worldHandle.getServerLevel(),
-        () -> callbacks.onReady(worldHandle.getServerLevel()));
+    server.execute(() -> {
+      var worldHandle = McWorldMod.getMcWorld(server).orElseThrow().loadOrCreate(id, levelData);
+      if (worldHandle != null) {
+        LevelActivationUtil.executeWhenLevelReady(
+            worldHandle.getServerLevel(),
+            () -> callbacks.onReady(worldHandle.getServerLevel()));
+      }
+    });
   }
 
   public static void validLevelId(Identifier id, MinecraftServer server) throws InvalidLevelIdException {
