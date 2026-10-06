@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
@@ -24,17 +23,10 @@ public abstract class MapItemSavedDataMixin {
             ResourceKey<Level> original,
             LevelAccessor levelAccessor,
             double rotation) {
-        if (levelAccessor != null) {
-            MinecraftServer minecraftServer = levelAccessor.getServer();
-            if (minecraftServer != null) {
-                ServerLevel level = minecraftServer.getLevel(this.dimension);
-                if (level != null) {
-                    ResourceKey<Level> mappedDimension = DimensionDetectionUtil.getVanillaDimensionMapping(level);
-                    if (mappedDimension != null) {
-                        return mappedDimension;
-                    }
-                }
-            }
+        MinecraftServer minecraftServer = levelAccessor != null ? levelAccessor.getServer() : null;
+        if (minecraftServer != null
+                && DimensionDetectionUtil.getVanillaDimensionMapping(minecraftServer, this.dimension) == Level.NETHER) {
+            return this.dimension;
         }
 
         return original;

@@ -12,6 +12,7 @@ import dev.wroud.mc.worlds.server.level.state.ActivationLevelState;
 import dev.wroud.mc.worlds.server.level.state.ActiveLevelState;
 import dev.wroud.mc.worlds.server.level.state.InitializationLevelState;
 import dev.wroud.mc.worlds.server.level.state.LevelState;
+import dev.wroud.mc.worlds.server.level.state.SpawnPreparationHelper;
 import dev.wroud.mc.worlds.server.level.state.StoppedLevelState;
 import dev.wroud.mc.worlds.server.level.state.StoppingLevelState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.saveddata.WeatherData;
+import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -114,6 +116,10 @@ public class CustomServerLevel extends ServerLevel {
     return deleteOnClose;
   }
 
+  public boolean isRespawnLevel() {
+    return this.dimension().equals(this.getRespawnData().dimension());
+  }
+
   public boolean isStopping() {
     return this.currentState instanceof StoppingLevelState;
   }
@@ -138,11 +144,17 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   public void stop(boolean deleteOnClose) {
-    if (this.isStopped() || this.isStopping()) {
-      return;
+    if (deleteOnClose && !this.deleteOnClose) {
+      this.deleteOnClose = true;
+      if (this.isRespawnLevel()) {
+        var spawnPos = SpawnPreparationHelper.findInitialSpawn(this.getServer().overworld());
+        this.getServer().setRespawnData(RespawnData.of(Level.OVERWORLD, spawnPos, 0.0F, 0.0F));
+      }
     }
-    this.deleteOnClose = deleteOnClose;
-    this.setState(StoppingLevelState::new);
+
+    if (!this.isStopped() && !this.isStopping()) {
+      this.setState(StoppingLevelState::new);
+    }
   }
 
   public void setState(LevelStateFactory<? extends LevelState> factory) {

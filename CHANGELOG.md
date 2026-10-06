@@ -12,6 +12,13 @@
 
 ### Fixed
 
+- A world that holds the world spawn (set with `/execute in <world> run setworldspawn`) no longer unloads and reloads every minute while it is empty. It now stays loaded.
+- Deleting the world that holds the world spawn moves the spawn back to the Overworld, to the spot the game originally picked, instead of leaving it pointing at a world that no longer exists.
+- Players in a world that is being deleted are sent to the world spawn, even when it is in another extra world. Before, they landed in the Overworld at that world's coordinates.
+- Deleting a world while it is unloading now deletes it, instead of reporting success and keeping it.
+- Map markers spin only on maps of Nether-like worlds, as in the vanilla Nether. Before, they spun on Overworld and End maps instead.
+- Maps and dimension-change advancements no longer load an unloaded extra world just to check what kind of world it is.
+
 ### Security
 
 ## 1.8.25 - 2026-10-06

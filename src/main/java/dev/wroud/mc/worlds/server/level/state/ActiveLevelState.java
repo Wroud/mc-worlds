@@ -19,7 +19,8 @@ public class ActiveLevelState extends LevelState {
   @Override
   public void tick(BooleanSupplier booleanSupplier) {
     if (!this.level.getServer().isCurrentlySaving()
-        && ((ServerLevelAccessor) this.level).getEmptyTime() > CustomServerLevel.STOP_AFTER) {
+        && ((ServerLevelAccessor) this.level).getEmptyTime() > CustomServerLevel.STOP_AFTER
+        && !this.level.isRespawnLevel()) {
       this.level.stop(false);
       return;
     }

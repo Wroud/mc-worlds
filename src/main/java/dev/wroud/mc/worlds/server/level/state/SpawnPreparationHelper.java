@@ -75,34 +75,57 @@ public class SpawnPreparationHelper {
       ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
       ChunkPos chunkPos = serverChunkCache.getGeneratorState().getDimensionOrigin();
       McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().identifier());
-      int i = serverChunkCache.getGenerator().getSpawnHeight(serverLevel);
-      if (i < serverLevel.getMinY()) {
-        BlockPos blockPos = chunkPos.getWorldPosition();
-        i = serverLevel.getHeight(Types.WORLD_SURFACE, blockPos.getX() + 8, blockPos.getZ() + 8);
-      }
-
       serverLevelData
-          .setSpawn(RespawnData.of(serverLevel.dimension(), chunkPos.getWorldPosition().offset(8, i, 8), 0.0F, 0.0F));
-      int j = 0;
-      int k = 0;
-      int l = 0;
-      int m = -1;
+          .setSpawn(RespawnData.of(serverLevel.dimension(), getDefaultSpawnPos(serverLevel, chunkPos), 0.0F, 0.0F));
+      spawnChunksToCheck = getSpawnSearchChunks(chunkPos);
+    }
+  }
 
-      for (int n = 0; n < Mth.square(11); n++) {
-        if (j >= -5 && j <= 5 && k >= -5 && k <= 5) {
-          spawnChunksToCheck.add(new ChunkPos(chunkPos.x() + j, chunkPos.z() + k));
-        }
-
-        if (j == k || j < 0 && j == -k || j > 0 && j == 1 - k) {
-          int o = l;
-          l = -m;
-          m = o;
-        }
-
-        j += l;
-        k += m;
+  public static BlockPos findInitialSpawn(ServerLevel serverLevel) {
+    ChunkPos origin = serverLevel.getChunkSource().getGeneratorState().getDimensionOrigin();
+    for (ChunkPos chunkPos : getSpawnSearchChunks(origin)) {
+      BlockPos spawnPos = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
+      if (spawnPos != null) {
+        return spawnPos;
       }
     }
+
+    return getDefaultSpawnPos(serverLevel, origin);
+  }
+
+  private static ArrayList<ChunkPos> getSpawnSearchChunks(ChunkPos origin) {
+    var chunks = new ArrayList<ChunkPos>();
+    int j = 0;
+    int k = 0;
+    int l = 0;
+    int m = -1;
+
+    for (int n = 0; n < Mth.square(11); n++) {
+      if (j >= -5 && j <= 5 && k >= -5 && k <= 5) {
+        chunks.add(new ChunkPos(origin.x() + j, origin.z() + k));
+      }
+
+      if (j == k || j < 0 && j == -k || j > 0 && j == 1 - k) {
+        int o = l;
+        l = -m;
+        m = o;
+      }
+
+      j += l;
+      k += m;
+    }
+
+    return chunks;
+  }
+
+  private static BlockPos getDefaultSpawnPos(ServerLevel serverLevel, ChunkPos origin) {
+    int height = serverLevel.getChunkSource().getGenerator().getSpawnHeight(serverLevel);
+    if (height < serverLevel.getMinY()) {
+      BlockPos blockPos = origin.getWorldPosition();
+      height = serverLevel.getHeight(Types.WORLD_SURFACE, blockPos.getX() + 8, blockPos.getZ() + 8);
+    }
+
+    return origin.getWorldPosition().offset(8, height, 8);
   }
 
   private void processSpawnChunk() {

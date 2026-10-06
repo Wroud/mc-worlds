@@ -2,12 +2,17 @@ package dev.wroud.mc.worlds.util;
 
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 
 import org.jetbrains.annotations.Nullable;
 
+import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 
 public class DimensionDetectionUtil {
@@ -35,6 +40,25 @@ public class DimensionDetectionUtil {
         }
 
         return mapping;
+    }
+
+    public static ResourceKey<Level> getVanillaDimensionMapping(MinecraftServer server, ResourceKey<Level> dimension) {
+        var type = getDimensionType(server, dimension);
+        var mapping = type != null ? getVanillaDimensionMapping(type) : null;
+        return mapping != null ? mapping : dimension;
+    }
+
+    private static @Nullable Holder<DimensionType> getDimensionType(MinecraftServer server, ResourceKey<Level> dimension) {
+        var loaded = ((MinecraftServerAccessor) server).getLevels().get(dimension);
+        if (loaded != null) {
+            return loaded.dimensionTypeRegistration();
+        }
+
+        return McWorldMod.getMcWorld(server)
+            .map(worlds -> worlds.getManager().getWorldsData().getLevelData(dimension.identifier()))
+            .map(WorldsLevelData::getLevelStem)
+            .map(LevelStem::type)
+            .orElse(null);
     }
 
     public static @Nullable ResourceKey<Level> getVanillaDimensionMapping(Holder<DimensionType> holder) {

@@ -30,13 +30,20 @@ public class DeleteCommand {
 
 	public static int delete(CommandSourceStack source, Identifier id) throws CommandSyntaxException {
 		var resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-		var serverLevel = source.getServer().getLevel(resourceKey);
-
-		if (serverLevel == null || !(serverLevel instanceof CustomServerLevel)) {
+		if (!(source.getServer().getLevel(resourceKey) instanceof CustomServerLevel customLevel)) {
 			throw UNKNOWN_WORLD_EXCEPTION.create();
 		}
 
-		((CustomServerLevel) serverLevel).stop(true);
+		var wasRespawnLevel = customLevel.isRespawnLevel();
+		customLevel.stop(true);
+
+		if (wasRespawnLevel) {
+			var spawnPos = source.getServer().getRespawnData().pos();
+			source.sendSuccess(
+					() -> Component.translatable("dev.wroud.mc.worlds.command.delete.spawn_reset", id.toString(),
+							spawnPos.toShortString()),
+					true);
+		}
 
 		source.sendSuccess(
 				() -> Component.translatable("dev.wroud.mc.worlds.command.delete.success", id.toString()),
