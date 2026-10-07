@@ -2,6 +2,29 @@
 
 This mod provides an API for other mods to register custom server level providers.
 
+## Getting started
+
+Worlds is published to GitHub Packages. Add the repository and the dependency to your `build.gradle.kts`:
+
+```kotlin
+repositories {
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/wroud/mc-worlds")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") as String?
+            password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
+        }
+    }
+}
+
+dependencies {
+    modImplementation("dev.wroud.mc:worlds:${mc_worlds_version}")
+}
+```
+
+Authenticate with `gpr.user` and `gpr.key` in your `gradle.properties`, or the `GITHUB_ACTOR` and `GITHUB_TOKEN` environment variables. The token needs the `packages:read` permission.
+
 ## Server Level Providers
 
 Server level providers allow you to create custom implementations of server levels with custom behavior.
