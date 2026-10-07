@@ -53,3 +53,14 @@ jobs:
         if: inputs.platforms == 'all' || inputs.platforms == 'curseforge'
         continue-on-error: ${{ inputs.platforms == 'all' }}
         run: ./gradlew publishCurseforge
+
+  listing:
+    needs: release
+    if: inputs.platforms == 'all' || inputs.platforms == 'modrinth'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Wroud/github-workflows/actions/mod-listing@main
+        with:
+          dry-run: ${{ inputs.dry_run }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}

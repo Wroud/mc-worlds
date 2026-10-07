@@ -2,6 +2,8 @@
 name: "Worlds"
 summary: "A mod to support infinite dimensions (Multiverse for fabric). With own weather, Time, End Dragon and all vanilla mechanics."
 icon: src/main/resources/assets/mc-worlds/icon.png
+curseforge_slugs:
+  mc-stargate: mc-stargate
 ---
 
 # Worlds
