@@ -11,8 +11,8 @@ curseforge_slugs:
 </center>
 
 <center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-performance.png" alt="Performance: worlds load on demand, nothing idles" height="44">
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-vanilla.png" alt="Vanilla-like: vanilla commands, vanilla mechanics" height="44">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-performance.png" alt="Performance: worlds load on demand and unload when empty" height="44">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-vanilla.png" alt="Vanilla-like: vanilla commands and mechanics" height="44">
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-latest.png" alt="Latest Minecraft: updated within a week of each release" height="44">
 </center>
 
@@ -23,10 +23,10 @@ curseforge_slugs:
 <img src="https://img.shields.io/badge/Side-Server-2E8BC0?style=for-the-badge&labelColor=143C5C" alt="Server side, optional on the client">
 </center>
 
-**Worlds** lets a Fabric server run as many worlds as it wants, the way Multiverse does on Paper. Create, list, delete and teleport between worlds with in-game commands, and give each one its own time, weather and game rules. Every world plays like real vanilla Minecraft, down to the End dragon, which also makes Worlds a base other mods build their dimensions on. Coming from World Manager or Multiworld? Your worlds move over with one command each.
+**Worlds** lets a Fabric server run as many worlds as it wants, the way Multiverse does on Paper. Create, list, delete and teleport between worlds with in-game commands, and give each one its own time, weather and game rules. Every world plays like real vanilla Minecraft, down to the End dragon, which also makes Worlds a base other mods build their dimensions on. Worlds from World Manager or Multiworld can be recreated with one command each.
 
 <center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-create.png" alt="One command, any world" width="100%">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-create.png" alt="Creating worlds" width="100%">
 </center>
 
 <table>
@@ -35,14 +35,14 @@ curseforge_slugs:
             <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/create-end.webp" alt="Typing /worlds create event_end from-dimension minecraft:the_end, then /worlds tp event_end, and arriving in a new End under the circling Ender Dragon" width="100%">
         </td>
         <td width="40%">
-            <h2>Any kind of world</h2>
+            <h2>World types</h2>
             <p><code>/worlds create &lt;id&gt;</code> makes an Overworld. Add <code>from-preset</code> for flat, amplified or any data pack preset, or <code>from-dimension</code> for a Nether, an End or any dimension type. <code>/worlds tp</code> takes you there.</p>
         </td>
     </tr>
 </table>
 
 <center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-vanilla.png" alt="Real vanilla everywhere" width="100%">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-vanilla.png" alt="Vanilla mechanics" width="100%">
 </center>
 
 - **The End dragon fight, portals, maps and ender pearls work in every world** you create, not only in the original three.
@@ -51,7 +51,7 @@ curseforge_slugs:
 - **Nothing new to learn.** No extra commands for weather, time or rules, and the Overworld, Nether and End behave exactly as in vanilla.
 
 <center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-servers.png" alt="Built for servers" width="100%">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-servers.png" alt="Performance and API" width="100%">
 </center>
 
 - **Load on demand.** A world loads when a player enters it and unloads a minute after the last player leaves, so you can keep hundreds of worlds without paying for idle ones.
