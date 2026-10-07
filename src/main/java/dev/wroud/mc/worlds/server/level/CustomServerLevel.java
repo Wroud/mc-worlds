@@ -37,6 +37,7 @@ public class CustomServerLevel extends ServerLevel {
   private boolean deleteOnClose;
   private LevelState currentState;
   private final WeatherData weatherData;
+  private final @Nullable LayeredGameRules perWorldGameRules;
   private final @Nullable ServerClockManager perWorldClockManager;
   private final @Nullable EnvironmentAttributeSystem perWorldEnvironmentAttributes;
 
@@ -56,6 +57,7 @@ public class CustomServerLevel extends ServerLevel {
     this.deleteOnClose = false;
     this.weatherData = (WeatherData) this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
     ((ServerLevelAccessor) this).invokePrepareWeather(this.weatherData);
+    this.perWorldGameRules = PerWorldGameRules.create(this);
     this.perWorldClockManager = PerWorldClocks.create(this);
     this.perWorldEnvironmentAttributes = EnvironmentAttributeSystem.builder().addDefaultLayers(this).build();
     this.currentState = levelData.isInitialized() ? new ActivationLevelState(this)
@@ -73,6 +75,12 @@ public class CustomServerLevel extends ServerLevel {
   @Override
   public WeatherData getWeatherData() {
     return this.weatherData;
+  }
+
+  @Override
+  public GameRules getGameRules() {
+    LayeredGameRules rules = this.perWorldGameRules;
+    return rules != null ? rules : super.getGameRules();
   }
 
   @Override

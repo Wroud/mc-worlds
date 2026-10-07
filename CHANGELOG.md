@@ -14,6 +14,22 @@
 
 ### Security
 
+## 1.10.0 - 2026-10-07
+
+### Added
+
+- Each created world can now have its own game rules. Change a rule with `/gamerule` inside the world, and every rule you leave alone keeps following the server. In a created world, `/gamerule` on its own lists the rules the world changed, and `/gamerule <rule> inherit` makes a rule follow the server again.
+- Keep inventory follows the world where you died, and the death screen, reduced debug info, time and weather follow the world you are in.
+- With Worlds installed on your game, the Game Rules screen opened in a created world shows in each rule's tooltip whether the world set it, uses the server's value, or is server-wide.
+
+### Changed
+
+- In a created world, `/gamerule` now changes the rule only for that world, and its message names the world. The Overworld, Nether and End keep sharing the server's rules, and the rules for command feedback, admin command logging and command limits stay server-wide.
+
+### Fixed
+
+- Fixed a rare crash, "Exception generating new chunk", when several worlds generate villages or other structures at the same time, for example right after creating new worlds or starting the server.
+
 ## 1.9.0 - 2026-10-07
 
 ### Added

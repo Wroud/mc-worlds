@@ -67,7 +67,11 @@ Add a mixin: create class under `src/main/java/dev/wroud/mc/worlds/mixin/`, regi
 ## Common Tasks
 - **New command:** create `command/MyCommand.java` → register in `WorldsCommands` → add translation keys → add datagen entry under `src/datagen/`.
 - **New persistent field:** add to `WorldsLevelData` + its `CODEC` + getter/setter; access via `CustomServerLevel.getWorldData()`.
-- **MC version bump:** update `versions/latest/gradle.properties` (minecraft_version, java_version) and `gradle.properties` (mod_version, loader_version, fabric_version); fix broken mixin targets; `./gradlew build`.
+- **MC version bump:** update `versions/latest/gradle.properties` (minecraft_version, java_version) and `gradle.properties` (mod_version, loader_version, fabric_version); fix broken mixin targets; `./gradlew build`. Then check the per-world game rules, whose breakage compiles clean:
+  - `LayeredGameRules` passes an empty map to `super`, so every `GameRules` method that reads `this.rules`/`other.rules` must be overridden. Diff `GameRules.java` and override any new one.
+  - `MinecraftServer.onGameRuleChanged` still sends its side effects through `getPlayers()`/`getAllLevels()` (`MinecraftServerGameRulesMixin` filters those), and `ServerPlayer.restoreFrom` has exactly one `getGameRules()` call (`ServerPlayerGameRulesMixin`).
+  - `GameRuleTooltipMixin` targets the anonymous visitor `AbstractGameRulesScreen$RuleList$1`; if the class is renumbered or `addEntry` stops calling `EntryFactory.create`, the Game Rules screen tooltips lose the origin line. Check with `javap` on the clientOnly jar.
+  - Smoke test with `mc-server-probe`: `execute in <world> run gamerule advance_time false` freezes only that world's `time query time`; `execute in <world> run gamerule <rule> inherit` restores the server value.
 
 ## Minecraft Source (Mojmap)
 Fabric Loom decompiles MC into source JARs in:

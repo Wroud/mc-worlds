@@ -1,6 +1,33 @@
+---
+name: "Worlds"
+summary: "Multiverse for Fabric: create unlimited worlds with their own weather, time and game rules, a working End dragon and every vanilla mechanic."
+icon: src/main/resources/assets/mc-worlds/icon.png
+---
+
 # Worlds
 
-A Minecraft mod that allows you to create and manage worlds in-game using simple commands.
+Create and manage as many worlds as you like on one server, all with in-game commands.
+
+<a href="https://pixly.gg/?utm_source=modrinth&utm_medium=referral&utm_campaign=mc-worlds&utm_content=mods-banner">
+  <picture>
+  <source media="(max-width: 640px)" srcset="https://pixly.gg/assets/promo/pixly-banner-mods-compact-2400x1200.jpg">
+  <img src="https://pixly.gg/assets/promo/pixly-banner-mods-2400x600.jpg" alt="Pixly: Minecraft servers you pay for only while they're online" width="100%">
+  </picture>
+</a>
+
+## New in 1.10: game rules for every world
+
+Each world you create can now have its own game rules, set with the vanilla `/gamerule` command.
+
+- **Your rules, per world.** Run `/gamerule` inside a world and the change applies there only. Every rule you leave alone keeps following the server.
+- **Always clear where a rule comes from.** `/gamerule` names the world it changed, `/gamerule` on its own lists a world's own rules, and `/gamerule <rule> inherit` hands a rule back to the server.
+- **The Game Rules screen knows too.** With Worlds on your game, each rule's tooltip says whether the world set it, uses the server's value, or is server-wide.
+- **Keep inventory where you died.** Keep inventory follows the world you died in, and the death screen, debug info, time and weather follow the world you are in.
+- **Steadier world generation.** A rare crash when several worlds generated villages at once is fixed.
+
+## New in 1.9: see all your worlds
+
+- **World list.** `/worlds list` shows every world, loaded ones in green and sleeping ones in gray, with details on hover and a click to teleport.
 
 ## Features
 
@@ -129,52 +156,7 @@ MC Worlds provides an API that allows other mods to register custom server level
 2. Implement the `ServerLevelProvider` interface
 3. Register your provider using `WorldsRegistries.LEVEL_PROVIDER_REGISTRY`
 
-For detailed documentation and examples, see [API.md](API.md).
-
-## Installation
-
-### For Players
-1. Download the mod file from the releases page
-2. Place it in your `mods` folder
-3. Start your Minecraft server or client
-
-### For Mod Developers (Using as Dependency)
-
-MC Worlds is published to GitHub Packages. To use it as a dependency in your Gradle project:
-
-1. Add the GitHub Packages repository to your `build.gradle.kts`:
-
-```kotlin
-repositories {
-    maven {
-        name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/wroud/mc-worlds")
-        credentials {
-            username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") as String?
-            password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
-        }
-    }
-}
-```
-
-2. Add the dependency:
-
-```kotlin
-dependencies {
-    modImplementation("dev.wroud.mc:worlds:${mc_worlds_version}")
-}
-```
-
-3. Set up authentication by adding to your `gradle.properties`:
-
-```properties
-gpr.user=your_github_username
-gpr.key=your_github_token
-```
-
-Or set environment variables `GITHUB_ACTOR` and `GITHUB_TOKEN`.
-
-Note: You need a GitHub personal access token with `packages:read` permission to download from GitHub Packages.
+For detailed documentation and examples, see [API.md](https://github.com/Wroud/mc-worlds/blob/main/API.md).
 
 ## Requirements
 
@@ -182,10 +164,4 @@ Note: You need a GitHub personal access token with `packages:read` permission to
 - Fabric Loader 0.18.4+ and Fabric API
 - Java 25
 
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed release notes and version history.
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+You can support this project by hosting your server on [Pixly Hosting](https://pixly.gg)

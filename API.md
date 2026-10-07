@@ -57,6 +57,16 @@ public void onInitialize() {
 }
 ```
 
+### Game Rules
+
+Every `CustomServerLevel` returns its own game rules from `getGameRules()`: values the world overrides, with every other rule read from the server. A provider can pre-seed overrides once the level is constructed:
+
+```java
+level.getGameRules().set(GameRules.KEEP_INVENTORY, true, null);
+```
+
+Rules in the `#mc-worlds:global` game rule tag are always written to the server's rules. A mod that reads `level.getGameRules()` sees the world's value; one that reads `server.getGameRules()` sees only the server's value.
+
 ### Dependencies
 
 Make sure to add mc-worlds as a dependency in your `fabric.mod.json`:

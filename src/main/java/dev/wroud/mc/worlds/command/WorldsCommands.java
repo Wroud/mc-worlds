@@ -73,5 +73,7 @@ public class WorldsCommands {
         literal("worlds")
             .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
             .redirect(root));
+
+    WorldGameRuleCommand.register(dispatcher, commandBuildContext);
   }
 }

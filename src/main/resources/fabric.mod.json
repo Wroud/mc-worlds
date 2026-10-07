@@ -12,7 +12,8 @@
   "icon": "assets/mc-worlds/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.wroud.mc.worlds.McWorldMod"]
+    "main": ["dev.wroud.mc.worlds.McWorldMod"],
+    "client": ["dev.wroud.mc.worlds.client.McWorldsClient"]
   },
   "mixins": [
     "worlds.mixins.json",

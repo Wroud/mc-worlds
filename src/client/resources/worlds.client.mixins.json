@@ -9,6 +9,7 @@
   "client": [
     "ClientPacketListenerMixin",
     "ContextDimensionMixin",
+    "GameRuleTooltipMixin",
     "MinecraftClientMixin",
     "compat.IrisMixin"
   ],

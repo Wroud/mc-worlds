@@ -28,5 +28,19 @@
   "dev.wroud.mc.worlds.command.list.world_spawn": "Holds the world spawn",
   "dev.wroud.mc.worlds.command.list.players": "Players: %s",
   "dev.wroud.mc.worlds.command.list.players.none": "none",
-  "dev.wroud.mc.worlds.command.list.click": "Click to put %s in chat"
+  "dev.wroud.mc.worlds.command.list.click": "Click to put %s in chat",
+  "dev.wroud.mc.worlds.gamerule.origin.world": "Set for world %s (server: %s)",
+  "dev.wroud.mc.worlds.gamerule.origin.server": "Uses the server value",
+  "dev.wroud.mc.worlds.gamerule.origin.global": "Server-wide: applies to every world",
+  "dev.wroud.mc.worlds.command.gamerule.set.world": "Game rule %s is now set to %s in world %3$s",
+  "dev.wroud.mc.worlds.command.gamerule.set.server": "Game rule %s is now set to %s for the whole server",
+  "dev.wroud.mc.worlds.command.gamerule.query.world": "Game rule %s is currently set to %s in world %3$s",
+  "dev.wroud.mc.worlds.command.gamerule.query.inherited": "Game rule %s is currently set to %s, the server value used by world %3$s",
+  "dev.wroud.mc.worlds.command.gamerule.query.server": "Game rule %s is currently set to %s for the whole server",
+  "dev.wroud.mc.worlds.command.gamerule.inherit.success": "Game rule %s now uses the server value %s in world %3$s",
+  "dev.wroud.mc.worlds.command.gamerule.inherit.not_overridden": "World %s already uses the server value of %s",
+  "dev.wroud.mc.worlds.command.gamerule.inherit.server_rules": "%s always uses the server's game rules",
+  "dev.wroud.mc.worlds.command.gamerule.list": "World %s overrides these game rules:",
+  "dev.wroud.mc.worlds.command.gamerule.list.entry": "%s = %s (server: %s)",
+  "dev.wroud.mc.worlds.command.gamerule.list.none": "World %s uses the server value of every game rule"
 }

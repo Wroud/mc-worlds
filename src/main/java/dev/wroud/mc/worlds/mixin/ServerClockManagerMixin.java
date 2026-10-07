@@ -6,17 +6,24 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.wroud.mc.worlds.server.level.PerWorldClocks;
 import dev.wroud.mc.worlds.server.level.WorldClockOwner;
 import java.util.List;
+import java.util.Map;
 
+import net.minecraft.core.Holder;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.clock.ServerClockManager;
+import net.minecraft.world.clock.WorldClock;
 import net.minecraft.world.level.gamerules.GameRules;
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerClockManager.class)
 public class ServerClockManagerMixin implements WorldClockOwner {
@@ -24,9 +31,21 @@ public class ServerClockManagerMixin implements WorldClockOwner {
     @Unique
     private @Nullable ServerLevel mcworlds$owner;
 
+    @Shadow
+    @Final
+    private Map<Holder<WorldClock>, ServerClockManager.ServerClockInstance> clocks;
+
     @Override
     public void mcworlds$setOwner(ServerLevel level) {
         this.mcworlds$owner = level;
+    }
+
+    @Inject(method = "init", at = @At("TAIL"))
+    private void mcworlds$ownInstances(MinecraftServer server, CallbackInfo ci) {
+        ServerLevel owner = this.mcworlds$owner;
+        if (owner != null) {
+            this.clocks.values().forEach(instance -> ((WorldClockOwner) instance).mcworlds$setOwner(owner));
+        }
     }
 
     @WrapOperation(

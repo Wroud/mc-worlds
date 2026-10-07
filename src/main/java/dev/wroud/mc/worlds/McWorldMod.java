@@ -1,5 +1,8 @@
 package dev.wroud.mc.worlds;
 
+import dev.wroud.mc.worlds.network.GameRuleOriginsPayload;
+import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -35,6 +38,7 @@ public class McWorldMod implements ModInitializer {
     public void onInitialize() {
         
         WorldsRegistries.bootstrap();
+        PayloadTypeRegistry.clientboundPlay().register(GameRuleOriginsPayload.TYPE, GameRuleOriginsPayload.CODEC);
 
         ServerLevelEvents.LOAD.register((serverInstance, world) -> {
             if (world.dimension() == Level.OVERWORLD && !worlds.containsKey(serverInstance)) {
@@ -43,6 +47,8 @@ public class McWorldMod implements ModInitializer {
                 mcWorld.loadSavedWorlds();
             }
         });
+
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((serverInstance, resources, success) -> PerWorldGameRules.pruneAll(serverInstance));
 
         ServerLifecycleEvents.SERVER_STOPPED.register(serverInstance -> {
             worlds.remove(serverInstance);
