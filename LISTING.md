@@ -11,9 +11,9 @@ curseforge_slugs:
 </center>
 
 <center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-performance.png" alt="Performance: worlds load on demand, nothing idles" width="230">
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-vanilla.png" alt="Vanilla-like: vanilla commands, vanilla mechanics" width="230">
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-latest.png" alt="Latest Minecraft: updated within a week of each release" width="230">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-performance.png" alt="Performance: worlds load on demand, nothing idles" height="44">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-vanilla.png" alt="Vanilla-like: vanilla commands, vanilla mechanics" height="44">
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-latest.png" alt="Latest Minecraft: updated within a week of each release" height="44">
 </center>
 
 <center>
