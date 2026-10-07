@@ -29,11 +29,17 @@ curseforge_slugs:
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-create.png" alt="One command, any world" width="100%">
 </center>
 
-<center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/create-end.webp" alt="Typing /worlds create event_end from-dimension minecraft:the_end, then /worlds tp event_end, and arriving in a new End under the circling Ender Dragon" width="100%">
-</center>
-
-`/worlds create <id>` makes an Overworld. Add `from-preset` for flat, amplified, large biomes or any world preset from a data pack, or `from-dimension` for a Nether, an End or any dimension type, with your own seed or a random one. `/worlds tp` takes you there, `/worlds list` shows every world and who is in it, and `/worlds delete` removes one after moving everyone out.
+<table>
+    <tr>
+        <td width="60%">
+            <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/create-end.webp" alt="Typing /worlds create event_end from-dimension minecraft:the_end, then /worlds tp event_end, and arriving in a new End under the circling Ender Dragon" width="100%">
+        </td>
+        <td width="40%">
+            <h2>Any kind of world</h2>
+            <p><code>/worlds create &lt;id&gt;</code> makes an Overworld. Add <code>from-preset</code> for flat, amplified or any data pack preset, or <code>from-dimension</code> for a Nether, an End or any dimension type. <code>/worlds tp</code> takes you there.</p>
+        </td>
+    </tr>
+</table>
 
 <center>
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-vanilla.png" alt="Real vanilla everywhere" width="100%">
