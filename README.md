@@ -49,12 +49,11 @@ A world id without a namespace gets `minecraft:`, so `/worlds create mining` cre
 /gamerule advance_weather false
 ```
 
-**A safe lobby that loads with the server**
+**A safe lobby where new players spawn**
 ```
 /worlds create lobby
 /worlds tp lobby
-/worlds settings spawn here
-/worlds settings loadOnStartup true
+/setworldspawn
 /gamerule pvp false
 /gamerule spawn_monsters false
 ```
