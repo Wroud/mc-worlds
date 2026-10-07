@@ -6,15 +6,18 @@ curseforge_slugs:
   mc-stargate: mc-stargate
 ---
 
+<!-- only:modrinth -->
 <center>
-<a href="https://pixly.gg/?utm_source=modrinth&utm_medium=referral&utm_campaign=mc-worlds&utm_content=mods-banner"><img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/banner.png" alt="Worlds: Multiverse for Fabric servers. Create, list and teleport between unlimited worlds, each one real vanilla." width="100%"><img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/promo-pixly.png" alt="Pixly hosting: no subscription, crossplay in one switch, mods, modpacks, from 8¢ per hour. Try it free." width="100%"></a>
+<a href="https://pixly.gg/?utm_source=modrinth&utm_medium=referral&utm_campaign=mc-worlds&utm_content=mods-banner"><img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/banner.png" alt="A cherry grove at sunset. Performance: built for servers and minigames with many dimensions. Vanilla: custom dimensions work exactly like the original ones. Latest Minecraft: fast, backward-compatible updates, no waiting for new content." width="100%"><img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/promo-pixly.png" alt="Pixly hosting: no subscription, crossplay in one switch, mods, modpacks, from 8¢ per hour. Try it free." width="100%"></a>
 </center>
+<!-- /only -->
+<!-- only:curseforge -->
+<center>
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/banner-rounded.png" alt="A cherry grove at sunset. Performance: built for servers and minigames with many dimensions. Vanilla: custom dimensions work exactly like the original ones. Latest Minecraft: fast, backward-compatible updates, no waiting for new content." width="100%">
+</center>
+<!-- /only -->
 
-<center>
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-performance.png" alt="Performance: worlds load on demand and unload when empty" height="44">
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-vanilla.png" alt="Vanilla-like: vanilla commands and mechanics" height="44">
-<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/badge-latest.png" alt="Latest Minecraft: updated within a week of each release" height="44">
-</center>
+<br>
 
 <center>
 <img src="https://img.shields.io/modrinth/v/rDdf0tz6?style=for-the-badge&label=Latest&color=2E8BC0&labelColor=143C5C" alt="Latest version, with the Minecraft version it runs on">
@@ -22,6 +25,8 @@ curseforge_slugs:
 <img src="https://img.shields.io/badge/Loader-Fabric-2E8BC0?style=for-the-badge&labelColor=143C5C" alt="Fabric loader">
 <img src="https://img.shields.io/badge/Side-Server-2E8BC0?style=for-the-badge&labelColor=143C5C" alt="Server side, optional on the client">
 </center>
+
+<br>
 
 **Worlds** lets a Fabric server run as many worlds as it wants, the way Multiverse does on Paper. Create, list, delete and teleport between worlds with in-game commands, and give each one its own time, weather and game rules. Every world plays like real vanilla Minecraft, down to the End dragon, which also makes Worlds a base other mods build their dimensions on. Worlds from World Manager or Multiworld can be recreated with one command each.
 
