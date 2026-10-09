@@ -8,7 +8,7 @@ mc-worlds stays as close as possible to vanilla so MC updates stay easy and beha
 
 - reuse vanilla mechanisms: vanilla commands acting on the world they run in, `SavedData` in the world's own storage, dimension types and world presets from data packs;
 - keep the Overworld, Nether and End behaving exactly as vanilla;
-- add the fewest and smallest mixins, and list every compile-clean breakage point in the `CLAUDE.md` version-bump checks;
+- add the fewest and smallest mixins, and list every compile-clean breakage point in the `AGENTS.md` version-bump checks;
 - don't add policies vanilla doesn't have (permissions, economy, inventories).
 
 ## Where the demand comes from

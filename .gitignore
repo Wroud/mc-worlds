@@ -54,3 +54,8 @@ minecraft-server/
 .claude/skills/mod-release
 .claude/skills/fabric-mod-migration
 .claude/skills/mod-listing
+.agents/skills/mc-server-probe
+.agents/skills/mc-client
+.agents/skills/mod-release
+.agents/skills/fabric-mod-migration
+.agents/skills/mod-listing

@@ -41,7 +41,17 @@ McWorldMod (ModInitializer) → McWorld (per-server facade) → WorldsManager
 ./gradlew genSources    # regenerate decompiled MC sources after MC upgrade
 ```
 
-Runtime checks (reproduce a bug, prove a fix, create worlds, read loaded levels and the world spawn) go through the `mc-server-probe` skill's `--cmd` mode; releases through `mod-release`; the store page (`LISTING.md`, `docs/listing/`) through `mod-listing`. These shared skills live in `../mc-mod-skills`, symlinked into `.claude/skills/` (git-ignored; recreate the links with the loop in `../mc-mod-skills/README.md`); per-mod values are in `.claude/mod-skills.env`.
+Runtime checks (reproduce a bug, prove a fix, create worlds, read loaded levels and the world spawn) go through the `mc-server-probe` skill's `--cmd` mode; releases through `mod-release`; the store page (`LISTING.md`, `docs/listing/`) through `mod-listing`. The repository's `dimension-sweep` skill lives in `.agents/skills/`, with a symlink in `.claude/skills/`. The shared skills live in `../mc-mod-skills`; local symlinks in both skill directories are git-ignored. Recreate missing shared links from the repository root with:
+
+```bash
+for n in mc-server-probe mc-client mod-release fabric-mod-migration mod-listing; do
+  for base in .agents .claude; do
+    test -L "$base/skills/$n" || ln -s "../../../mc-mod-skills/$n" "$base/skills/$n"
+  done
+done
+```
+
+Per-mod values are in `.claude/mod-skills.env`.
 
 ## Mixins
 ASM bytecode injection patching closed-source MC classes.
