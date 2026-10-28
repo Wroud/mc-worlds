@@ -1,5 +1,8 @@
 package dev.wroud.mc.worlds;
 
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.jspecify.annotations.Nullable;
 
 import dev.wroud.mc.worlds.manager.WorldHandle;
@@ -10,6 +13,7 @@ import net.minecraft.server.MinecraftServer;
 
 public class McWorld {
   private WorldsManager worldsManager;
+  private final AtomicReference<@Nullable RunningImport> runningImport = new AtomicReference<>();
 
   public McWorld(MinecraftServer server) {
     this.worldsManager = new WorldsManager(server);
@@ -29,5 +33,24 @@ public class McWorld {
 
   public void handleWorldUnload(Identifier level) {
     worldsManager.unloadWorld(level);
+  }
+
+  public boolean tryBeginImport(String description) {
+    return runningImport.compareAndSet(null, new RunningImport(description, "starting"));
+  }
+
+  public void setImportPhase(String phase) {
+    runningImport.updateAndGet(current -> current == null ? null : new RunningImport(current.description(), phase));
+  }
+
+  public void endImport() {
+    runningImport.set(null);
+  }
+
+  public Optional<String> currentImport() {
+    return Optional.ofNullable(runningImport.get()).map(current -> current.description() + " (" + current.phase() + ")");
+  }
+
+  private record RunningImport(String description, String phase) {
   }
 }

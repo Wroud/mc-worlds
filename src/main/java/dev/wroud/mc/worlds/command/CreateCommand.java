@@ -17,7 +17,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceKey;
@@ -153,21 +152,14 @@ public class CreateCommand {
           Component successMessage = Component.translatable("dev.wroud.mc.worlds.command.create.success")
               .append(Component.literal(id.toString()).withStyle(ChatFormatting.GOLD))
               .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.created"))
-              .append(Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
-                  .withStyle(style -> style
-                      .withColor(ChatFormatting.AQUA)
-                      .withUnderlined(true)
-                      .withClickEvent(new ClickEvent.RunCommand(
-                          "/worlds tp " + id.toString()))));
+              .append(TeleportCommand.link(id));
           source.sendSystemMessage(successMessage);
 
         }
       }, id, preset, dimension, levelStemKey, seed);
       return Command.SINGLE_SUCCESS;
     } catch (WorldsCreator.InvalidLevelIdException e) {
-      throw new SimpleCommandExceptionType(
-          Component.translatable("dev.wroud.mc.worlds.command.create.exception.world_already_exists"))
-          .create();
+      throw new SimpleCommandExceptionType(Component.translatable(e.getTranslationKey(), id.toString())).create();
     } catch (Exception e) {
       McWorldMod.LOGGER.error("Error creating world", e);
       throw new SimpleCommandExceptionType(

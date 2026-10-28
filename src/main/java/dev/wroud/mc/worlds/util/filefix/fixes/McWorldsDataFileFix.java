@@ -2,6 +2,8 @@ package dev.wroud.mc.worlds.util.filefix.fixes;
 
 import com.mojang.datafixers.schemas.Schema;
 import java.util.List;
+
+import dev.wroud.mc.worlds.manager.WorldsData;
 import net.minecraft.util.filefix.FileFix;
 import net.minecraft.util.filefix.access.FileRelation;
 import net.minecraft.util.filefix.operations.FileFixOperations;
@@ -18,6 +20,6 @@ public class McWorldsDataFileFix extends FileFix {
         FileFixOperations.applyInFolders(
             FileRelation.DATA,
             List.of(
-                FileFixOperations.move("mc-worlds.dat", "mc-worlds/worlds_data.dat"))));
+                FileFixOperations.move(WorldsData.LEGACY_FILE, "mc-worlds/worlds_data.dat"))));
   }
 }

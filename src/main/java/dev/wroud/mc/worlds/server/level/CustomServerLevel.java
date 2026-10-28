@@ -1,10 +1,14 @@
 package dev.wroud.mc.worlds.server.level;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
+import java.util.function.UnaryOperator;
 
+import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.mixin.ServerLevelAccessor;
@@ -16,6 +20,10 @@ import dev.wroud.mc.worlds.server.level.state.SpawnPreparationHelper;
 import dev.wroud.mc.worlds.server.level.state.StoppedLevelState;
 import dev.wroud.mc.worlds.server.level.state.StoppingLevelState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
+import net.minecraft.SharedConstants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -26,8 +34,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.world.level.saveddata.WeatherData;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.SavedDataStorage;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -165,6 +177,38 @@ public class CustomServerLevel extends ServerLevel {
 
   public void setState(LevelStateFactory<? extends LevelState> factory) {
     this.currentState = factory.create(this);
+  }
+
+  static <T extends SavedData> T loadOrConvert(ServerLevel level, SavedDataType<T> type, Identifier vanillaId,
+      UnaryOperator<T> convert) {
+    SavedDataStorage storage = level.getDataStorage();
+    T data = storage.get(type);
+    if (data != null) {
+      return data;
+    }
+    Path file = vanillaId.withSuffix(".dat").resolveAgainst(((MinecraftServerAccessor) level.getServer())
+        .getStorageSource().getDimensionPath(level.dimension()).resolve(LevelResource.DATA.id()));
+    if (!Files.exists(file)) {
+      return storage.computeIfAbsent(type);
+    }
+    try {
+      CompoundTag tag = storage.readTagFromDisk(file, type.dataFixType(),
+          SharedConstants.getCurrentVersion().dataVersion().version());
+      T converted = convert.apply(type.codec()
+          .parse(level.registryAccess().createSerializationContext(NbtOps.INSTANCE), tag.get("data")).getOrThrow());
+      storage.set(type, converted);
+      storage.scheduleSave().thenRun(() -> {
+        try {
+          Files.deleteIfExists(file);
+        } catch (IOException e) {
+          McWorldMod.LOGGER.warn("Could not delete {}", file, e);
+        }
+      });
+      return converted;
+    } catch (IOException | RuntimeException e) {
+      McWorldMod.LOGGER.error("Could not convert {}", file, e);
+      return storage.computeIfAbsent(type);
+    }
   }
 
   public interface LevelStateFactory<T extends LevelState> {

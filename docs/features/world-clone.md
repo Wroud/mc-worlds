@@ -44,6 +44,21 @@ Paths: mc-worlds code is under `src/main/java/dev/wroud/mc/worlds/`. Vanilla cod
   - Multiverse-Core saves with flush, then copies the whole folder synchronously, skipping `uid.dat`/`session.lock`.
 - The maintainer agreed (2026-10-07) that clone must be built on import.
 
+### Demand and coverage (checked 2026-10-29)
+
+| Signal | Numbers |
+|---|---|
+| Multiverse-Core | 31 issues and PRs mention clone, almost all bugs ("World could NOT be cloned!" #1436/#2148, `session.lock` on Windows #2337) and recent work (#3422 unloaded worlds, #3436 Paper 26.1 metadata, #3478 uppercase names on Linux). The command is used and maintained; no feature votes |
+| Feature requests | Multiverse-Core #779 (2012, the original: copying a folder and importing it by hand is tedious) and #2391 (a fresh skyblock copy per player from a command-block button; closed as "use a placeholder plugin") |
+| Fabric | No clone requests on Multiworld, melius World Manager or the mc-worlds tracker |
+
+| Fabric coverage | Downloads | What it covers |
+|---|---|---|
+| Multiverse Dimensions (senseiwells) | 7.1K | `/multiverse clone`, optionally one region, synchronous, no save first |
+| Multiworld (86.5K), melius World Manager (15.2K) | — | No clone |
+
+Demand is low to medium: the uses (backups, templates, testing on a copy) are real but nobody on Fabric asks for it. It is cheap once import's transfer routine exists, which is why it comes after import.
+
 ## Vanilla alignment
 
 - **Snapshot = vanilla's documented backup procedure, scoped to one level.**
@@ -53,13 +68,14 @@ Paths: mc-worlds code is under `src/main/java/dev/wroud/mc/worlds/`. Vanilla cod
 - **Unit of copy = vanilla's unit of dimension storage.** In 26.x `getDimensionPath(key)` holds everything a dimension owns:
   - `region/`, `entities/` and `poi/` (`DimensionType.java:113-115`, `ServerLevel.java:250-257`)
   - its own `data/` (`ServerChunkCache.java:93-101`)
-  - Server-global things (players, maps, scoreboard, gamerules) live elsewhere, so they are neither duplicated nor touched (see the import doc's internals).
+  - Server-global things (players, maps, scoreboard, the server's game rules) live elsewhere, so they are neither duplicated nor touched (see the import doc's internals). A world's game rule overrides (1.10.0) live in its own `data/`, so the clone gets them.
 - **No exclusion list.** `uid.dat`, `session.lock` and `level.dat` sit at the world root, never in a dimension folder. Multiverse-Core needs `CLONE_IGNORE_FILES` only because it copies whole Bukkit world folders (`WorldManager.java:94-97` @ `fe49efe`).
 - **No reset flags.** Each per-world piece already has a vanilla command that acts on the executing level in mc-worlds:
   - weather (`mixin/WeatherCommandMixin.java:15-37`)
   - time and clocks (`mixin/TimeCommandMixin.java:14-20`)
   - `worldborder` and `forceload`, which are vanilla per-level SavedData
-  - Multiverse-Core's `--reset-world-config/--reset-gamerules` reset Multiverse's *own* per-world config, which mc-worlds doesn't have.
+  - game rule overrides (`/execute in <to> run gamerule <rule> inherit`)
+  - Multiverse-Core's `--reset-world-config` resets Multiverse's *own* per-world config, which mc-worlds doesn't have. Its `--reset-gamerules` maps to `gamerule … inherit` above.
 
 ## Current state in mc-worlds
 
@@ -130,12 +146,12 @@ Paths: mc-worlds code is under `src/main/java/dev/wroud/mc/worlds/`. Vanilla cod
    - In `WorldsData`, else `UNKNOWN_WORLD_EXCEPTION` (`WorldsCommands.java:58-59`).
    - Not busy.
    - If loaded (`MinecraftServerAccessor.getLevels()`), it must be a `CustomServerLevel` that `isActive()`, so not initializing, stopping or `isDeleteOnClose()`. Otherwise refuse with `busy`.
-2. **`<to>`:** the import doc's target-id checks (WorldsData, loaded keys, path segments, the folder must not exist, not reserved).
+2. **`<to>`:** the data-only `WorldsCreator.validLevelId` from import (WorldsData, loaded keys, path segments, the folder must not exist), plus not reserved.
 3. **No other transfer job running.**
 
 ### Pipeline
 
-Steps marked † are import's `WorldTransfer` steps.
+Steps marked † are the copy-and-install part of import's `WorldImporter`. Clone extracts it into a shared `manager/WorldTransfer.java` when it is built; import itself has no busy set or reservation (see [world-import.md](world-import.md#pipeline)), so the busy set below is new with clone.
 
 | # | Thread | Step |
 |---|---|---|
@@ -158,20 +174,21 @@ Steps marked † are import's `WorldTransfer` steps.
 | Dragon fight (End-like) | `<dim>/data/minecraft/ender_dragon_fight.dat` | copied |
 | Weather | `<dim>/data/minecraft/weather.dat` | copied (`/execute in <to> run weather …`) |
 | Time and clocks | `<dim>/data/mc-worlds/world_clocks.dat` | copied (`/execute in <to> run time …`) |
+| Game rule overrides | `<dim>/data/mc-worlds/game_rules.dat` | copied (`/execute in <to> run gamerule <rule> inherit`) |
 | Other mods' per-dimension data | `<dim>/data/<modid>/…` | copied |
 | Generator: stem, seed, provider, `generate_structures`, `prepare_spawn` | `worlds_data.dat` | copied (Codec) |
 | Spawn | `worlds_data.dat` | copied, dimension rewritten to `<to>` |
 | `game_time`, `initialized` | `worlds_data.dat` | copied |
 | Load on startup (`lazy`) | `worlds_data.dat` | reset to `true` (open question) |
-| Players inside, player data, maps, scoreboard, gamerules | global | not copied (shared server state) |
+| Players inside, player data, maps, scoreboard, server game rules | global | not copied (shared server state) |
 
 ### Files
 
 | File | Change |
 |---|---|
 | `command/CloneCommand.java` (new) | Tree, validation, messages |
-| `manager/WorldTransfer.java` (from import) | `cloneWorld(server, from, to, callbacks)`: snapshot, copy, install, register |
-| `manager/WorldsManager.java` | Busy set (shared with import). `isBusy(id)` |
+| `manager/WorldTransfer.java` (new, extracted from `WorldImporter`) | `cloneWorld(server, from, to, callbacks)`: snapshot, copy, install, register |
+| `manager/WorldsManager.java` | Busy set. `isBusy(id)` |
 | `server/level/state/ActiveLevelState.java` | Add `&& !manager.isBusy(id)` to the auto-stop condition (`:21-23`) |
 | `command/DeleteCommand.java` | Refuse a busy id before `stop(true)` |
 | `command/WorldsCommands.java` | `.then(CloneCommand.build())`, `SAVED_WORLD_SUGGESTIONS` |
@@ -187,7 +204,8 @@ No Codec change: the round-trip uses the existing `WorldsLevelData.CODEC` and it
 | `dev.wroud.mc.worlds.command.clone.success` | `World %s cloned into %s. ` (followed by `…create.success.teleport`) |
 | `dev.wroud.mc.worlds.command.clone.failed` | `Cloning %s failed: %s` |
 | `dev.wroud.mc.worlds.command.clone.exception.source_busy` | `World %s is loading, stopping or being deleted; try again shortly` |
-| shared (import doc) | `…command.exception.folder_exists`, `…command.exception.busy`, `…create.exception.world_already_exists`, `…command.exception.unknown_world` |
+| shared (import doc) | `…command.exception.folder_exists`, `…create.exception.world_already_exists`, `…command.exception.unknown_world` |
+| `dev.wroud.mc.worlds.command.exception.busy` | `Another clone is still running` |
 
 ## Edge cases & risks
 
@@ -217,6 +235,7 @@ No Codec change: the round-trip uses the existing `WorldsLevelData.CODEC` and it
    - Its weather and clocks are server-global, so they would be transplanted into the clone's folder exactly like import steps 5 and 7.
    - Recommended as a follow-up once import's level-data builder exists.
 4. **Provider hook.** Should `ServerLevelProvider` get a default `onCloned(server, from, to)` so mods like mc-stargate can copy id-keyed data they keep elsewhere, such as `StargatePresetData`? Not needed for vanilla-provider worlds.
+5. **Command blocks and functions.** The template-per-player case (#2391) needs clone to run from a command block or a function, with the target id supplied by a function macro (`$worlds clone template $(id)`) or by another mod. Nothing here assumes a player source, but the manual test plan should run it once from a function. Multiverse-Core #2560 was a crash when regen ran from a command block.
 
 ## Manual test plan
 
@@ -257,4 +276,5 @@ Run `./gradlew runServer` and connect `./gradlew runClient`.
 - Multiverse-Core docs (`/mv clone`): https://mvplugins.org/core/fundamentals/commands-usage/
 - Multiverse-Core clone source: https://github.com/Multiverse/Multiverse-Core/blob/fe49efe276ec50b069280b4de9d9eb29966d57d7/src/main/java/org/mvplugins/multiverse/core/world/WorldManager.java · https://github.com/Multiverse/Multiverse-Core/blob/fe49efe276ec50b069280b4de9d9eb29966d57d7/src/main/java/org/mvplugins/multiverse/core/commands/CloneCommand.java
 - Multiverse-Core PRs and issues: https://github.com/Multiverse/Multiverse-Core/pull/3210 · https://github.com/Multiverse/Multiverse-Core/pull/3212 · https://github.com/Multiverse/Multiverse-Core/pull/3422 · https://github.com/Multiverse/Multiverse-Core/issues/3502
+- Demand and coverage check (2026-10-29): https://github.com/Multiverse/Multiverse-Core/issues?q=clone+in%3Atitle · https://github.com/Multiverse/Multiverse-Core/issues/779 · https://github.com/Multiverse/Multiverse-Core/issues/2391 · https://github.com/Multiverse/Multiverse-Core/issues/2337 · https://github.com/Multiverse/Multiverse-Core/issues/2560 · https://modrinth.com/mod/multiverse-dimensions
 - Import design (shared routine, comparison table): [world-import.md](world-import.md)

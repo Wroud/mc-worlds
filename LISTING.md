@@ -72,6 +72,7 @@ curseforge_slugs:
 | `/worlds create <id> [seed]` | Creates an overworld |
 | `/worlds create <id> from-preset <preset> [dimension] [seed]` | Creates a world from a world preset, for example `minecraft:flat` or `minecraft:amplified` |
 | `/worlds create <id> from-dimension <type> [seed]` | Creates a world of a dimension type, for example `minecraft:the_nether` or `minecraft:the_end` |
+| `/worlds import <id> <save> [<dimension>\|all]` | Imports a singleplayer world, another server's worlds (Paper and Multiverse too), a zip, or a direct download link to a zip |
 | `/worlds tp <id> [players]` | Teleports you or other players to a world's spawn |
 | `/worlds list [loaded\|unloaded]` | Lists worlds; hover for details, click to teleport |
 | `/worlds delete <id>` | Deletes a world after moving everyone out of it |
@@ -118,6 +119,14 @@ A world id without a namespace gets `minecraft:`, so `/worlds create mining` cre
 /execute in minecraft:arena run gamerule keep_inventory true
 ```
 
+**Bring in a singleplayer world, a map download or a Paper server's worlds**
+```
+/worlds import old_survival "My Old World"
+/worlds import adventure "https://example.com/maps/adventure.zip"
+/worlds import hub paperworld all
+```
+Put the save, or its zip, next to the server world. Older Minecraft versions are upgraded, and the world keeps its seed, spawn, maps and game rules.
+
 **Moving from World Manager or Multiworld:** replace it with Worlds, then run `/worlds create <id> from-dimension <type> <seed>` with the id, type and seed each world had. Classic Overworld, Nether and End worlds are supported.
 
 ## Requirements
@@ -128,9 +137,9 @@ A world id without a namespace gets `minecraft:`, so `/worlds create mining` cre
 
 ## Recent updates
 
+- **1.11.0** `/worlds import` brings in singleplayer worlds, other servers' worlds and Paper or Multiverse worlds, from a folder, a zip or a download link.
 - **1.10.0** Per-world game rules through vanilla `/gamerule`, and a fix for a rare "Exception generating new chunk" crash when several worlds generate structures at once.
 - **1.9.0** `/worlds list` with loaded and unloaded worlds, hover details and click-to-teleport.
-- **1.8.26** A world that holds the world spawn stays loaded, and deleting it moves the spawn back to the Overworld.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

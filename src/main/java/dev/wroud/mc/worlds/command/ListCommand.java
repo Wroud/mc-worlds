@@ -121,7 +121,7 @@ public class ListCommand {
             .withColor(statusColor(loaded))
             .withInsertion(id.toString())
             .withHoverEvent(new HoverEvent.ShowText(details))
-            .withClickEvent(canTeleport ? new ClickEvent.SuggestCommand(teleportCommand(id)) : null));
+            .withClickEvent(canTeleport ? new ClickEvent.SuggestCommand(TeleportCommand.command(id)) : null));
   }
 
   private static Component details(Identifier id, boolean loaded, Holder<DimensionType> type, WorldsLevelData data,
@@ -153,7 +153,7 @@ public class ListCommand {
 
     if (canTeleport) {
       lines.add(CommonComponents.EMPTY);
-      lines.add(Component.translatable(KEY + "click", teleportCommand(id))
+      lines.add(Component.translatable(KEY + "click", TeleportCommand.command(id))
           .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
     }
 
@@ -167,9 +167,5 @@ public class ListCommand {
 
   private static ChatFormatting statusColor(boolean loaded) {
     return loaded ? ChatFormatting.GREEN : ChatFormatting.GRAY;
-  }
-
-  private static String teleportCommand(Identifier id) {
-    return "/worlds tp " + id;
   }
 }

@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
+import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 
 public class DimensionDetectionUtil {
@@ -28,8 +29,23 @@ public class DimensionDetectionUtil {
     }
 
     public static boolean isOverworldLikeDimension(Level level) {
-        Holder<DimensionType> type = level.dimensionTypeRegistration();
+        return isOverworldLikeDimension(level.dimensionTypeRegistration());
+    }
+
+    public static boolean isOverworldLikeDimension(Holder<DimensionType> type) {
         return type.is(BuiltinDimensionTypes.OVERWORLD) || type.is(DimensionTypeTags.OVERWORLD_LIKE);
+    }
+
+    public static ResourceKey<Level> chunkFixContextDimension(Level level, ResourceKey<Level> key) {
+        return level instanceof CustomServerLevel ? chunkFixContextDimension(key, level.dimensionTypeRegistration()) : key;
+    }
+
+    public static ResourceKey<Level> chunkFixContextDimension(ResourceKey<Level> key, Holder<DimensionType> type) {
+        if (isOverworldLikeDimension(type) && type.value().minY() == -64 && type.value().height() == 384) {
+            return Level.OVERWORLD;
+        }
+
+        return key;
     }
 
     public static ResourceKey<Level> getVanillaDimensionMapping(Level level) {
@@ -70,7 +86,7 @@ public class DimensionDetectionUtil {
             return Level.NETHER;
         }
 
-        if (holder.is(BuiltinDimensionTypes.OVERWORLD) || holder.is(DimensionTypeTags.OVERWORLD_LIKE)) {
+        if (isOverworldLikeDimension(holder)) {
             return Level.OVERWORLD;
         }
 

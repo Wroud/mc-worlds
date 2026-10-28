@@ -3,7 +3,10 @@ package dev.wroud.mc.worlds.server.level;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 
@@ -35,11 +38,18 @@ public final class PerWorldGameRules {
   public static final ScopedValue<ServerLevel> WORLD_CHANGE = ScopedValue.newInstance();
 
   public static LayeredGameRules create(ServerLevel level) {
-    GameRuleMap overrides = level.getDataStorage().computeIfAbsent(TYPE);
+    GameRules serverRules = level.getServer().getGameRules();
+    GameRuleMap overrides = CustomServerLevel.loadOrConvert(level, TYPE, GameRuleMap.TYPE.id(), vanilla -> {
+      Set<GameRule<?>> available = serverRules.availableRules().collect(Collectors.toSet());
+      GameRuleMap differing = GameRuleMap.of();
+      differing.setFromIf(vanilla,
+          rule -> available.contains(rule) && !Objects.equals(vanilla.get(rule), serverRules.get(rule)));
+      return differing;
+    });
     if (overrides.size() == 0) {
       overrides.setDirty(false);
     }
-    return new LayeredGameRules(level, level.getServer().getGameRules(), overrides);
+    return new LayeredGameRules(level, serverRules, overrides);
   }
 
   public static <T> void onWorldGameRuleChanged(ServerLevel level, GameRule<T> rule, T value) {

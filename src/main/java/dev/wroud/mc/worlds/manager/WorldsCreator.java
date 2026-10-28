@@ -1,9 +1,14 @@
 package dev.wroud.mc.worlds.manager;
 
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 import org.jetbrains.annotations.Nullable;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
+import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.mixin.WorldPresetAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.util.LevelActivationUtil;
@@ -11,7 +16,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.FileUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldOptions;
@@ -112,17 +117,59 @@ public class WorldsCreator {
     });
   }
 
+  public static @Nullable WorldHandle registerAndLoad(MinecraftServer server, Identifier id, WorldsLevelData data) {
+    var mcWorld = McWorldMod.getMcWorld(server).orElseThrow();
+    mcWorld.getManager().getWorldsData().addLevelData(id, data);
+    return mcWorld.loadOrCreate(id, data);
+  }
+
+  public static void validLevelIdFormat(Identifier id) throws InvalidLevelIdException {
+    if (!Stream.concat(Stream.of(id.getNamespace()), Arrays.stream(id.getPath().split("/", -1)))
+        .allMatch(FileUtil::isValidPathSegment)) {
+      throw new InvalidLevelIdException(InvalidLevelIdException.INVALID_ID,
+          "Level id '" + id + "' is not a valid folder name");
+    }
+  }
+
   public static void validLevelId(Identifier id, MinecraftServer server) throws InvalidLevelIdException {
+    validLevelIdFormat(id);
     ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-    ServerLevel level = server.getLevel(resourceKey);
-    if (level != null) {
+    var registered = McWorldMod.getMcWorld(server)
+        .map(mcWorld -> mcWorld.getManager().getWorldsData().getLevelData(id) != null)
+        .orElse(false);
+    if (registered || server.levelKeys().contains(resourceKey)) {
       throw new InvalidLevelIdException("Level with id '" + id + "' already exists");
     }
   }
 
+  public static void validImportTarget(Identifier id, MinecraftServer server) throws InvalidLevelIdException {
+    validLevelId(id, server);
+    ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
+    var session = ((MinecraftServerAccessor) server).getStorageSource();
+    if (Files.exists(session.getDimensionPath(resourceKey))) {
+      throw new InvalidLevelIdException(InvalidLevelIdException.FOLDER_EXISTS,
+          "Folder for level '" + id + "' already exists");
+    }
+  }
+
   public static class InvalidLevelIdException extends Exception {
+    public static final String ALREADY_EXISTS = "dev.wroud.mc.worlds.command.create.exception.world_already_exists";
+    public static final String INVALID_ID = "dev.wroud.mc.worlds.command.exception.invalid_id";
+    public static final String FOLDER_EXISTS = "dev.wroud.mc.worlds.command.exception.folder_exists";
+
+    private final String translationKey;
+
     public InvalidLevelIdException(String message) {
+      this(ALREADY_EXISTS, message);
+    }
+
+    public InvalidLevelIdException(String translationKey, String message) {
       super(message);
+      this.translationKey = translationKey;
+    }
+
+    public String getTranslationKey() {
+      return translationKey;
     }
   }
 

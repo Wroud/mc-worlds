@@ -21,13 +21,15 @@ McWorldMod (ModInitializer) → McWorld (per-server facade) → WorldsManager
 | `WorldsData` | `SavedData` for all worlds, Codec-serialized |
 | `DefaultServerLevelProvider` | Registered as `mc-worlds:default` |
 | `WorldsRegistries` | Fabric registry for `ServerLevelProvider` |
+| `WorldImporter` | `/worlds import`: download a zip URL, stage a copy of a save or zip, run vanilla's file fixer, resolve level data and state, remap maps, move and register (`manager/importer/`) |
 
 ## Key Files
 - Entry: `src/main/java/dev/wroud/mc/worlds/McWorldMod.java`
 - Manager: `manager/WorldsManager.java`
 - Level: `server/level/CustomServerLevel.java`
 - Data: `manager/level/data/WorldsLevelData.java`
-- Commands: `command/` (Create/Delete/Teleport/Settings, registered in `WorldsCommands.java`)
+- Commands: `command/` (Create/Import/Delete/Teleport/List/Settings, registered in `WorldsCommands.java`)
+- Import: `command/ImportCommand.java` (arguments, busy slot, validation, messages) and `manager/importer/`: `WorldImporter` (threads, install with rollback), `SourceSave` (folder rules, dimension discovery, `all` ids), `ArchiveDownload` (URL download into staging), `StagingStage` (copy from a folder or a zip opened in place, version checks, file fix), `LevelDataResolver` (generator, spawn, weather, clock, game rules), `MapRemapper` (map ids). Design and test plan: `docs/features/world-import.md`
 - Mixin config: `src/main/resources/worlds.mixins.json`, `src/client/resources/worlds.client.mixins.json`
 - Build: `build.gradle.kts`, `gradle.properties`, `versions/latest/gradle.properties`
 - Metadata: `src/main/resources/fabric.mod.json`
@@ -53,13 +55,15 @@ done
 
 Per-mod values are in `.claude/mod-skills.env`.
 
+Import tests place each source save beside `world` in `.probe/server/universes/<u>/` (never pass `--fresh` to that universe afterwards; it deletes them) and check results with the probe hooks `@chunk <dim> <cx> <cz>`, `@map <id>` and `@await <regex> [ticks]`.
+
 ## Mixins
 ASM bytecode injection patching closed-source MC classes.
 
 | Package | Purpose |
 |---------|---------|
 | `mixin/` (root) | Core: server init, weather, wandering trader spawner |
-| `mixin/fixes/` | Vanilla mechanics fixes for custom dimensions (portals, maps, entities) |
+| `mixin/fixes/` | Vanilla mechanics fixes for custom dimensions (portals, maps, entities, the chunk datafix context of overworld-like worlds: `ChunkDataFixContextMixin`) |
 | `mixin/filefix/` | Data format migration (DataFixers) |
 | `client/mixin/` | Client packet handling, dimension context |
 | `client/mixin/compat/` | Optional compatibility with other mods (Iris shader dimension mapping); applied only when that mod is loaded, via `compat/ClientMixinPlugin` |

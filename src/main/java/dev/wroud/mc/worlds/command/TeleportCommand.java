@@ -9,6 +9,8 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
@@ -25,6 +27,18 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public class TeleportCommand {
+	public static String command(Identifier id) {
+		return "/worlds tp " + id;
+	}
+
+	public static Component link(Identifier id) {
+		return Component.translatable("dev.wroud.mc.worlds.command.create.success.teleport")
+				.withStyle(style -> style
+						.withColor(ChatFormatting.AQUA)
+						.withUnderlined(true)
+						.withClickEvent(new ClickEvent.RunCommand(command(id))));
+	}
+
 	public static LiteralArgumentBuilder<CommandSourceStack> build() {
 		return literal("tp")
         .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))

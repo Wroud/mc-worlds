@@ -11,6 +11,7 @@
     "filefix.DataFixersMixin",
     "fixes.BaseFireBlockMixin",
     "fixes.ChangeDimensionTriggerMixin",
+    "fixes.ChunkDataFixContextMixin",
     "fixes.EndPortalBlockMixin",
     "fixes.EntityMixin",
     "fixes.FallingBlockEntityMixin",

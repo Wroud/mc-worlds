@@ -1,12 +1,12 @@
 # Per-world difficulty
 
-**Verdict.** Implement it, but it is small and low priority, and it does not depend on per-world gamerules. Difficulty is a dial with dozens of graded effects: mob damage scaling, how far starvation can take you, hunger depletion, regional difficulty (mob gear and enchantments), door breaking, zombie reinforcements, villager infection, poison and wither durations, and raid and phantom group sizes. Gamerules are on/off switches. At best they approximate the *spawning* half of Peaceful, and they can never make a world harder than the server. That leaves one use case that only difficulty can serve: a world that is **harder or easier than the rest of the server**, such as a Hard adventure or End world next to a Normal or Peaceful main world, or a Peaceful survival world with no hunger. This is real usage. Bukkit/Paper have per-world difficulty natively, every comparable world manager (Multiverse-Core, Multiworld, WorldEngine, Fantasy) exposes it, and Spigot and Multiworld bug reports come from people using it. The peaceful-hub and creative-build cases are mostly covered by gamerules, once those are per-world. On the vanilla side, every read site already goes through the level's own `LevelData`, and the client is already sent the difficulty of the level it is in. So the feature needs:
+**Verdict.** Implement it, but it is small and low priority, and it does not depend on per-world gamerules. Difficulty is a dial with dozens of graded effects: mob damage scaling, how far starvation can take you, hunger depletion, regional difficulty (mob gear and enchantments), door breaking, zombie reinforcements, villager infection, poison and wither durations, and raid and phantom group sizes. Gamerules are on/off switches. At best they approximate the *spawning* half of Peaceful, and they can never make a world harder than the server. That leaves one use case that only difficulty can serve: a world that is **harder or easier than the rest of the server**, such as a Hard adventure or End world next to a Normal or Peaceful main world, or a Peaceful survival world with no hunger. This is real usage. Bukkit/Paper have per-world difficulty natively, every comparable world manager (Multiverse-Core, Multiworld, WorldEngine, Fantasy) exposes it, and Spigot and Multiworld bug reports come from people using it. The peaceful-hub and creative-build cases are mostly covered by gamerules, which are per-world since 1.10.0. On the vanilla side, every read site already goes through the level's own `LevelData`, and the client is already sent the difficulty of the level it is in. So the feature needs:
 - one changed getter,
 - one optional persisted field,
 - two write-path wraps that match Paper's own `DifficultyCommand` patch line for line,
 - `/worlds settings difficulty [inherit]`.
 
-It needs no read-path mixins and no mechanics vanilla doesn't have. Nobody has asked for it in the mc-worlds tracker, so it should not displace other work. Ideally it ships with the same inherit/override UX that per-world gamerules end up with.
+It needs no read-path mixins and no mechanics vanilla doesn't have. Nobody has asked for it in the mc-worlds tracker, so it should not displace other work. It should use the same inherit/override UX that per-world gamerules shipped with in 1.10.0.
 
 ## Summary
 
@@ -25,9 +25,9 @@ It needs no read-path mixins and no mechanics vanilla doesn't have. Nobody has a
 
 ## Use cases & demand
 
-There are no requests in the mc-worlds tracker: issues #1–#8 cover deletion, LuckPerms, tp, `/setworldspawn`, weather and the 26.3 port. Every comparable tool supports per-world difficulty, except melius World Manager and senseiwells' Multiverse, which offer only gamerule inheritance. I could not search Reddit: the fetcher is blocked there and the Reddit connector was down.
+There are no requests in the mc-worlds tracker: issues #1–#10 cover deletion, LuckPerms, tp, `/setworldspawn`, weather, the 26.3 port, 1.21.1 support and #9 (per-world inventories and a creative-only world). Every comparable tool supports per-world difficulty, except melius World Manager and senseiwells' Multiverse, which offer only gamerule inheritance. I could not search Reddit: the fetcher is blocked there and the Reddit connector was down.
 
-Throughout this doc, "Gamerules" means "once gamerules are per-world". Today they are global even in mc-worlds worlds: `ServerLevel.getGameRules()` returns `server.getGameRules()` (`ServerLevel.java:1941-1942`).
+Per-world gamerules shipped in 1.10.0 as an extension of vanilla `/gamerule` (`LayeredGameRules`, `PerWorldGameRules`), so the "Covered by gamerules?" column below describes what works per world today.
 
 | Use case | Evidence | Covered by gamerules? |
 |---|---|---|
@@ -39,6 +39,24 @@ Throughout this doc, "Gamerules" means "once gamerules are per-world". Today the
 | **Minigame arenas / runtime worlds** (mod-driven) | Fantasy (NucleoidMC): `RuntimeLevelConfig.setDifficulty` plus `setMirrorOverworldDifficulty`. Its README says "World-wide values such as difficulty and game rules can be configured per-level" | **Partly.** PvE arenas need the dial. Such mods would call an API rather than commands |
 | **"Hardcore world" on a normal server** | No source found | **No, and difficulty doesn't serve it either.** Hardcore is a `WorldData` flag sent once in the login packet (`PlayerList.java:171`). The client keeps it across dimension changes (`ClientPacketListener.java:525,1242`). Per-world HARD is the only vanilla-aligned part |
 | Counter-signal: players expect *consistency* | Nomi-CEu #297: a player reports difficulty "changing" between the overworld and a void dimension as a bug | This supports **inherit by default**, with overrides explicit and visible |
+
+### Demand and coverage (checked 2026-10-29)
+
+| Signal | Numbers |
+|---|---|
+| Fabric requests | None found: no difficulty request on Multiworld, melius World Manager or the mc-worlds tracker |
+| Multiverse-Core | 14 difficulty issues, all "the value doesn't stick" bugs (#1559, #1718, #1772, #2732): people use it and expect it to survive restarts and `server.properties` |
+| Spigot JIRA | SPIGOT-6900 (Nether/End stuck on one difficulty), SPIGOT-7469 (`server.properties` overrides in-game changes) |
+| Forge | ForgeEssentials #2175: Peaceful only in the spawn dimension, because modded mobs ignored the spawn rules there |
+
+| Fabric coverage | Downloads | What it covers |
+|---|---|---|
+| Multiworld (IsaiahMC) | 86.5K | `/mw difficulty` for the current world (#174: it reset on restart) |
+| CustomDimensions | 1.3K | `/cdim difficulty`, 1.21.1 only |
+| World Switcher | 734 | Per-world difficulty, NeoForge 1.21.1 only |
+| melius World Manager (15.2K), Multiverse Dimensions (7.1K) | — | None |
+
+Demand is low and it is a parity item: the most popular Fabric manager already has it, and the complaints are about persistence, which a stored override in `WorldsLevelData` answers.
 
 ## What difficulty affects
 
@@ -222,7 +240,7 @@ These follow the existing "…:" plus GOLD value style (`SettingsCommand.java:65
 ## Open questions for the maintainer
 
 1. **Should vanilla `/difficulty` and World Options in an mc-worlds world set that world** (recommended; this is the `WeatherCommandMixin` and Paper model)? The alternatives are `/worlds settings difficulty <d>` only, which would leave `/difficulty` reporting "set to Hard" while the world stays Peaceful (SPIGOT-6330), or disabling the World Options packet as Paper does.
-2. **Ship now or bundle with per-world gamerules?** Technically the two are independent. Bundling them gives one "inherit unless overridden" story (`/worlds settings … inherit`) and one changelog entry.
+2. **Inherit syntax.** Per-world gamerules shipped alone in 1.10.0, as `/execute in <world> run gamerule <rule> inherit` rather than `/worlds settings gamerule`. Should difficulty match that and become `/execute in <world> run difficulty inherit` (extending vanilla `/difficulty`), instead of `/worlds settings difficulty inherit`?
 3. **Pinning.** Should `/difficulty normal` in a world that inherits Normal pin it (recommended: compare against the override) or fail with vanilla's "already set" (compare against the effective value)?
 4. Should `/worlds settings difficulty` also accept explicit values, for discoverability, or only `inherit`? And should `CustomServerLevel#setDifficulty` be documented as public API?
 
@@ -246,6 +264,7 @@ There is no test suite. Use `./gradlew runServer` (dev `server.properties` defau
 
 Demand and comparable tools:
 - mc-worlds issues (none about difficulty): https://github.com/wroud/mc-worlds/issues
+- Demand and coverage check (2026-10-29): https://github.com/Multiverse/Multiverse-Core/issues?q=difficulty+in%3Atitle · https://github.com/Multiverse/Multiverse-Core/issues/2732 · https://hub.spigotmc.org/jira/browse/SPIGOT-6900 · https://github.com/ForgeEssentials/ForgeEssentials/issues/2175 · https://modrinth.com/mod/customdimensions · https://modrinth.com/mod/world-switcher
 - Multiworld (Fabric), `/mw difficulty`: https://modrinth.com/mod/multiworld · https://github.com/IsaiahMC/multiworld · https://github.com/IsaiahMC/multiworld/blob/master/Multiworld-Common/src/main/java/me/isaiah/multiworld/command/DifficultyCommand.java
 - Multiworld #174, "Difficulty resets on server restart": https://github.com/IsaiahMC/multiworld/issues/174
 - WorldEngine ("Difficulty — peaceful through hard, per world"): https://modrinth.com/project/qjqEpxGC

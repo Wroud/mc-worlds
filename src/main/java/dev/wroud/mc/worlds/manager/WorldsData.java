@@ -18,6 +18,7 @@ public class WorldsData extends SavedData {
       .unboundedMap(Identifier.CODEC, WorldsLevelData.CODEC)
       .xmap(WorldsData::new, wd -> wd.levels);
 
+  public static final String LEGACY_FILE = McWorldMod.MOD_ID + ".dat";
   public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.id("worlds_data"),
       WorldsData::new, CODEC, null);
 

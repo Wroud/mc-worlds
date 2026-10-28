@@ -3,6 +3,7 @@ package dev.wroud.mc.worlds.server.level;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import net.minecraft.network.protocol.Packet;
@@ -21,7 +22,8 @@ public final class PerWorldClocks {
       ServerClockManager.TYPE.dataFixType());
 
   public static ServerClockManager create(ServerLevel level) {
-    ServerClockManager clockManager = level.getDataStorage().computeIfAbsent(TYPE);
+    ServerClockManager clockManager = CustomServerLevel.loadOrConvert(level, TYPE, ServerClockManager.TYPE.id(),
+        UnaryOperator.identity());
     ((WorldClockOwner) clockManager).mcworlds$setOwner(level);
     clockManager.init(level.getServer());
     return clockManager;

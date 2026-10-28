@@ -67,7 +67,8 @@ public class WorldsCommands {
             .then(TeleportCommand.build())
             .then(CreateCommand.build())
             .then(SettingsCommand.build())
-            .then(ListCommand.build()));
+            .then(ListCommand.build())
+            .then(ImportCommand.build()));
 
     dispatcher.register(
         literal("worlds")

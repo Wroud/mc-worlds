@@ -14,6 +14,18 @@
 
 ### Security
 
+## 1.11.0 - 2026-10-29
+
+### Added
+
+- Bring existing worlds onto your server with `/worlds import`: a singleplayer world, a world from another server, the worlds of a Paper server with Multiverse, or the worlds of another server running Worlds. Put the save next to the server world, or give a zip file or a direct download link to one. Worlds from older Minecraft versions are upgraded the same way the server upgrades its own world.
+- An imported world keeps its terrain generator and seed, spawn, weather, time of day, filled maps and the game rules that differ from the server's. You can import just the Overworld, one dimension, or the Overworld, Nether and End together. The original save is never changed.
+
+### Fixed
+
+- Old chunks in created Overworld-like worlds now blend with newly generated terrain after a Minecraft update, and chunks from before the caves and cliffs update get the new deep terrain instead of air. Chunks that were already upgraded stay as they are.
+- `/worlds create` no longer hangs on "please wait" when the id belongs to a saved world that failed to load.
+
 ## 1.10.0 - 2026-10-07
 
 ### Added

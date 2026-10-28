@@ -10,7 +10,8 @@
 | Mechanism | `CustomServerLevel.stop(true)` (same as delete) → after `WorldsManager.unloadWorld` deletes the folder → `loadOrCreateWorld(id, copiedLevelData)` (same as create) |
 | Kept | `level_stem`, `provider`, `generate_structures`, `prepare_spawn`, `lazy` (loadOnStartup), seed unless overridden; custom spawn only when the seed is unchanged |
 | Reset | Entire dimension folder (`region/`, `entities/`, `poi/`, `data/`); `game_time` |
-| Untouched (global) | Gamerules, scoreboard, random sequences, maps, player data |
+| Carried over from `data/` | Per-world game rule overrides (`mc-worlds:game_rules`) and the world border (open question 2) |
+| Untouched (global) | Server game rules, scoreboard, random sequences, maps, player data |
 | Players inside | Evicted exactly as `/worlds delete` does; not returned (success message has a clickable Teleport) |
 | Confirmation | None, consistent with `/worlds delete` (open question) |
 | New code | 1 command class, a copy-with-seed on `WorldGeneratorData`, a pending-recreate hook in `WorldsManager`, ~5 lang keys |
@@ -27,7 +28,25 @@
   - *World Reset* (Libreh/Worldless) swaps the server's main overworld/nether/end for pooled dimensions, for speedrun or minigame play.
   - *ResetWorld* deletes the whole world folder and stops the server.
   - senseiwells' Fabric *Multiverse* has create/delete/clone/tp but no regen.
-- **mc-worlds' own tracker** has no regen request; its 5 issues are all closed bugs. Demand here is inferred from the ecosystem, not requested.
+- **mc-worlds' own tracker** has no regen request (10 issues as of 2026-10-29). Demand here is inferred from the ecosystem, not requested.
+
+### Demand and coverage (checked 2026-10-29)
+
+| Signal | Numbers |
+|---|---|
+| Use-case guides | Hosting guides list resetting resource worlds among the main reasons to run several worlds (GameServerKings) |
+| Paper reset plugins (Modrinth downloads) | WorldReset 8.1K (speedrun/manhunt), WorldResetPlugin 1.4K, ResourceWorldResetter 1.2K, Karta WorldReset 715. `/mv regen` is built into Multiverse-Core (916K) |
+| GitHub votes | None. Multiverse-Core's 23 regen issues are bugs and improvements (seed handling, biome, bonus chest, crashes), which shows the command is used |
+| Older requests | Multiverse-Core #611 (new random seed every start, for PvP/hunger games), #1539 (reset Nether/End/mod dimensions on a timer or when empty, with a warning) |
+
+| Fabric coverage | Downloads | What it covers |
+|---|---|---|
+| World Reset (Libreh) | 6.9K | Swaps the server's main world for speedrun/manhunt play; not an arbitrary world |
+| Aethro Resource World | 817 | One fixed resource dimension, timed new-seed reset, 1.21.9–1.21.11 |
+| Timed Harvest | 216 | Timed resource worlds, 1.20.1 only |
+| Multiworld (86.5K), melius World Manager (15.2K), Multiverse Dimensions (7.1K) | — | No regen |
+
+No Fabric world manager regenerates a world it created. What users expect, from the reset mods: same seed by default with an explicit or random new one, players evacuated first, border and game rules kept, and a timer with countdown warnings. The first three are in this design; the timer is left to an API consumer (open question 6).
 
 ## Comparison: Chunky trim vs delete+create vs regen
 
@@ -35,7 +54,7 @@
 |---|---|---|---|---|
 | Scope | Chunks inside/outside a shape | Whole world | Whole world | Whole world |
 | What is deleted | Region files wholly in the selection are deleted. Otherwise the chunk's header entry is zeroed in `region/`, `poi/` and `entities/` (`TrimCommand.java:177-265`) | Whole `dimensions/<ns>/<path>/` (`WorldsManager.java:136-147`) | Same as delete | World folder (`WorldManager.java:918`) |
-| Per-dimension `data/` (border, raids, forceloads, weather, clocks, dragon fight, wandering trader) | **Kept**, so it goes stale | Reset | Reset (border: open question) | Border, gamerules and config kept by default (`WorldManager.java:933-948`) |
+| Per-dimension `data/` (border, raids, forceloads, weather, clocks, dragon fight, wandering trader) | **Kept**, so it goes stale | Reset | Reset, except game rule overrides and border (carried over) | Border, gamerules and config kept by default (`WorldManager.java:933-948`) |
 | Seed | Same only (no seed option; the generator is untouched) | Any, but must be re-typed; random if omitted (`WorldsCreator.java:95-97`) | Same by default, explicit, or `random` | Same by default; `--seed` / `--seed <v>` (`RegenWorldOptions.java:210-217`) |
 | Generator/preset | Unchanged | Must re-type preset/dimension; provider is forced to `mc-worlds:default` (`WorldsLevelData.java:154-157`) | Copied from stored `level_stem` + `provider` | Copied (`WorldManager.java:906-916`) |
 | loadOnStartup / spawn | Unchanged | Reset to lazy / re-prepared (`WorldsLevelData.java:150`, `WorldSettingsData.java:18-21`) | `lazy` kept; spawn kept only if same seed | Spawn kept only if same seed (`WorldManager.java:904`) |
@@ -52,13 +71,14 @@
   - `minecraft:raids` (`ServerLevel.java:280`)
   - `minecraft:world_border` (`ServerLevel.java:1566-1569`)
   - `minecraft:chunk_tickets`, i.e. forceloads (`ServerChunkCache.java:102`)
+  - `mc-worlds:game_rules`, the per-world game rule overrides added in 1.10.0 (`PerWorldGameRules.java:29-38`)
   - `minecraft:ender_dragon_fight` on End-like types (`ServerLevel.java:301-303`)
   - `minecraft:weather` (mc-worlds per-world: `CustomServerLevel.java:58`)
   - `mc-worlds:world_clocks` (`PerWorldClocks.java:17-28`)
   - `minecraft:wandering_trader` (`WanderingTraderSpawnerMixin.java:40-45`)
   
   Structure starts and references are in chunk NBT (`SerializableChunkData.java:149,451`), so they go with `region/`.
-- **What is global and not per world:** random sequences, gamerules, boss bars and the scheduled-function queue (`MinecraftServer.java:346-348,363-364`), plus maps (`ServerLevel.java:1590-1597`). Multiverse's `--reset-gamerules` has no equivalent here, because 26.x gamerules are server-wide.
+- **What is global and not per world:** random sequences, the server's game rules, boss bars and the scheduled-function queue (`MinecraftServer.java:346-348,363-364`), plus maps (`ServerLevel.java:1590-1597`). A world's game rule *overrides* are not global: since 1.10.0 they live in its own `data/` folder, so deleting the folder would silently drop them. Multiverse keeps game rules on regen unless `--reset-gamerules` is given; regen here carries the overrides over (Kept vs reset), and `/execute in <id> run gamerule <rule> inherit` resets any of them.
 - **The seed is not part of the stored generator.** The `LevelStem` codec is type + generator (`LevelStem.java:12-15`), and the noise generator is biome source + settings (`NoiseBasedChunkGenerator.java:61-66`). Terrain comes from the level seed (`ChunkMap.java:181-190`), which mc-worlds supplies per world (`CustomServerLevel.java:141-144`). So "same stem, new seed" behaves exactly like vanilla.
 - **Precedent.** Multiverse's regen is literally delete + create with the creation options copied, and it keeps the spawn only when the seed is unchanged (`WorldManager.java:901-931`). The proposal follows that shape.
 
@@ -106,6 +126,7 @@ The command is gated by `Commands.hasPermission(Commands.LEVEL_ADMINS)` and regi
    - `generator` → copy with the new seed. Add `WorldGeneratorData#withSeed(long)` that reuses the private constructor (`WorldGeneratorData.java:45-53`), so the raw stem `Either`, `provider`, `lazy`, `generate_structures` and `prepare_spawn` carry over unchanged.
    - `settings` → if the seed is unchanged, copy `respawn` + `initialized` (the Multiverse rule). Otherwise use `new WorldSettingsData()`, so `SpawnPreparationHelper` re-prepares the spawn (`state/SpawnPreparationHelper.java:59-82`).
    - `game_time` → 0.
+   - Carried-over data → snapshot the old level's `PerWorldGameRules.TYPE` map (and its `WorldBorder` settings if open question 2 is decided as keep) into the pending regen in step 3, and write them into the new level's data storage before it activates in step 4.
 3. Get the live level the way delete does (`DeleteCommand.java:33`). If `isDeleteOnClose()` is already set, refuse with `regen.exception.in_progress`. Otherwise register a pending regen `{id → nextData, source}` in `WorldsManager`, then call `customLevel.stop(true)`. That gives the same player eviction and spawn-world handling, including the `delete.spawn_reset` message (`DeleteCommand.java:37-46`).
 4. In `WorldsManager.unloadWorld`, after `removeLevelData` (`WorldsManager.java:150`), if a pending regen exists for `location`:
    - If the dimension folder still exists (delete failed), drop the regen and report `regen.exception.files_remain`. Never load new data over old region files.
@@ -122,8 +143,10 @@ The command is gated by `Commands.hasPermission(Commands.LEVEL_ADMINS)` and regi
 | `settings.respawn`, `settings.initialized` | `WorldsData` → `settings` | Kept if seed unchanged, else reset |
 | `game_time` | `WorldsData` | Reset (0) |
 | Chunks, entities, POI, structure refs | `region/`, `entities/`, `poi/` | Reset |
-| World border, weather, per-world clocks, raids, forceloads, dragon fight, wandering trader | `data/` | Reset (border: see open questions) |
-| Gamerules, scoreboard, maps, player inventories/positions, advancements | Server-global | Untouched |
+| Per-world game rule overrides | `data/mc-worlds/game_rules.dat` | Kept (carried over) |
+| World border | `data/minecraft/world_border.dat` | Kept (carried over; open question 2) |
+| Weather, per-world clocks, raids, forceloads, dragon fight, wandering trader | `data/` | Reset |
+| Server game rules, scoreboard, maps, player inventories/positions, advancements | Server-global | Untouched |
 
 ### i18n keys (`src/main/resources/assets/mc-worlds/lang/en_us.json`)
 
@@ -174,23 +197,23 @@ The `forceload` lines exist because Chunky's ticket types use flags `2` and `2|4
 ## Open questions for the maintainer
 
 1. **Default seed.** Should `/worlds regen <id>` keep the seed, like Multiverse and the "regenerate" wording, or pick a random one, like `/worlds create <id>`? The recommendation is to keep it and use an explicit `random` literal.
-2. **World border.** Reset it (vanilla folder semantics, smallest code) or carry it over like Multiverse's default? Carrying it over means reading the old `WorldBorder` settings and applying them through the vanilla setters `setCenter`, `setSize`, `setDamagePerBlock`, `setSafeZone`, `setWarningTime` and `setWarningBlocks` (`WorldBorder.java:163-272`). The recommendation is to reset it in v1 and document `/execute in … run worldborder set`, since resource-world admins script that anyway.
+2. **World border.** Reset it (vanilla folder semantics, smallest code) or carry it over like Multiverse's default? Carrying it over means reading the old `WorldBorder` settings and applying them through the vanilla setters `setCenter`, `setSize`, `setDamagePerBlock`, `setSafeZone`, `setWarningTime` and `setWarningBlocks` (`WorldBorder.java:163-272`). The recommendation (changed 2026-10-29) is to carry it over: Multiverse keeps it by default and every Fabric resource-world mod configures a fixed border per world (Timed Harvest, Aethro Resource World), so admins expect the border to survive a reset. `/execute in … run worldborder set` still changes it.
 3. **World-spawn world.** Regenerate it and move the spawn to the Overworld (inherited from delete, with a message), or refuse? Or, when the seed is unchanged, restore the spawn into the new world?
 4. **Confirmation.** Should there be a confirmation step? `/worlds delete` has none. Chunky, Multiverse-Core and senseiwells' Fabric Multiverse all confirm destructive actions. If yes, add it to delete and regen together.
-5. **Returning evicted players.** Should players who were evicted be sent back after the regen, like Multiverse's `--remove-players`? The recommendation is no; the clickable Teleport is enough.
-6. **Public API.** Expose `WorldsManager.regenerate(id, seed, callbacks)` so other mods can schedule resets, or keep it command-only?
+5. **Returning evicted players.** Should players who were evicted be sent back after the regen, like Multiverse's `--remove-players`? The recommendation is no; the clickable Teleport is enough. Every reset mod evacuates players before the reset (Multiverse, Timed Harvest, Aethro Resource World, BubbleReset), but only Multiverse returns them, and only behind a flag.
+6. **Public API.** Expose `WorldsManager.regenerate(id, seed, callbacks)` so other mods can schedule resets, or keep it command-only? Every resource-world mod and plugin ships a timer and countdown warnings (Timed Harvest: 60/30/10/5/1 min; ResourceWorldResetter: daily/weekly/monthly with TPS and player-count gates). Those are policies vanilla doesn't have, so they stay out of core; an API lets a scheduler mod build on regen, and a data pack or RCON cron covers simple cases.
 
 ## Manual test plan
 
 Run on `./gradlew runServer` (world at `versions/latest/run/world/`). The console can be driven through a FIFO or the `mc-server-probe` skill. `res` means `minecraft:res`.
 
-1. **Baseline.** Run `/worlds create res 123` and `/worlds tp res`. Place blocks. Run `/worlds settings loadOnStartup true`, `/worlds settings spawn here`, `/execute in minecraft:res run weather thunder` and `/execute in minecraft:res run time set 18000`.
+1. **Baseline.** Run `/worlds create res 123` and `/worlds tp res`. Place blocks. Run `/worlds settings loadOnStartup true`, `/worlds settings spawn here`, `/execute in minecraft:res run weather thunder`, `/execute in minecraft:res run time set 18000`, `/execute in minecraft:res run worldborder set 500` and `/execute in minecraft:res run gamerule advance_time false`.
 2. **Same-seed regen with a player inside.** Run `/worlds regen res`. Expected:
    - The player is moved to world spawn.
    - The log shows `Saving chunks for level`, then `Creating new world: minecraft:res` (`WorldsManager.java:101`).
    - `regen.success` appears with a working Teleport.
    - On teleport back, the blocks are gone, `/execute in minecraft:res run seed` shows `123`, and `loadOnStartup` is still `true`.
-   - The custom spawn is kept. Weather, time and border are back to defaults.
+   - The custom spawn is kept. Weather and time are back to defaults. The border is still 500, and `/execute in minecraft:res run gamerule advance_time` still reports the world's override.
    - The `dimensions/minecraft/res/data/` files have fresh mtimes.
 3. **Explicit seed.** Run `/worlds regen res 456`. Expected: the seed is `456`, the terrain is different, `Preparing spawn: minecraft:res` is logged, and the custom spawn is reset.
 4. **Random seed.** Run `/worlds regen res random`. Expected: the printed seed matches `/seed` in the world.
@@ -243,6 +266,10 @@ Run on `./gradlew runServer` (world at `versions/latest/run/world/`). The consol
   - https://modrinth.com/plugin/bubblereset
 - Modrinth searches used: https://api.modrinth.com/v2/search?query=world%20reset&facets=[["categories:fabric"]] (also `resource world`, `mining world`, `regenerate world`; plugin facet for Bukkit)
 - mc-worlds issues (no regen request): https://github.com/wroud/mc-worlds/issues
+- Demand and coverage check (2026-10-29):
+  - Modrinth: https://modrinth.com/plugin/worldreset · https://modrinth.com/plugin/multiverse-core · https://modrinth.com/project/tUO0brgu (Timed Harvest) · https://modrinth.com/mod/multiworld · https://modrinth.com/mod/melius-worldmanager · https://modrinth.com/mod/multiverse-dimensions
+  - Multiverse-Core issues: https://github.com/Multiverse/Multiverse-Core/issues/611 · https://github.com/Multiverse/Multiverse-Core/issues/1539 · regen issue search: https://github.com/Multiverse/Multiverse-Core/issues?q=regen+in%3Atitle
+  - Use-case guide: https://www.gameserverkings.com/knowledge-base/minecraft/multiverse-multiple-worlds/
 - Minecraft 26.3-rc-1 decompiled Mojmap sources (Loom cache `minecraft-common-6974b2190e-26.3-rc-1-sources.jar`):
   - `ServerLevel`, `ServerChunkCache`, `ChunkMap`, `IOWorker`, `RegionFile`, `RegionFileStorage`
   - `DimensionType`, `LevelStem`, `NoiseBasedChunkGenerator`, `MinecraftServer`
