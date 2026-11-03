@@ -21,7 +21,7 @@ public class MinecraftServerGameRulesMixin {
         method = "onGameRuleChanged",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/notifications/NotificationManager;onGameRuleChanged(Lnet/minecraft/world/level/gamerules/GameRule;Ljava/lang/Object;)V"))
     private boolean mcworlds$notifyServerWideOnly(NotificationManager notifications, GameRule<?> rule, Object value) {
-        return !PerWorldGameRules.WORLD_CHANGE.isBound();
+        return !PerWorldGameRules.CHANGED_MAP.isBound();
     }
 
     @ModifyExpressionValue(

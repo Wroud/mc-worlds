@@ -1,6 +1,6 @@
 ---
 name: "Worlds: Multiverse for Fabric"
-summary: "Run unlimited worlds on one Fabric server, like Multiverse on Paper, World Manager or Multiworld: create, list and teleport with commands. Every world keeps its own time, weather and game rules, and the End dragon, portals and maps work in all of them."
+summary: "Run unlimited worlds on one Fabric server, like Multiverse on Paper, World Manager or Multiworld. Each world has its own time, weather and rules. Groups add linked portals and separate inventories, Trinkets included, and temporary worlds run minigames."
 icon: src/main/resources/assets/mc-worlds/icon.png
 curseforge_slugs:
   mc-stargate: mc-stargate
@@ -56,12 +56,35 @@ curseforge_slugs:
 - **Nothing new to learn.** No extra commands for weather, time or rules, and the Overworld, Nether and End behave exactly as in vanilla.
 
 <center>
+<img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-groups.png" alt="World groups" width="100%">
+</center>
+
+## Linked portals and separate inventories per world group
+
+- **Own Nether and End.** Worlds in a group act as one vanilla world: a nether portal leads to the group's Nether and back, with a shared spawn and shared game rules.
+- **Separate inventories.** Each group keeps its own copy of every player: inventory, ender chest, experience, health, effects, game mode, statistics, advancements and the data other mods store on the player. Your first visit starts empty, as on a first join.
+- **Its own game mode.** Two game rules give a group a default or forced game mode, so a creative group can sit beside a survival one.
+- **Temporary worlds for minigames.** Temporary worlds and groups are deleted when they close or the server restarts, and players return where they came from with everything they had. Data pack functions can create, enter and delete all of it.
+
+## Compatible with Trinkets, backpacks, Origins and other mods
+
+Other mods need no integration. A group keeps a complete copy of the player's save data, so **extra equipment slots, backpacks, origins and other data mods store on the player stay separate per group**, with no setup.
+
+- **Tested with a real player.** Trinkets, Traveler's Backpack, Origins, Cardinal Components and WorldThreader.
+- **Tested in a game window.** Sodium, Iris with shaders, Jade, AppleSkin and Xaero's Minimap.
+- **Loaded and run together on a server.** Lithium, C2ME, FerriteCore, Krypton, Very Many Players, Carpet, spark, Chunky, WorldEdit, BlueMap, Ledger, LuckPerms, Terralith, Tectonic, Distant Horizons and more.
+- **Teleports from other mods.** Moving a player into another group switches their copy, with no change to that mod.
+- **Dimensions from other mods.** `/worlds create <id> from-dimension <mod>:<dimension>` makes a new world from any registered dimension.
+
+A mod that keeps player data in the world's saved data instead, as Pufferfish's Skills does, stays shared across groups unless it adds support. [The compatibility page](https://github.com/Wroud/mc-worlds/blob/main/docs/compatibility.md) has the full list, versions and limits.
+
+<center>
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-servers.png" alt="Performance and API" width="100%">
 </center>
 
 - **Load on demand.** A world loads when a player enters it and unloads a minute after the last player leaves, so you can keep hundreds of worlds without paying for idle ones.
 - **Updated within a week of each Minecraft release.** Worlds follows the newest Minecraft version; older versions stay on the Versions tab.
-- **A base for other mods.** Mods register their own world types through the Worlds API and let Worlds handle creating, loading, saving and teleporting. [Stargate](https://modrinth.com/mod/mc-stargate) is built on it; [API.md](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the guide and the Gradle setup.
+- **A base for other mods.** Mods can do everything the commands do and register their own world types through the Worlds API. [Stargate](https://modrinth.com/mod/mc-stargate) is built on it; [API.md](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the guide and the Gradle setup.
 
 <center>
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-commands.png" alt="Commands" width="100%">
@@ -78,11 +101,22 @@ curseforge_slugs:
 | `/worlds delete <id>` | Deletes a world after moving everyone out of it |
 | `/worlds settings spawn [here\|<x> <y> <z>]` | Shows or sets the spawn of the world you are in |
 | `/worlds settings loadOnStartup [true\|false]` | Shows or sets whether the world you are in loads when the server starts |
-| `/gamerule <rule> <value>` | In a created world, sets a rule for that world only |
+| `/worlds group` | Shows the group of the world you are in |
+| `/worlds group list` | Lists groups and their worlds |
+| `/worlds group create <group>` | Creates a group |
+| `/worlds group delete <group>` | Deletes a group and the player data kept for it; its worlds leave the group, or are deleted if the group is temporary |
+| `/worlds group join <group> [main]` | Adds the world you are in to a group; `main` makes it the group's Overworld, Nether or End |
+| `/worlds group leave` | Takes the world you are in out of its group |
+| `/worlds group spawn [here\|<x> <y> <z>]` | Shows or sets the group's spawn |
+| `/worlds create temporary <name> ...` | Creates a temporary world, deleted when it closes or the server restarts; takes the same options as `/worlds create` |
+| `/worlds import temporary <name> <save> [<dimension>]` | Imports a world as a temporary one |
+| `/worlds group create temporary <name>` | Creates a temporary group; only temporary worlds can join it |
+| `/worlds group temp leave <players>` | Sends players in a temporary group back where they came from |
+| `/gamerule <rule> <value>` | In a created world, sets a rule for that world only; in a group, for the whole group |
 | `/gamerule` | In a created world, lists the rules the world changed |
 | `/gamerule <rule> inherit` | In a created world, makes a rule follow the server again |
 
-A world id without a namespace gets `minecraft:`, so `/worlds create mining` creates `minecraft:mining`. Run any command for another world with `/execute in <world> run ...`. `/worlds` commands need operator level 3; `/gamerule` needs level 2, as in vanilla.
+A world id without a namespace gets `minecraft:`, so `/worlds create mining` creates `minecraft:mining`. Run any command for another world with `/execute in <world> run ...`. `/worlds` commands and `/gamerule` need operator level 2, the level functions run at by default.
 
 <center>
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-examples.png" alt="Examples" width="100%">
@@ -119,6 +153,16 @@ A world id without a namespace gets `minecraft:`, so `/worlds create mining` cre
 /execute in minecraft:arena run gamerule keep_inventory true
 ```
 
+**A skyblock group with its own Nether, spawn and inventories**
+```
+/worlds group create skyblock
+/worlds create sky from-preset minecraft:flat
+/worlds create sky_nether from-dimension minecraft:the_nether
+/execute in minecraft:sky run worlds group join skyblock
+/execute in minecraft:sky_nether run worlds group join skyblock
+/execute in minecraft:sky run worlds group spawn 0 70 0
+```
+
 **Bring in a singleplayer world, a map download or a Paper server's worlds**
 ```
 /worlds import old_survival "My Old World"
@@ -137,9 +181,9 @@ Put the save, or its zip, next to the server world. Older Minecraft versions are
 
 ## Recent updates
 
+- **2.0.0** World groups with linked portals, separate inventories and their own spawn and game rules, temporary worlds for minigames, and a new API for mods. Mods built on an older version need an update.
 - **1.11.0** `/worlds import` brings in singleplayer worlds, other servers' worlds and Paper or Multiverse worlds, from a folder, a zip or a download link.
 - **1.10.0** Per-world game rules through vanilla `/gamerule`, and a fix for a rare "Exception generating new chunk" crash when several worlds generate structures at once.
-- **1.9.0** `/worlds list` with loaded and unloaded worlds, hover details and click-to-teleport.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

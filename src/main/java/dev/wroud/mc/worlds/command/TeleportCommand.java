@@ -3,25 +3,18 @@ package dev.wroud.mc.worlds.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import dev.wroud.mc.worlds.abstractions.ServerPlayerAbstraction;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 
 import java.util.Collection;
 import java.util.List;
 
-import static dev.wroud.mc.worlds.command.WorldsCommands.UNKNOWN_WORLD_EXCEPTION;
 import static dev.wroud.mc.worlds.command.WorldsCommands.WORLD_SUGGESTIONS;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
@@ -41,7 +34,6 @@ public class TeleportCommand {
 
 	public static LiteralArgumentBuilder<CommandSourceStack> build() {
 		return literal("tp")
-        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
 				.then(
 						argument("id", IdentifierArgument.id())
 								.suggests(WORLD_SUGGESTIONS)
@@ -57,26 +49,11 @@ public class TeleportCommand {
 
 	public static int teleport(CommandSourceStack source, Identifier id, Collection<ServerPlayer> targets)
 			throws CommandSyntaxException {
-		ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-		ServerLevel serverLevel = source.getServer().getLevel(resourceKey);
-		if (serverLevel == null) {
-			throw UNKNOWN_WORLD_EXCEPTION.create();
-		}
-		for (ServerPlayer player : targets) {
-			teleport(player, id);
-		}
+		var worlds = WorldsCommands.worlds(source);
+		WorldsCommands.call(() -> targets.forEach(player -> worlds.teleport(player, id)));
 		source.sendSuccess(() -> Component.translatable("dev.wroud.mc.worlds.command.teleport.success", id.toString()),
 				false);
 		return 1;
 	}
 
-	public static boolean teleport(ServerPlayer player, Identifier id) {
-		ResourceKey<Level> resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-		ServerLevel serverLevel = ServerPlayerAbstraction.getServer(player).getLevel(resourceKey);
-		if (serverLevel == null || player.level() == serverLevel)
-			return false;
-
-		WorldLocation.findSpawn(serverLevel, player).teleport(player);
-		return true;
-	}
 }

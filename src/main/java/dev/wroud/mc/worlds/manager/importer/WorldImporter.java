@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -18,7 +19,12 @@ import org.jspecify.annotations.Nullable;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.command.TeleportCommand;
+import dev.wroud.mc.worlds.manager.TemporaryIds;
 import dev.wroud.mc.worlds.manager.WorldsCreator;
+import dev.wroud.mc.worlds.manager.WorldsException;
+import dev.wroud.mc.worlds.manager.importer.ImportResult.Line;
+import dev.wroud.mc.worlds.manager.group.WorldGroups;
+import dev.wroud.mc.worlds.manager.group.WorldKind;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMaps;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -35,10 +41,7 @@ public final class WorldImporter {
   private WorldImporter() {
   }
 
-  public record Line(Component message, boolean failure) {
-  }
-
-  private record Plan(SourceSave save, Map<Identifier, Identifier> targets, boolean all) {
+  private record Plan(SourceSave save, Map<Identifier, Identifier> targets, boolean all, @Nullable Identifier group) {
   }
 
   private record Prepared(Plan plan, StagedImport staged, List<ResolvedDimension> dims, IntList mapIds,
@@ -48,35 +51,59 @@ public final class WorldImporter {
   private record Remapped(Prepared prepared, Int2IntMap table) {
   }
 
-  public static CompletableFuture<List<Line>> run(MinecraftServer server, Identifier id, String folder, String label,
-      @Nullable Identifier dimension, boolean all, Consumer<Collection<Identifier>> started) {
-    var mcWorld = McWorldMod.getMcWorld(server).orElseThrow();
-    var description = id + " from " + label;
-    if (!mcWorld.tryBeginImport(description)) {
-      return CompletableFuture.failedFuture(
-          new ImportException("exception.busy", mcWorld.currentImport().orElse("")));
+  public static CompletableFuture<ImportResult> run(MinecraftServer server, Identifier id, String folder,
+      @Nullable Identifier dimension, boolean all, @Nullable Identifier group,
+      Consumer<Collection<Identifier>> started) {
+    if (all && TemporaryIds.isTemporary(id)) {
+      throw new ImportException("exception.temporary_all");
     }
+    WorldsCreator.validLevelIdFormat(id);
+    var manager = McWorldMod.getManager(server).orElseThrow();
+    var label = ArchiveDownload.label(folder);
+    var description = id + " from " + label;
+    if (!manager.tryBeginImport(description)) {
+      throw new ImportException("exception.busy", manager.currentImport().orElse(""));
+    }
+    manager.getTemporaryStorage().beginWorld(id);
     var job = new ImportJob(server, label, phase -> {
       McWorldMod.LOGGER.info("Import of {}: {}", description, phase);
-      mcWorld.setImportPhase(phase);
+      manager.setImportPhase(phase);
     });
 
-    return CompletableFuture
-        .supplyAsync(() -> call(() -> plan(job, folder, id, dimension, all)), Util.nonCriticalIoPool())
-        .thenApplyAsync(plan -> call(() -> validate(job, plan, started)), server)
-        .thenApplyAsync(plan -> call(() -> prepare(job, plan)), Util.ioPool())
+    var result = new CompletableFuture<ImportResult>();
+    CompletableFuture
+        .supplyAsync(() -> plan(job, folder, id, dimension, all, group), Util.nonCriticalIoPool())
+        .thenApplyAsync(plan -> validate(job, plan, started), server)
+        .thenApplyAsync(plan -> prepare(job, plan), Util.ioPool())
         .thenCompose(prepared -> prepared.mapIds().isEmpty()
             ? CompletableFuture.completedFuture(new Remapped(prepared, Int2IntMaps.EMPTY_MAP))
-            : CompletableFuture.supplyAsync(() -> call(() -> allocateMaps(job, prepared)), server)
-                .thenApplyAsync(remapped -> call(() -> remapMaps(job, remapped)), Util.ioPool()))
-        .thenApplyAsync(remapped -> call(() -> install(job, remapped.prepared())), server)
-        .handle((lines, error) -> finish(job, lines, error))
+            : CompletableFuture.supplyAsync(() -> allocateMaps(job, prepared), server)
+                .thenApplyAsync(remapped -> remapMaps(job, remapped), Util.ioPool()))
+        .thenApplyAsync(remapped -> install(job, remapped.prepared()), server)
+        .handle((imported, error) -> finish(job, imported, error))
         .thenCompose(future -> future)
-        .whenComplete((lines, error) -> mcWorld.endImport());
+        .whenCompleteAsync((imported, error) -> {
+          manager.endImport();
+          if (error == null) {
+            result.complete(imported);
+          } else {
+            result.completeExceptionally(toWorldsException(job, error));
+          }
+        }, server);
+    return result;
   }
 
-  private static Plan plan(ImportJob job, String folder, Identifier id, @Nullable Identifier dimension, boolean all)
-      throws ImportException {
+  private static WorldsException toWorldsException(ImportJob job, Throwable error) {
+    var cause = error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;
+    if (cause instanceof WorldsException worldsException) {
+      return worldsException;
+    }
+    McWorldMod.LOGGER.error("Import from {} failed", job.folder(), cause);
+    return ImportException.failed(job.folder(), cause);
+  }
+
+  private static Plan plan(ImportJob job, String folder, Identifier id, @Nullable Identifier dimension, boolean all,
+      @Nullable Identifier group) {
     SourceSave save;
     try {
       StagingStage.clearStaging(job.worldDir());
@@ -96,17 +123,17 @@ public final class WorldImporter {
         throw new ImportException("exception.datapack_dimension", source, save.folder());
       }
     }
-    return new Plan(save, targets, all);
+    return new Plan(save, targets, all, group);
   }
 
-  private static Plan validate(ImportJob job, Plan plan, Consumer<Collection<Identifier>> started)
-      throws ImportException {
+  private static Plan validate(ImportJob job, Plan plan, Consumer<Collection<Identifier>> started) {
     checkTargets(job, plan);
+    checkGroup(job, plan);
     started.accept(plan.targets().values());
     return plan;
   }
 
-  private static Prepared prepare(ImportJob job, Plan plan) throws ImportException {
+  private static Prepared prepare(ImportJob job, Plan plan) {
     var staged = StagingStage.stage(job, plan.save(), plan.targets().keySet());
 
     job.phase().accept("level data");
@@ -124,13 +151,13 @@ public final class WorldImporter {
     return new Prepared(plan, staged, List.copyOf(dims), MapRemapper.sourceMapIds(staged), difficulty);
   }
 
-  private static Remapped allocateMaps(ImportJob job, Prepared prepared) throws ImportException {
+  private static Remapped allocateMaps(ImportJob job, Prepared prepared) {
     job.checkStopped();
     job.phase().accept("maps");
     return new Remapped(prepared, MapRemapper.allocate(job.server(), prepared.mapIds()));
   }
 
-  private static Remapped remapMaps(ImportJob job, Remapped remapped) throws ImportException {
+  private static Remapped remapMaps(ImportJob job, Remapped remapped) {
     try {
       MapRemapper.remap(job, remapped.prepared().staged(), remapped.table(), remapped.prepared().dims());
     } catch (RuntimeException e) {
@@ -140,10 +167,11 @@ public final class WorldImporter {
     return remapped;
   }
 
-  private static List<Line> install(ImportJob job, Prepared prepared) throws ImportException {
+  private static ImportResult install(ImportJob job, Prepared prepared) {
     var server = job.server();
     job.phase().accept("installing");
     checkTargets(job, prepared.plan());
+    checkMainSlots(job, prepared);
 
     var moved = new LinkedHashMap<Path, Path>();
     try {
@@ -167,10 +195,16 @@ public final class WorldImporter {
     }
 
     var save = prepared.plan().save();
+    var group = prepared.plan().group();
+    var worlds = new ArrayList<Identifier>();
     var lines = new ArrayList<Line>();
     var notes = new ArrayList<Component>();
     for (var d : prepared.dims()) {
-      lines.add(load(job, d));
+      var line = load(job, d, group);
+      lines.add(line);
+      if (!line.failure()) {
+        worlds.add(d.newKey().identifier());
+      }
       notes.addAll(d.warnings());
     }
     if (prepared.difficulty() != null && prepared.difficulty() != server.getWorldData().getDifficulty()) {
@@ -180,7 +214,9 @@ public final class WorldImporter {
       notes.add(Component.translatable(ImportException.KEY_PREFIX + "success.nested", save.nested(), job.folder()));
     }
     if (prepared.plan().all()) {
-      notes.add(Component.translatable(ImportException.KEY_PREFIX + "success.portals"));
+      notes.add(group == null
+          ? Component.translatable(ImportException.KEY_PREFIX + "success.portals")
+          : Component.translatable(ImportException.KEY_PREFIX + "success.portals_group", group.toString()));
       var skipped = save.emptyDimensionIds();
       if (!skipped.isEmpty()) {
         notes.add(Component.translatable(ImportException.KEY_PREFIX + "success.skipped_empty",
@@ -188,16 +224,24 @@ public final class WorldImporter {
       }
     }
     notes.forEach(note -> lines.add(new Line(note, false)));
-    return lines;
+    return new ImportResult(worlds, lines);
   }
 
-  private static Line load(ImportJob job, ResolvedDimension d) {
+  private static Line load(ImportJob job, ResolvedDimension d, @Nullable Identifier group) {
     var id = d.newKey().identifier();
     Object reason;
     try {
       if (WorldsCreator.registerAndLoad(job.server(), id, d.data()) != null) {
-        return new Line(Component.translatable(ImportException.KEY_PREFIX + "success", id.toString(), job.folder(),
-            d.sourceDim().toString()).append(TeleportCommand.link(id)), false);
+        var message = Component.translatable(ImportException.KEY_PREFIX + "success", id.toString(), job.folder(),
+            d.sourceDim().toString());
+        var join = group != null ? groups(job).join(id, group, false) : null;
+        if (join != null) {
+          message.append(join.main()
+              ? Component.translatable(ImportException.KEY_PREFIX + "success.group_main", join.kind().key(),
+                  group.toString())
+              : Component.translatable(ImportException.KEY_PREFIX + "success.group_member", group.toString()));
+        }
+        return new Line(message.append(TeleportCommand.link(id)), false);
       }
       reason = Component.translatable(ImportException.KEY_PREFIX + "reason.see_log");
     } catch (Exception e) {
@@ -208,26 +252,57 @@ public final class WorldImporter {
         true);
   }
 
-  private static void checkTargets(ImportJob job, Plan plan) throws ImportException {
+  private static void checkTargets(ImportJob job, Plan plan) {
     job.checkStopped();
     for (var target : plan.targets().values()) {
-      try {
-        WorldsCreator.validImportTarget(target, job.server());
-      } catch (WorldsCreator.InvalidLevelIdException e) {
-        throw new ImportException(e.getTranslationKey(), target.toString());
+      WorldsCreator.validImportTarget(target, job.server());
+    }
+  }
+
+  private static WorldGroups groups(ImportJob job) {
+    return Objects.requireNonNull(WorldGroups.of(job.server()));
+  }
+
+  private static void checkGroup(ImportJob job, Plan plan) {
+    var group = plan.group();
+    if (group == null) {
+      return;
+    }
+    if (groups(job).get(group) == null) {
+      throw new ImportException("exception.unknown_group", group.toString());
+    }
+    for (var world : plan.targets().values()) {
+      if (!groups(job).accepts(group, world)) {
+        throw new ImportException("exception.not_temporary", world.toString(), group.toString());
       }
     }
   }
 
-  private static CompletableFuture<List<Line>> finish(ImportJob job, @Nullable List<Line> lines,
+  private static void checkMainSlots(ImportJob job, Prepared prepared) {
+    var group = prepared.plan().group();
+    if (group == null) {
+      return;
+    }
+    checkGroup(job, prepared.plan());
+    var target = groups(job).get(group);
+    for (var d : prepared.dims()) {
+      var kind = WorldKind.of(d.stem().type());
+      var existing = target.main(kind);
+      if (existing != null) {
+        throw new ImportException("exception.main_taken", group.toString(), kind.key(), existing.toString());
+      }
+    }
+  }
+
+  private static CompletableFuture<ImportResult> finish(ImportJob job, @Nullable ImportResult imported,
       @Nullable Throwable error) {
     job.closeArchive();
     var access = job.staging().getAndSet(null);
     if (access != null) {
       access.safeClose();
     }
-    CompletableFuture<List<Line>> result = error == null
-        ? CompletableFuture.completedFuture(lines)
+    CompletableFuture<ImportResult> result = error == null
+        ? CompletableFuture.completedFuture(imported)
         : CompletableFuture.failedFuture(error);
     if (!job.server().isRunning()) {
       return result;
@@ -241,17 +316,5 @@ public final class WorldImporter {
     } catch (IOException e) {
       McWorldMod.LOGGER.warn("Could not delete the import staging folder", e);
     }
-  }
-
-  private static <T> T call(Step<T> step) {
-    try {
-      return step.run();
-    } catch (ImportException e) {
-      throw new CompletionException(e);
-    }
-  }
-
-  private interface Step<T> {
-    T run() throws ImportException;
   }
 }

@@ -1,34 +1,29 @@
 package dev.wroud.mc.worlds.command;
 
+import org.jspecify.annotations.Nullable;
+
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 
-import dev.wroud.mc.worlds.McWorldMod;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.phys.Vec3;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public class SettingsCommand {
-  private static final SimpleCommandExceptionType UNKNOWN_WORLD_EXCEPTION = new SimpleCommandExceptionType(
-      Component.translatable("dev.wroud.mc.worlds.command.exception.unknown_world"));
-
   public static LiteralArgumentBuilder<CommandSourceStack> build() {
     return literal("settings")
-        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
         .then(literal("loadOnStartup")
             .executes(context -> getLoadOnStartup(context.getSource()))
             .then(
@@ -53,14 +48,7 @@ public class SettingsCommand {
       throws CommandSyntaxException {
     var id = source.getLevel().dimension().identifier();
     
-    var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
-    var levelData = worlds.getManager().getWorldsData().getLevelData(id);
-
-    if (levelData == null) {
-      throw UNKNOWN_WORLD_EXCEPTION.create();
-    }
-
-    boolean loadOnStartup = !levelData.isLazy();
+    boolean loadOnStartup = WorldsCommands.call(() -> WorldsCommands.worlds(source).loadsOnStartup(id));
 
     source.sendSuccess(
         () -> Component.translatable("dev.wroud.mc.worlds.command.settings.loadOnStartup.query", id.toString())
@@ -75,14 +63,7 @@ public class SettingsCommand {
       throws CommandSyntaxException {
     var id = source.getLevel().dimension().identifier();
     
-    var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
-    var levelData = worlds.getManager().getWorldsData().getLevelData(id);
-
-    if (levelData == null) {
-      throw UNKNOWN_WORLD_EXCEPTION.create();
-    }
-
-    levelData.setLazy(!loadOnStartup);
+    WorldsCommands.call(() -> WorldsCommands.worlds(source).setLoadOnStartup(id, loadOnStartup));
 
     source.sendSuccess(
         () -> Component.translatable("dev.wroud.mc.worlds.command.settings.loadOnStartup.success", id.toString())
@@ -97,14 +78,7 @@ public class SettingsCommand {
       throws CommandSyntaxException {
     var id = source.getLevel().dimension().identifier();
     
-    var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
-    var levelData = worlds.getManager().getWorldsData().getLevelData(id);
-
-    if (levelData == null) {
-      throw UNKNOWN_WORLD_EXCEPTION.create();
-    }
-
-    var spawn = levelData.getRespawnData();
+    var spawn = WorldsCommands.call(() -> WorldsCommands.worlds(source).worldSpawn(id));
     if (spawn == null || spawn == RespawnData.DEFAULT) {
       source.sendSuccess(
           () -> Component.translatable("dev.wroud.mc.worlds.command.settings.spawn.query.none", id.toString()),
@@ -127,36 +101,14 @@ public class SettingsCommand {
     return Command.SINGLE_SUCCESS;
   }
 
-  public static int setSpawn(CommandSourceStack source, Vec3 position)
+  public static int setSpawn(CommandSourceStack source, @Nullable Vec3 position)
       throws CommandSyntaxException {
     var id = source.getLevel().dimension().identifier();
     
-    var worlds = McWorldMod.getMcWorld(source.getServer()).orElseThrow();
-    var levelData = worlds.getManager().getWorldsData().getLevelData(id);
+    var respawnData = respawnDataAt(source, position, source.getLevel().dimension());
+    WorldsCommands.call(() -> WorldsCommands.worlds(source).setWorldSpawn(id, respawnData));
 
-    if (levelData == null) {
-      throw UNKNOWN_WORLD_EXCEPTION.create();
-    }
-
-    var resourceKey = ResourceKey.create(Registries.DIMENSION, id);
-    Vec3 spawnPos;
-    float yaw;
-    float pitch;
-
-    if (position != null) {
-      spawnPos = position;
-      yaw = 0.0F;
-      pitch = 0.0F;
-    } else {
-      spawnPos = source.getPosition();
-      var rotation = source.getRotation();
-      yaw = rotation.y;
-      pitch = rotation.x;
-    }
-
-    var respawnData = RespawnData.of(resourceKey, BlockPos.containing(spawnPos), yaw, pitch);
-    levelData.setSpawn(respawnData);
-
+    var spawnPos = position != null ? position : source.getPosition();
     source.sendSuccess(
         () -> Component.translatable("dev.wroud.mc.worlds.command.settings.spawn.success", id.toString())
             .append(Component.literal(" "))
@@ -165,6 +117,15 @@ public class SettingsCommand {
         false);
 
     return Command.SINGLE_SUCCESS;
+  }
+
+  public static RespawnData respawnDataAt(CommandSourceStack source, @Nullable Vec3 position,
+      ResourceKey<Level> dimension) {
+    if (position != null) {
+      return RespawnData.of(dimension, BlockPos.containing(position), 0.0F, 0.0F);
+    }
+    var rotation = source.getRotation();
+    return RespawnData.of(dimension, BlockPos.containing(source.getPosition()), rotation.y, rotation.x);
   }
 
 }

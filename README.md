@@ -9,9 +9,12 @@ Run as many worlds as you want on one Fabric server, the way Multiverse does on 
 - **Each world keeps its own weather and time.** Vanilla `/weather` and `/time` run inside a world change only that world.
 - **Each world can have its own game rules.** Keep inventory, PvP, mob spawning, daylight and more, set with vanilla `/gamerule` inside the world. Rules you don't change follow the server.
 - **Import existing worlds.** Bring in a singleplayer save, a world from another server, or a Paper or Multiverse server's worlds with `/worlds import`.
+- **World groups.** Worlds in a group act as one vanilla world: their own Nether and End through portals, a shared spawn and shared game rules.
+- **Separate inventories per group.** Each group keeps its own copy of every player: inventory, ender chest, experience, health, effects, game mode, statistics, advancements and the data other mods store on the player.
+- **Temporary worlds for minigames.** Temporary worlds and groups are deleted when they close or the server restarts, and players return where they came from with everything they had. Data pack functions can run all of it.
 - **Lightweight.** Worlds load when a player enters them and unload a minute after the last player leaves, so you can keep many worlds without paying for idle ones.
 - **Close to vanilla.** No new commands to learn for weather, time or game rules, and the Overworld, Nether and End behave exactly as in vanilla.
-- **A base for other mods.** Mods register their own world types through the Worlds API. [Stargate](https://modrinth.com/mod/mc-stargate) is built on it.
+- **A base for other mods.** Mods can do everything the commands do and register their own world types through the Worlds API. [Stargate](https://modrinth.com/mod/mc-stargate) is built on it.
 
 ## Commands
 
@@ -26,11 +29,22 @@ Run as many worlds as you want on one Fabric server, the way Multiverse does on 
 | `/worlds delete <id>` | Deletes a world after moving everyone out of it |
 | `/worlds settings spawn [here\|<x> <y> <z>]` | Shows or sets the spawn of the world you are in |
 | `/worlds settings loadOnStartup [true\|false]` | Shows or sets whether the world you are in loads when the server starts |
-| `/gamerule <rule> <value>` | In a created world, sets a rule for that world only |
+| `/worlds group` | Shows the group of the world you are in |
+| `/worlds group list` | Lists groups and their worlds |
+| `/worlds group create <group>` | Creates a group |
+| `/worlds group delete <group>` | Deletes a group and the player data kept for it; its worlds leave the group, or are deleted if the group is temporary |
+| `/worlds group join <group> [main]` | Adds the world you are in to a group; `main` makes it the group's Overworld, Nether or End |
+| `/worlds group leave` | Takes the world you are in out of its group |
+| `/worlds group spawn [here\|<x> <y> <z>]` | Shows or sets the group's spawn |
+| `/worlds create temporary <name> ...` | Creates a temporary world, deleted when it closes or the server restarts; takes the same options as `/worlds create` |
+| `/worlds import temporary <name> <save> [<dimension>]` | Imports a world as a temporary one |
+| `/worlds group create temporary <name>` | Creates a temporary group; only temporary worlds can join it |
+| `/worlds group temp leave <players>` | Sends players in a temporary group back where they came from |
+| `/gamerule <rule> <value>` | In a created world, sets a rule for that world only; in a group, for the whole group |
 | `/gamerule` | In a created world, lists the rules the world changed |
 | `/gamerule <rule> inherit` | In a created world, makes a rule follow the server again |
 
-A world id without a namespace gets `minecraft:`, so `/worlds create mining` creates `minecraft:mining`. Run any command for another world with `/execute in <world> run ...`. `/worlds` commands need operator level 3; `/gamerule` needs level 2, as in vanilla.
+A world id without a namespace gets `minecraft:`, so `/worlds create mining` creates `minecraft:mining`. Run any command for another world with `/execute in <world> run ...`. `/worlds` commands and `/gamerule` need operator level 2, the level functions run at by default.
 
 ## Examples
 
@@ -72,6 +86,45 @@ A world id without a namespace gets `minecraft:`, so `/worlds create mining` cre
 ```
 
 **Moving from World Manager:** replace World Manager with Worlds, then run `/worlds create <id> from-dimension <type> <seed>` with the id, type and seed each world had; Worlds picks up the world's existing folder. Classic Overworld, Nether and End worlds are supported. A world kept as its own save folder, such as a singleplayer world or a Paper or Multiverse server's world, is brought in with [`/worlds import`](#import-command) instead.
+
+## World groups
+
+A group makes several worlds act as one vanilla world, with its own Nether and End, spawn, game rules and player data. Worlds stay outside any group until you add them.
+
+```
+/worlds group create skyblock
+/worlds create sky from-preset minecraft:flat
+/worlds create sky_nether from-dimension minecraft:the_nether
+/execute in minecraft:sky run worlds group join skyblock
+/execute in minecraft:sky_nether run worlds group join skyblock
+/execute in minecraft:sky run worlds group spawn 0 70 0
+```
+
+- **Portals.** A nether portal in `sky` leads to `sky_nether` and back. An End portal needs an End world in the group.
+- **Moving between groups.** Going to a world in another group, by `/tp`, `/worlds tp` or a mod's teleport, saves your player and loads your copy for that group. Your first visit starts empty, as on a first join.
+- **Game rules.** A rule set in any world of the group holds in all of them. `mc-worlds:default_game_mode` and `mc-worlds:force_game_mode` give a group its own game mode.
+- **Mobs and items stay.** Only players cross between groups.
+
+Temporary groups are for minigames and events. They use generated ids, which data pack functions read from the `mc-worlds:temporary` command storage:
+
+```
+/worlds group create temporary match
+/worlds create temporary arena from-preset minecraft:flat
+```
+
+A player inside starts empty. `/worlds group temp leave @a`, or deleting the group, returns them to where they came from with everything they had.
+
+## Works with other mods
+
+Other mods need no integration. A group keeps a complete copy of the player's save data, so **extra equipment slots, backpacks, origins and other data mods store on the player stay separate per group**, with no setup. Your first visit to a group starts empty, and coming back restores everything.
+
+- **Tested with a real player:** Trinkets, Traveler's Backpack, Origins, Cardinal Components and WorldThreader.
+- **Tested in a game window:** Sodium, Iris with shaders, Jade, AppleSkin and Xaero's Minimap.
+- **Loaded and run together on a server:** Lithium, C2ME, FerriteCore, Krypton, Very Many Players, Carpet, spark, Chunky, WorldEdit, BlueMap, Ledger, LuckPerms, Terralith, Tectonic, Distant Horizons and more.
+- **Teleports from other mods** work unchanged: moving a player into another group switches their copy.
+- **Dimensions from other mods:** `/worlds create <id> from-dimension <mod>:<dimension>` makes a new world from any registered dimension.
+
+A mod that keeps player data in the world's saved data instead, as Pufferfish's Skills does, stays shared across groups unless it adds support. [docs/compatibility.md](docs/compatibility.md) has the full list, versions, what each test covered and the limits.
 
 ## Import command
 
@@ -118,7 +171,7 @@ One import runs at a time. Progress is written to the server log.
 
 ## For mod developers
 
-Worlds provides an API for registering your own server level providers, so your mod can add worlds with their own generation, rules or mechanics while Worlds handles creating, loading, saving and teleporting. See [API.md](API.md) for the guide and the Gradle setup.
+Your mod can do everything the commands do: create, import and delete worlds, manage groups, and run temporary worlds for minigames. It can also register its own server level providers to add worlds with their own generation, rules or mechanics, while Worlds handles creating, loading and saving. See [API.md](API.md) for the guide and the Gradle setup.
 
 ## Requirements
 

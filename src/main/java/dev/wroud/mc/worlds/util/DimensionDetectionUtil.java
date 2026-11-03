@@ -6,13 +6,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.dimension.LevelStem;
 
 import org.jetbrains.annotations.Nullable;
 
 import dev.wroud.mc.worlds.McWorldMod;
-import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
-import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
+import dev.wroud.mc.worlds.manager.LazyLevelMap;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import dev.wroud.mc.worlds.tags.DimensionTypeTags;
 
@@ -65,15 +63,13 @@ public class DimensionDetectionUtil {
     }
 
     private static @Nullable Holder<DimensionType> getDimensionType(MinecraftServer server, ResourceKey<Level> dimension) {
-        var loaded = ((MinecraftServerAccessor) server).getLevels().get(dimension);
+        var loaded = LazyLevelMap.loaded(server).get(dimension);
         if (loaded != null) {
             return loaded.dimensionTypeRegistration();
         }
 
-        return McWorldMod.getMcWorld(server)
-            .map(worlds -> worlds.getManager().getWorldsData().getLevelData(dimension.identifier()))
-            .map(WorldsLevelData::getLevelStem)
-            .map(LevelStem::type)
+        return McWorldMod.getManager(server)
+            .map(manager -> manager.dimensionType(dimension.identifier()))
             .orElse(null);
     }
 

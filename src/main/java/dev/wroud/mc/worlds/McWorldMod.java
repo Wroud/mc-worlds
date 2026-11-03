@@ -1,6 +1,8 @@
 package dev.wroud.mc.worlds;
 
+import dev.wroud.mc.worlds.manager.group.transition.GroupTransitions;
 import dev.wroud.mc.worlds.network.GameRuleOriginsPayload;
+import dev.wroud.mc.worlds.server.level.GroupGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.api.ModInitializer;
@@ -21,9 +23,11 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import dev.wroud.mc.worlds.command.WorldsCommands;
 import dev.wroud.mc.worlds.core.registries.WorldsRegistries;
+import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 
@@ -38,15 +42,20 @@ public class McWorldMod implements ModInitializer {
     public void onInitialize() {
         
         WorldsRegistries.bootstrap();
+        GroupGameRules.bootstrap();
+        GroupTransitions.bootstrap();
         PayloadTypeRegistry.clientboundPlay().register(GameRuleOriginsPayload.TYPE, GameRuleOriginsPayload.CODEC);
 
         ServerLevelEvents.LOAD.register((serverInstance, world) -> {
             if (world.dimension() == Level.OVERWORLD && !worlds.containsKey(serverInstance)) {
                 var mcWorld = new McWorld(serverInstance);
                 worlds.put(serverInstance, mcWorld);
-                mcWorld.loadSavedWorlds();
+                mcWorld.manager().loadSavedWorlds();
             }
         });
+
+        ServerLifecycleEvents.SERVER_STARTED.register(serverInstance -> getManager(serverInstance)
+                .ifPresent(manager -> manager.getTemporaryStorage().clear()));
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((serverInstance, resources, success) -> PerWorldGameRules.pruneAll(serverInstance));
 
@@ -55,6 +64,10 @@ public class McWorldMod implements ModInitializer {
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            var transitions = GroupTransitions.of(server);
+            if (transitions != null) {
+                transitions.drain();
+            }
             var toRemove = new ArrayList<ResourceKey<Level>>();
 
             for (var entry : ((MinecraftServerAccessor) server).getLevels().entrySet()) {
@@ -82,7 +95,7 @@ public class McWorldMod implements ModInitializer {
 
         ServerLevelEvents.UNLOAD.register((server, level) -> {
             if (level instanceof CustomServerLevel) {
-                worlds.get(server).handleWorldUnload(level.dimension().identifier());
+                worlds.get(server).manager().unloadWorld(level.dimension().identifier());
             }
         });
 
@@ -95,8 +108,12 @@ public class McWorldMod implements ModInitializer {
         return worlds.keySet().stream().findFirst().orElse(null);
     }
 
-    public static Optional<McWorld> getMcWorld(MinecraftServer server) {
-        return Optional.ofNullable(worlds.get(server));
+    static @Nullable McWorld instance(MinecraftServer server) {
+        return worlds.get(server);
+    }
+
+    public static Optional<WorldsManager> getManager(MinecraftServer server) {
+        return Optional.ofNullable(worlds.get(server)).map(McWorld::manager);
     }
 
     public static Identifier id(String path) {

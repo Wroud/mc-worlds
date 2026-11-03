@@ -1,4 +1,4 @@
-package dev.wroud.mc.worlds.command;
+package dev.wroud.mc.worlds.manager;
 
 import net.minecraft.util.BlockUtil;
 import net.minecraft.util.BlockUtil.FoundRectangle;
@@ -33,28 +33,29 @@ import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import dev.wroud.mc.worlds.util.EndGatewayUtil;
 import dev.wroud.mc.worlds.util.NetherPortalUtil;
 
-public record WorldLocation(ServerLevel level, TeleportTransition transition) {
+public final class WorldSpawns {
+  private WorldSpawns() {
+  }
 
-  public static WorldLocation findSpawn(ServerLevel level, Entity entity) {
-    var respawnData = level.getServer().getRespawnData();
+  public static TeleportTransition transition(ServerLevel level, Entity entity) {
+    var respawnData = level.getRespawnData();
 
     if (respawnData.dimension().equals(level.dimension())) {
-      return new WorldLocation(level, TeleportTransitionAbstraction.spawnAtRespawn(entity, level, TeleportTransition.PLACE_PORTAL_TICKET));
+      return TeleportTransitionAbstraction.spawnAtRespawn(entity, level, TeleportTransition.PLACE_PORTAL_TICKET);
     }
 
     if (DimensionDetectionUtil.isEndLikeDimension(level)) {
-      return new WorldLocation(level, getEndSpawn(level, entity));
+      return getEndSpawn(level, entity);
     } else if (DimensionDetectionUtil.isNetherLikeDimension(level)) {
-      return new WorldLocation(level, getNetherSpawn(level, entity));
+      return getNetherSpawn(level, entity);
     }
 
     if (Level.OVERWORLD.equals(level.dimension())) {
-      return new WorldLocation(level, TeleportTransitionAbstraction.spawnNear(entity, level,
-          SpawnPreparationHelper.findInitialSpawn(level), TeleportTransition.PLACE_PORTAL_TICKET));
+      return TeleportTransitionAbstraction.spawnNear(entity, level,
+          SpawnPreparationHelper.findInitialSpawn(level), TeleportTransition.PLACE_PORTAL_TICKET);
     }
 
-    return new WorldLocation(level,
-        TeleportTransitionAbstraction.spawnAt(entity, level, TeleportTransition.PLACE_PORTAL_TICKET));
+    return TeleportTransitionAbstraction.spawnAt(entity, level, TeleportTransition.PLACE_PORTAL_TICKET);
   }
 
   private static TeleportTransition getEndSpawn(ServerLevel level, Entity entity) {
@@ -124,10 +125,5 @@ public record WorldLocation(ServerLevel level, TeleportTransition transition) {
 
     return NetherPortalUtil.getDimensionTransitionFromExit(entity, blockPos, foundRectangle, serverLevel,
         postTeleportTransition);
-  }
-
-  public void teleport(Entity entity) {
-    entity.setPortalCooldown();
-    entity.teleport(transition);
   }
 }

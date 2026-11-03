@@ -2,6 +2,7 @@ package dev.wroud.mc.worlds.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 
+import dev.wroud.mc.worlds.server.level.GroupGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,5 +26,6 @@ public class PlayerListMixin {
     @Inject(method = "sendLevelInfo", at = @At("TAIL"))
     private void mcworlds$sendClientRules(ServerPlayer player, ServerLevel level, CallbackInfo ci) {
         PerWorldGameRules.sendClientRules(player, level.getGameRules());
+        GroupGameRules.applyOnEnter(player, level);
     }
 }

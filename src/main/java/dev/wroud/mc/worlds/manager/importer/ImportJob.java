@@ -44,7 +44,7 @@ record ImportJob(MinecraftServer server, String folder, UpgradeProgress progress
     return Math.max(0, storage().estimateDiskSpace() - LOW_DISK_SPACE_BYTES);
   }
 
-  void checkStopped() throws ImportException {
+  void checkStopped() {
     if (progress.isCanceled()) {
       throw ImportException.stopped(folder);
     }
@@ -55,7 +55,7 @@ record ImportJob(MinecraftServer server, String folder, UpgradeProgress progress
   }
 
   long copy(InputStream in, OutputStream out, long limit, Supplier<ImportException> overLimit,
-      LongConsumer onProgress) throws IOException, ImportException {
+      LongConsumer onProgress) throws IOException {
     byte[] buffer = new byte[BUFFER_BYTES];
     long copied = 0;
     long lastReport = Util.getMillis();

@@ -14,6 +14,35 @@
 
 ### Security
 
+## 2.0.0 - 2026-11-03
+
+### Added
+
+- World groups. Create a group with `/worlds group create <group>`, then run `/worlds group join <group>` in each world that belongs to it. The worlds of a group act as one vanilla world: a nether portal leads to the group's own Nether-like world and back, an end portal leads to the group's End-like world, leaving the End or dying without a bed brings you back to the group's spawn, and the compass points at it. A bed in another group does not count there. Worlds you never put in a group behave exactly as before.
+- Each group has its own spawn, set with `/worlds group spawn here` or a position, separate from the server spawn of `/setworldspawn`. `/worlds group` shows the group of the world you are in, and `/worlds group list` shows all of them.
+- The worlds of a group share one set of game rules: a rule set in any of them, with `/gamerule` or the Game Rules screen, holds in all of them. A world's own overrides pause while it is in a group and return when it leaves.
+- Two game rules for groups, `mc-worlds:default_game_mode` and `mc-worlds:force_game_mode`, give a group a default or a forced game mode, like the `gamemode` and `force-gamemode` server properties do for the whole server.
+- `/worlds import … group <group>` puts imported worlds straight into a group, so an imported Overworld, Nether and End pair their portals. `/worlds list` shows each world's group.
+- Each group keeps its own copy of every player: inventory, ender chest, experience, health, effects, game mode, respawn point, statistics, advancements and the data other mods store on the player. Moving into a world of another group, by teleport, respawn or another mod's portal, swaps to that group's copy and leaves the one you came from behind, untouched, until you return. A first visit to a group starts you fresh. Boats, minecarts, thrown ender pearls and mobs stay in their group. The copies are ordinary player files under `players/groups/` in the save.
+- Deleting a group also deletes the player data kept for it.
+- Temporary worlds and groups for minigames and events. `/worlds create temporary <name>`, `/worlds import temporary <name>` and `/worlds group create temporary <name>` make one with a generated id, and `/worlds list` marks the temporary worlds. A temporary group holds only temporary worlds and deleting it deletes them with the player data kept for it. Nothing temporary survives a restart.
+- Entering a temporary group remembers where you came from. `/worlds group temp leave <players>` sends players back there with everything they had, and so does deleting the group while they are inside, on the death screen or offline. Nothing from inside comes home with them.
+- Data pack functions can create, enter and delete all of this. Generated ids are in the `mc-worlds:temporary` command storage, ready for function macros.
+- Other mods can now do everything the commands do: create, import and delete worlds, manage groups and run temporary worlds for minigames. They can also react when a player moves between groups or a group is deleted. The [API guide](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the details.
+
+### Changed
+
+- Every world command now needs operator level 2 instead of 3, so data pack functions and command blocks can use them. Level 2 operators and command blocks can now delete any world or group and make the server download a world.
+- The word `temporary` is now part of `/worlds create`, `/worlds import` and `/worlds group create`. A world or group named `temporary` must be written `minecraft:temporary`, and `/worlds create temporary 123` no longer means a world named `temporary` with seed 123. The `mc-worlds-temp` namespace is reserved.
+- `allow_entering_nether_using_portals` applies to every Nether-like world a portal leads to, not only the vanilla Nether.
+- The API for mods changed, so mods built on an older version of Worlds need an update. That includes Stargate.
+
+### Fixed
+
+- Nether portals in the vanilla Overworld respect `allow_entering_nether_using_portals` again.
+- Entering a created world no longer crashes the server when the full Cardinal Components library is installed.
+- `/worlds create` now tells you when the world is deleted before it is ready, or can't load.
+
 ## 1.11.0 - 2026-10-29
 
 ### Added

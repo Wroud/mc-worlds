@@ -48,7 +48,7 @@ public final class ArchiveDownload {
     return at < authority ? base : base.substring(0, authority) + base.substring(at + 1);
   }
 
-  static void download(ImportJob job, String text, Path target) throws ImportException {
+  static void download(ImportJob job, String text, Path target) {
     URI uri = parse(text);
     if (uri == null) {
       throw new ImportException("exception.invalid_url", job.folder());
@@ -98,7 +98,7 @@ public final class ArchiveDownload {
   }
 
   private static void copy(ImportJob job, HttpURLConnection connection, Path target)
-      throws IOException, ImportException {
+      throws IOException {
     long length = connection.getContentLengthLong();
     long budget = job.diskBudget();
     if (length > budget) {

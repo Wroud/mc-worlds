@@ -10,6 +10,7 @@ import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.GroupGameRules;
 import dev.wroud.mc.worlds.server.level.LayeredGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.commands.CommandBuildContext;
@@ -32,6 +33,12 @@ public class WorldGameRuleCommand {
   private static final Dynamic2CommandExceptionType NOT_OVERRIDDEN_EXCEPTION = new Dynamic2CommandExceptionType(
       (world, rule) -> Component.translatableEscape(KEY + "inherit.not_overridden", world, rule));
 
+  private static final Dynamic2CommandExceptionType GROUP_NOT_OVERRIDDEN_EXCEPTION = new Dynamic2CommandExceptionType(
+      (group, rule) -> Component.translatableEscape(KEY + "inherit.not_overridden.group", group, rule));
+
+  private static final DynamicCommandExceptionType GROUP_ONLY_EXCEPTION = new DynamicCommandExceptionType(
+      rule -> groupOnly((GameRule<?>) rule));
+
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context) {
     LiteralArgumentBuilder<CommandSourceStack> base = literal("gamerule")
         .executes(c -> list(c.getSource()));
@@ -51,9 +58,22 @@ public class WorldGameRuleCommand {
           level.getServer().getGameRules().getAsString(rule));
     }
     var rules = level.getGameRules();
-    var origin = rules instanceof LayeredGameRules layered && !layered.isOverridden(rule) ? ".inherited" : ".world";
-    return Component.translatable(KEY + action + origin, rule.id(), rules.getAsString(rule),
-        level.dimension().identifier().toString());
+    if (!(rules instanceof LayeredGameRules layered) || !layered.isOverridden(rule)) {
+      return Component.translatable(KEY + action + ".inherited", rule.id(), rules.getAsString(rule),
+          level.dimension().identifier().toString());
+    }
+    return Component.translatable(KEY + action + (layered.isGroup() ? ".group" : ".world"), rule.id(),
+        rules.getAsString(rule), layered.scopeId().toString());
+  }
+
+  public static void requireGroup(CommandSourceStack source, GameRule<?> rule) throws CommandSyntaxException {
+    if (GroupGameRules.isRefused(rule, source.getLevel())) {
+      throw GROUP_ONLY_EXCEPTION.create(rule);
+    }
+  }
+
+  public static Component groupOnly(GameRule<?> rule) {
+    return Component.translatable(KEY + "group_only", rule.id());
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> inherit(GameRule<?> rule) {
@@ -63,36 +83,40 @@ public class WorldGameRuleCommand {
   }
 
   private static int inherit(CommandSourceStack source, GameRule<?> rule) throws CommandSyntaxException {
-    var world = source.getLevel().dimension().identifier().toString();
     if (!(source.getLevel().getGameRules() instanceof LayeredGameRules rules)) {
-      throw SERVER_RULES_EXCEPTION.create(world);
+      throw SERVER_RULES_EXCEPTION.create(source.getLevel().dimension().identifier().toString());
     }
+    var scope = rules.scopeId().toString();
     if (!rules.inherit(rule)) {
-      throw NOT_OVERRIDDEN_EXCEPTION.create(world, rule.id());
+      throw (rules.isGroup() ? GROUP_NOT_OVERRIDDEN_EXCEPTION : NOT_OVERRIDDEN_EXCEPTION).create(scope, rule.id());
     }
 
-    source.sendSuccess(() -> Component.translatable(KEY + "inherit.success", rule.id(), rules.getAsString(rule),
-        world), true);
+    source.sendSuccess(() -> Component.translatable(KEY + "inherit.success" + suffix(rules), rule.id(),
+        rules.getAsString(rule), scope), true);
     return Command.SINGLE_SUCCESS;
   }
 
   private static int list(CommandSourceStack source) throws CommandSyntaxException {
-    var world = source.getLevel().dimension().identifier().toString();
     if (!(source.getLevel().getGameRules() instanceof LayeredGameRules rules)) {
       throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().create();
     }
+    var scope = rules.scopeId().toString();
 
     var overridden = rules.overriddenRules().stream().sorted(Comparator.comparing(GameRule::id)).toList();
     if (overridden.isEmpty()) {
-      source.sendSuccess(() -> Component.translatable(KEY + "list.none", world), false);
+      source.sendSuccess(() -> Component.translatable(KEY + "list.none" + suffix(rules), scope), false);
       return 0;
     }
 
-    source.sendSuccess(() -> Component.translatable(KEY + "list", world), false);
+    source.sendSuccess(() -> Component.translatable(KEY + "list" + suffix(rules), scope), false);
     for (GameRule<?> rule : overridden) {
       source.sendSuccess(() -> Component.translatable(KEY + "list.entry", rule.id(), rules.getAsString(rule),
           rules.parent().getAsString(rule)), false);
     }
     return overridden.size();
+  }
+
+  private static String suffix(LayeredGameRules rules) {
+    return rules.isGroup() ? ".group" : "";
   }
 }

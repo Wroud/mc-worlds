@@ -59,8 +59,7 @@ public record SourceSave(Path root, String folder, @Nullable String nested, List
     return dimensions.stream().filter(SourceDimension::empty).map(SourceDimension::id).toList();
   }
 
-  public Map<Identifier, Identifier> targets(Identifier baseId, @Nullable Identifier dimension, boolean all)
-      throws ImportException {
+  public Map<Identifier, Identifier> targets(Identifier baseId, @Nullable Identifier dimension, boolean all) {
     List<Identifier> nonEmpty = dimensions.stream().filter(d -> !d.empty()).map(SourceDimension::id).toList();
     if (all) {
       if (nonEmpty.isEmpty()) {
@@ -125,7 +124,7 @@ public record SourceSave(Path root, String folder, @Nullable String nested, List
     return ids.stream().map(Identifier::toString).collect(Collectors.joining(", "));
   }
 
-  static SourceSave resolve(ImportJob job, String folder) throws ImportException {
+  static SourceSave resolve(ImportJob job, String folder) {
     LevelStorageSource.LevelStorageAccess access = job.storage();
     LevelStorageSource storage = access.parent();
     Path baseDir = storage.getBaseDir();
@@ -174,7 +173,7 @@ public record SourceSave(Path root, String folder, @Nullable String nested, List
     }
   }
 
-  static SourceSave openArchive(ImportJob job, Path file) throws ImportException {
+  static SourceSave openArchive(ImportJob job, Path file) {
     FileSystem fileSystem = openZip(file, job.folder());
     job.archive().set(fileSystem);
     Path root = saveRoot(fileSystem.getPath("/"));
@@ -199,7 +198,7 @@ public record SourceSave(Path root, String folder, @Nullable String nested, List
     }
   }
 
-  private static FileSystem openZip(Path file, String label) throws ImportException {
+  private static FileSystem openZip(Path file, String label) {
     if (!isZip(file)) {
       throw new ImportException("exception.archive", label);
     }

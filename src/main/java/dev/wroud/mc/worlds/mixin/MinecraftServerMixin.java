@@ -1,29 +1,35 @@
 package dev.wroud.mc.worlds.mixin;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.manager.LazyLevelMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-
-import java.util.Map;
 
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 
   @Shadow
   @Final
+  @Mutable
   private Map<ResourceKey<Level>, ServerLevel> levels;
+
+  @Inject(method = "<init>", at = @At("RETURN"))
+  private void mcworlds$lazyLevels(CallbackInfo ci) {
+    this.levels = new LazyLevelMap((MinecraftServer) (Object) this, this.levels);
+  }
 
   /**
    * @author Wroud
@@ -33,33 +39,5 @@ public class MinecraftServerMixin {
   @Overwrite
   public Iterable<ServerLevel> getAllLevels() {
     return new ArrayList<>(this.levels.values());
-  }
-
-  @Inject(method = "getLevel", at = @At("RETURN"), cancellable = true)
-  private void onGetLevelReturn(final ResourceKey<Level> resourceKey, CallbackInfoReturnable<ServerLevel> cir) {
-    ServerLevel level = cir.getReturnValue();
-
-    if (level != null) {
-      return;
-    }
-
-    var worlds = McWorldMod.getMcWorld(((MinecraftServer) (Object) this)).orElse(null);
-
-    if (worlds == null) {
-      return;
-    }
-
-    var worldData = worlds.getManager().getWorldsData().getLevelData(resourceKey.identifier());
-
-    if (worldData == null) {
-      return;
-    }
-
-    var handle = worlds.loadOrCreate(resourceKey.identifier(), worldData);
-
-    if (handle != null) {
-      // LevelActivationUtil.forceLoadLevel(handle.getServerLevel());
-      cir.setReturnValue(handle.getServerLevel());
-    }
   }
 }

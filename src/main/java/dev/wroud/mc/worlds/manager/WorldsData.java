@@ -3,6 +3,7 @@ package dev.wroud.mc.worlds.manager;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.mojang.serialization.Codec;
 
 import dev.wroud.mc.worlds.McWorldMod;
@@ -16,7 +17,7 @@ public class WorldsData extends SavedData {
   private final Map<Identifier, WorldsLevelData> levels;
   private static final Codec<WorldsData> CODEC = Codec
       .unboundedMap(Identifier.CODEC, WorldsLevelData.CODEC)
-      .xmap(WorldsData::new, wd -> wd.levels);
+      .xmap(WorldsData::new, wd -> Maps.filterKeys(wd.levels, id -> !TemporaryIds.isTemporary(id)));
 
   public static final String LEGACY_FILE = McWorldMod.MOD_ID + ".dat";
   public static final SavedDataType<WorldsData> TYPE = new SavedDataType<>(McWorldMod.id("worlds_data"),

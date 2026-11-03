@@ -67,7 +67,7 @@ public final class StagingStage {
     }
   }
 
-  static StagedImport stage(ImportJob job, SourceSave save, Set<Identifier> sources) throws ImportException {
+  static StagedImport stage(ImportJob job, SourceSave save, Set<Identifier> sources) {
     Path stagingRoot = stagingRoot(job.worldDir());
     try {
       job.phase().accept("copying");
@@ -150,7 +150,7 @@ public final class StagingStage {
     return files;
   }
 
-  private static void checkDiskSpace(ImportJob job, Collection<Copy> files) throws ImportException {
+  private static void checkDiskSpace(ImportJob job, Collection<Copy> files) {
     long required = 0;
     for (Copy file : files) {
       required += file.size();
@@ -160,7 +160,7 @@ public final class StagingStage {
     }
   }
 
-  private static void copy(ImportJob job, Map<Path, Copy> files) throws IOException, ImportException {
+  private static void copy(ImportJob job, Map<Path, Copy> files) throws IOException {
     for (Map.Entry<Path, Copy> entry : files.entrySet()) {
       Path source = entry.getKey();
       try (InputStream in = Files.newInputStream(source);
@@ -178,7 +178,7 @@ public final class StagingStage {
   }
 
   private static void checkSummary(LevelStorageSource.LevelStorageAccess access, Dynamic<?> unfixedTag,
-      String folder) throws ImportException {
+      String folder) {
     LevelSummary summary;
     try {
       summary = access.fixAndGetSummaryFromTag(unfixedTag);

@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import dev.wroud.mc.worlds.command.WorldGameRuleCommand;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
@@ -14,9 +15,17 @@ import net.minecraft.server.commands.GameRuleCommand;
 import net.minecraft.world.level.gamerules.GameRule;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(GameRuleCommand.class)
 public class GameRuleCommandMixin {
+
+    @Inject(method = "setRule", at = @At("HEAD"))
+    private static void mcworlds$refuseGroupOnlyRules(CommandContext<CommandSourceStack> context, GameRule<?> rule,
+            CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
+        WorldGameRuleCommand.requireGroup(context.getSource(), rule);
+    }
 
     @WrapOperation(
         method = "setRule",

@@ -2,9 +2,11 @@ package dev.wroud.mc.worlds.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.serialization.DataResult;
 
 import dev.wroud.mc.worlds.command.WorldGameRuleCommand;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.GroupGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,6 +23,18 @@ public class ServerGamePacketListenerGameRulesMixin {
 
     @Shadow
     public ServerPlayer player;
+
+    @WrapOperation(
+        method = "setGameRuleValue",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gamerules/GameRule;deserialize(Ljava/lang/String;)Lcom/mojang/serialization/DataResult;"))
+    private <T> DataResult<T> mcworlds$refuseGroupOnlyRules(GameRule<T> rule, String value,
+            Operation<DataResult<T>> original) {
+        if (GroupGameRules.isRefused(rule, this.player.level())) {
+            this.player.sendSystemMessage(WorldGameRuleCommand.groupOnly(rule));
+            return DataResult.error(() -> "group only");
+        }
+        return original.call(rule, value);
+    }
 
     @WrapOperation(
         method = "broadcastGameRuleChangeToOperators",

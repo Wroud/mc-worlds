@@ -3,19 +3,19 @@ package dev.wroud.mc.worlds.command;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import org.jspecify.annotations.Nullable;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
-import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.WorldHandle;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
-import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
+import dev.wroud.mc.worlds.manager.LazyLevelMap;
+import dev.wroud.mc.worlds.manager.TemporaryIds;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
@@ -37,7 +37,6 @@ public class ListCommand {
 
   public static LiteralArgumentBuilder<CommandSourceStack> build() {
     return literal("list")
-        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
         .executes(context -> list(context.getSource(), true, true))
         .then(literal("loaded")
             .executes(context -> list(context.getSource(), true, false)))
@@ -47,19 +46,16 @@ public class ListCommand {
 
   public static int list(CommandSourceStack source, boolean showLoaded, boolean showUnloaded) {
     var server = source.getServer();
-    var manager = McWorldMod.getMcWorld(server).orElseThrow().getManager();
-    var levels = ((MinecraftServerAccessor) server).getLevels();
+    var manager = WorldsCommands.manager(source);
+    var groups = manager.getGroups();
+    var levels = LazyLevelMap.loaded(server);
     var saved = manager.getWorldsData().getLevelsData();
 
-    var ids = new TreeSet<Identifier>(saved.keySet());
-    for (var key : List.copyOf(levels.keySet())) {
-      ids.add(key.identifier());
-    }
+    var ids = manager.allWorldIds();
 
     Map<ResourceKey<Level>, List<ServerPlayer>> playersByDimension = server.getPlayerList().getPlayers().stream()
         .collect(Collectors.groupingBy(player -> player.level().dimension()));
     var spawnDimension = server.getRespawnData().dimension();
-    var canTeleport = Commands.hasPermission(Commands.LEVEL_ADMINS).test(source);
 
     var loaded = new ArrayList<Component>();
     var unloaded = new ArrayList<Component>();
@@ -89,8 +85,9 @@ public class ListCommand {
           : data != null && data.getLevelStem() != null ? data.getLevelStem().type() : null;
 
       var details = details(id, isLoaded, type, data, playersByDimension.getOrDefault(key, List.of()),
-          key.equals(spawnDimension), canTeleport);
-      var entry = entry(id, isLoaded, details, canTeleport);
+          key.equals(spawnDimension), groups.groupOrDefault(id),
+          groups.spawnHolder(id));
+      var entry = entry(id, isLoaded, details);
 
       (isLoaded ? loaded : unloaded).add(entry);
     }
@@ -115,22 +112,25 @@ public class ListCommand {
     return entries.size();
   }
 
-  private static Component entry(Identifier id, boolean loaded, Component details, boolean canTeleport) {
+  private static Component entry(Identifier id, boolean loaded, Component details) {
     return ComponentUtils.wrapInSquareBrackets(Component.literal(id.toString()))
         .withStyle(style -> style
             .withColor(statusColor(loaded))
             .withInsertion(id.toString())
             .withHoverEvent(new HoverEvent.ShowText(details))
-            .withClickEvent(canTeleport ? new ClickEvent.SuggestCommand(TeleportCommand.command(id)) : null));
+            .withClickEvent(new ClickEvent.SuggestCommand(TeleportCommand.command(id))));
   }
 
   private static Component details(Identifier id, boolean loaded, Holder<DimensionType> type, WorldsLevelData data,
-      List<ServerPlayer> players, boolean worldSpawn, boolean canTeleport) {
+      List<ServerPlayer> players, boolean worldSpawn, Identifier group, @Nullable Identifier groupSpawn) {
     var lines = new ArrayList<Component>();
 
     lines.add(Component.literal(id.toString()).withStyle(ChatFormatting.BOLD));
     lines.add(Component.translatable(KEY + (loaded ? "status.loaded" : "status.unloaded"))
         .withStyle(statusColor(loaded)));
+    if (TemporaryIds.isTemporary(id)) {
+      lines.add(Component.translatable(KEY + "temporary").withStyle(ChatFormatting.AQUA));
+    }
     lines.add(CommonComponents.EMPTY);
 
     if (type != null) {
@@ -143,6 +143,7 @@ public class ListCommand {
       lines.add(field("load_on_startup", data.isLazy() ? CommonComponents.GUI_NO : CommonComponents.GUI_YES));
     }
 
+    lines.add(field("group", Component.literal(group.toString())));
     lines.add(field("players", players.isEmpty()
         ? Component.translatable(KEY + "players.none")
         : ComponentUtils.formatList(players, ServerPlayer::getName)));
@@ -150,12 +151,13 @@ public class ListCommand {
     if (worldSpawn) {
       lines.add(Component.translatable(KEY + "world_spawn").withStyle(ChatFormatting.GOLD));
     }
-
-    if (canTeleport) {
-      lines.add(CommonComponents.EMPTY);
-      lines.add(Component.translatable(KEY + "click", TeleportCommand.command(id))
-          .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+    if (groupSpawn != null) {
+      lines.add(Component.translatable(KEY + "group_spawn", groupSpawn.toString()).withStyle(ChatFormatting.GOLD));
     }
+
+    lines.add(CommonComponents.EMPTY);
+    lines.add(Component.translatable(KEY + "click", TeleportCommand.command(id))
+        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 
     return ComponentUtils.formatList(lines, CommonComponents.NEW_LINE);
   }

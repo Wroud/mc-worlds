@@ -11,7 +11,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterables;
 
 import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.network.GameRuleOriginsPayload;
+import dev.wroud.mc.worlds.network.GameRuleOriginsPayload.Origin;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityEvent;
@@ -29,16 +31,22 @@ import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 public final class PerWorldGameRules {
-  public static final SavedDataType<GameRuleMap> TYPE = new SavedDataType<>(
-      McWorldMod.id("game_rules"),
-      GameRuleMap.TYPE.constructor(),
-      GameRuleMap.TYPE.codec(),
-      GameRuleMap.TYPE.dataFixType());
+  public static final SavedDataType<GameRuleMap> TYPE = type(McWorldMod.id("game_rules"));
   public static final TagKey<GameRule<?>> GLOBAL = TagKey.create(Registries.GAME_RULE, McWorldMod.id("global"));
-  public static final ScopedValue<ServerLevel> WORLD_CHANGE = ScopedValue.newInstance();
+  public static final ScopedValue<GameRuleMap> CHANGED_MAP = ScopedValue.newInstance();
+
+  public static SavedDataType<GameRuleMap> type(Identifier id) {
+    return new SavedDataType<>(id, GameRuleMap.TYPE.constructor(), GameRuleMap.TYPE.codec(),
+        GameRuleMap.TYPE.dataFixType());
+  }
 
   public static LayeredGameRules create(ServerLevel level) {
     GameRules serverRules = level.getServer().getGameRules();
+    Identifier group = WorldGroups.groupOf(level);
+    if (group != null) {
+      WorldGroups groups = Objects.requireNonNull(WorldGroups.of(level.getServer()));
+      return new LayeredGameRules(level, serverRules, groups.rules(group), group);
+    }
     GameRuleMap overrides = CustomServerLevel.loadOrConvert(level, TYPE, GameRuleMap.TYPE.id(), vanilla -> {
       Set<GameRule<?>> available = serverRules.availableRules().collect(Collectors.toSet());
       GameRuleMap differing = GameRuleMap.of();
@@ -49,11 +57,30 @@ public final class PerWorldGameRules {
     if (overrides.size() == 0) {
       overrides.setDirty(false);
     }
-    return new LayeredGameRules(level, serverRules, overrides);
+    return new LayeredGameRules(level, serverRules, overrides, null);
   }
 
-  public static <T> void onWorldGameRuleChanged(ServerLevel level, GameRule<T> rule, T value) {
-    ScopedValue.where(WORLD_CHANGE, level).run(() -> level.getServer().onGameRuleChanged(rule, value));
+  public static int ownOverrides(ServerLevel level) {
+    return level.getDataStorage().computeIfAbsent(TYPE).size();
+  }
+
+  public static <T> void onWorldGameRuleChanged(LayeredGameRules rules, GameRule<T> rule, T value) {
+    MinecraftServer server = rules.level().getServer();
+    ScopedValue.where(CHANGED_MAP, rules.overrides()).run(() -> server.onGameRuleChanged(rule, value));
+    if (GroupGameRules.isGameModeRule(rule)) {
+      GroupGameRules.enforce(rules);
+    }
+  }
+
+  public static void replayChanges(GameRules previous, LayeredGameRules rules) {
+    rules.availableRules().forEach(rule -> replayChange(previous, rules, rule));
+  }
+
+  private static <T> void replayChange(GameRules previous, LayeredGameRules rules, GameRule<T> rule) {
+    T value = rules.get(rule);
+    if (!Objects.equals(previous.get(rule), value)) {
+      onWorldGameRuleChanged(rules, rule, value);
+    }
   }
 
   public static void pruneAll(MinecraftServer server) {
@@ -69,13 +96,13 @@ public final class PerWorldGameRules {
       return;
     }
 
-    Optional<Identifier> world = Optional.empty();
+    Optional<Origin> origin = Optional.empty();
     Map<Identifier, String> serverValues = new HashMap<>();
     if (player.level().getGameRules() instanceof LayeredGameRules rules) {
-      world = Optional.of(player.level().dimension().identifier());
+      origin = Optional.of(new Origin(rules.isGroup(), rules.scopeId()));
       rules.overriddenRules().forEach(rule -> serverValues.put(rule.getIdentifier(), rules.parent().getAsString(rule)));
     }
-    ServerPlayNetworking.send(player, new GameRuleOriginsPayload(world, serverValues));
+    ServerPlayNetworking.send(player, new GameRuleOriginsPayload(origin, serverValues));
   }
 
   public static boolean isGlobal(GameRule<?> rule) {
@@ -100,8 +127,8 @@ public final class PerWorldGameRules {
   }
 
   private static boolean isAffected(ServerLevel level, GameRule<?> rule) {
-    if (WORLD_CHANGE.isBound()) {
-      return level == WORLD_CHANGE.get();
+    if (CHANGED_MAP.isBound()) {
+      return level.getGameRules() instanceof LayeredGameRules rules && rules.overrides() == CHANGED_MAP.get();
     }
     return !(level.getGameRules() instanceof LayeredGameRules rules && rules.isOverridden(rule));
   }

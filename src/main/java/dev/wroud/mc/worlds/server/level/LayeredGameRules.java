@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -18,13 +19,15 @@ public class LayeredGameRules extends GameRules {
   private final ServerLevel level;
   private final GameRules parent;
   private final GameRuleMap overrides;
+  private final @Nullable Identifier groupId;
   private final Set<GameRule<?>> available;
 
-  public LayeredGameRules(ServerLevel level, GameRules parent, GameRuleMap overrides) {
+  public LayeredGameRules(ServerLevel level, GameRules parent, GameRuleMap overrides, @Nullable Identifier groupId) {
     super(List.of());
     this.level = level;
     this.parent = parent;
     this.overrides = overrides;
+    this.groupId = groupId;
     this.available = parent.availableRules().collect(Collectors.toSet());
     this.prune();
   }
@@ -37,8 +40,24 @@ public class LayeredGameRules extends GameRules {
     }
   }
 
+  public ServerLevel level() {
+    return this.level;
+  }
+
   public GameRules parent() {
     return this.parent;
+  }
+
+  public GameRuleMap overrides() {
+    return this.overrides;
+  }
+
+  public boolean isGroup() {
+    return this.groupId != null;
+  }
+
+  public Identifier scopeId() {
+    return this.groupId != null ? this.groupId : this.level.dimension().identifier();
   }
 
   public boolean isOverridden(GameRule<?> rule) {
@@ -55,7 +74,7 @@ public class LayeredGameRules extends GameRules {
     }
 
     this.overrides.remove(rule);
-    PerWorldGameRules.onWorldGameRuleChanged(this.level, rule, this.parent.get(rule));
+    PerWorldGameRules.onWorldGameRuleChanged(this, rule, this.parent.get(rule));
     return true;
   }
 
@@ -76,10 +95,12 @@ public class LayeredGameRules extends GameRules {
       this.parent.set(rule, value, server);
     } else if (!this.available.contains(rule)) {
       super.set(rule, value, server);
+    } else if (GroupGameRules.isRefused(rule, this.level)) {
+      return;
     } else {
       this.overrides.set(rule, value);
       if (server != null) {
-        PerWorldGameRules.onWorldGameRuleChanged(this.level, rule, value);
+        PerWorldGameRules.onWorldGameRuleChanged(this, rule, value);
       }
     }
   }

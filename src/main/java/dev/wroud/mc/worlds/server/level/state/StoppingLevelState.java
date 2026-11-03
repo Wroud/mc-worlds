@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 
 import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
+import dev.wroud.mc.worlds.manager.group.transition.GroupTransitions;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.portal.TeleportTransition;
@@ -39,15 +40,25 @@ public class StoppingLevelState extends LevelState {
   private void kickPlayers() {
     this.kickScheduled = false;
     var server = this.level.getServer();
-    var destination = server.findRespawnDimension();
-    if (destination == this.level) {
+    var spawn = this.level.getRespawnData();
+    var destination = server.getLevel(spawn.dimension());
+    if (destination == null || destination == this.level) {
+      spawn = server.getRespawnData();
+      destination = server.getLevel(spawn.dimension());
+    }
+    if (destination == null || destination == this.level) {
       destination = server.overworld();
+      spawn = SpawnPreparationHelper.findInitialSpawn(destination);
     }
 
     var players = new ArrayList<>(this.level.players());
+    var transitions = GroupTransitions.of(server);
 
     for (ServerPlayer player : players) {
-      player.teleport(TeleportTransitionAbstraction.spawnAtRespawn(player, destination, TeleportTransition.PLACE_PORTAL_TICKET));
+      if (!player.isDeadOrDying() && (transitions == null || !transitions.evacuate(player, this.level))) {
+        player.teleport(TeleportTransitionAbstraction.spawnNear(player, destination, spawn,
+            TeleportTransition.PLACE_PORTAL_TICKET));
+      }
     }
   }
 }

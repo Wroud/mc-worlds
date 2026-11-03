@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.minecraft.SharedConstants;
@@ -68,16 +69,23 @@ public class SpawnPreparationHelper {
     var debug = worldData.isDebugWorld();
 
     if (SharedConstants.DEBUG_ONLY_GENERATE_HALF_THE_WORLD && SharedConstants.DEBUG_WORLD_RECREATE) {
-      serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), new BlockPos(0, 64, -100), 0.0F, 0.0F));
+      setSpawn(new BlockPos(0, 64, -100));
     } else if (debug) {
-      serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), BlockPos.ZERO.above(80), 0.0F, 0.0F));
+      setSpawn(BlockPos.ZERO.above(80));
     } else {
       ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
       ChunkPos chunkPos = serverChunkCache.getGeneratorState().getDimensionOrigin();
       McWorldMod.LOGGER.info("Preparing spawn: {}", serverLevel.dimension().identifier());
-      serverLevelData
-          .setSpawn(RespawnData.of(serverLevel.dimension(), getDefaultSpawnPos(serverLevel, chunkPos), 0.0F, 0.0F));
+      setSpawn(getDefaultSpawnPos(serverLevel, chunkPos));
       spawnChunksToCheck = getSpawnSearchChunks(chunkPos);
+    }
+  }
+
+  private void setSpawn(BlockPos pos) {
+    ((ServerLevelData) serverLevel.getLevelData()).setSpawn(RespawnData.of(serverLevel.dimension(), pos, 0.0F, 0.0F));
+    WorldGroups groups = WorldGroups.of(serverLevel.getServer());
+    if (groups != null) {
+      groups.worldSpawnChanged(serverLevel.dimension().identifier());
     }
   }
 
@@ -136,14 +144,13 @@ public class SpawnPreparationHelper {
     if (processingChunk != null) {
       return;
     }
-    var serverLevelData = (ServerLevelData) serverLevel.getLevelData();
     var chunkPos = spawnChunksToCheck.remove(0);
     var chunkSource = serverLevel.getChunkSource();
 
     if (!serverLevel.getServer().isReady()) {
       BlockPos blockPos2 = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
       if (blockPos2 != null) {
-        serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), blockPos2, 0.0F, 0.0F));
+        setSpawn(blockPos2);
         spawnChunksToCheck.clear();
       }
       return;
@@ -155,7 +162,7 @@ public class SpawnPreparationHelper {
           if (throwable == null) {
             BlockPos blockPos2 = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
             if (blockPos2 != null) {
-              serverLevelData.setSpawn(RespawnData.of(serverLevel.dimension(), blockPos2, 0.0F, 0.0F));
+              setSpawn(blockPos2);
               spawnChunksToCheck.clear();
             }
           } else {

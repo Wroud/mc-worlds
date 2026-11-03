@@ -19,7 +19,7 @@ public final class GameRuleOriginsTooltip {
 
   public static List<FormattedCharSequence> extend(List<FormattedCharSequence> tooltip, GameRule<?> rule) {
     GameRuleOriginsPayload origins = GameRuleOriginsTooltip.origins;
-    if (origins == null || origins.world().isEmpty()
+    if (origins == null || origins.origin().isEmpty()
         || !(Minecraft.getInstance().gui.screen() instanceof InWorldGameRulesScreen)) {
       return tooltip;
     }
@@ -30,8 +30,11 @@ public final class GameRuleOriginsTooltip {
     if (PerWorldGameRules.isGlobal(rule)) {
       line = Component.translatable("dev.wroud.mc.worlds.gamerule.origin.global").withStyle(ChatFormatting.GRAY);
     } else if (serverValue != null) {
-      line = Component.translatable("dev.wroud.mc.worlds.gamerule.origin.world",
-          origins.world().get().toString(), serverValue).withStyle(ChatFormatting.GOLD);
+      var origin = origins.origin().get();
+      line = Component.translatable(origin.group()
+          ? "dev.wroud.mc.worlds.gamerule.origin.group"
+          : "dev.wroud.mc.worlds.gamerule.origin.world", origin.id().toString(), serverValue)
+          .withStyle(ChatFormatting.GOLD);
     } else {
       line = Component.translatable("dev.wroud.mc.worlds.gamerule.origin.server").withStyle(ChatFormatting.GRAY);
     }

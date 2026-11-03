@@ -7,15 +7,17 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.wroud.mc.worlds.manager.DefaultServerLevelProvider;
 import dev.wroud.mc.worlds.manager.ServerLevelProvider;
+import dev.wroud.mc.worlds.mixin.DerivedLevelDataAccessor;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.WorldData;
 
-public class WorldsLevelData implements ServerLevelData {
+// Cardinal Components adds a method to LevelData that only PrimaryLevelData and DerivedLevelData implement
+public class WorldsLevelData extends DerivedLevelData {
 
   public static final Codec<WorldsLevelData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
       WorldGeneratorData.CODEC.fieldOf("core").forGetter(ld -> ld.generator),
@@ -34,6 +36,7 @@ public class WorldsLevelData implements ServerLevelData {
   }
 
   public WorldsLevelData(WorldGeneratorData generator, WorldSettingsData state, long gameTime) {
+    super(null, null);
     this.generator = generator;
     this.settings = state;
     this.gameTime = gameTime;
@@ -141,6 +144,7 @@ public class WorldsLevelData implements ServerLevelData {
 
   public void setWorldData(WorldData worldData) {
     this.worldData = worldData;
+    ((DerivedLevelDataAccessor) this).mcworlds$setWrapped(worldData.overworldData());
   }
 
   public static WorldsLevelData getDefault(ResourceKey<ServerLevelProvider<?>> provider, Identifier id,

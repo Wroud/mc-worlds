@@ -78,7 +78,7 @@ public final class LevelDataResolver {
   }
 
   public static ResolvedDimension resolve(StagedImport s, SourceSave save, SourceDimension source,
-      ResourceKey<Level> newKey, RegistryAccess reg) throws ImportException {
+      ResourceKey<Level> newKey, RegistryAccess reg) {
     String folder = save.folder();
     Identifier sourceDim = source.id();
     ResourceKey<Level> sourceKey = ResourceKey.create(Registries.DIMENSION, sourceDim);
@@ -158,7 +158,7 @@ public final class LevelDataResolver {
     return new ResolvedDimension(sourceDim, newKey, stem, data, List.copyOf(warnings));
   }
 
-  public static void copyRootState(StagedImport s, Identifier sourceDim) throws ImportException {
+  public static void copyRootState(StagedImport s, Identifier sourceDim) {
     Path dimData = dimensionData(s, ResourceKey.create(Registries.DIMENSION, sourceDim));
     Path rootData = s.access().getLevelPath(LevelResource.DATA);
     try {
@@ -216,7 +216,7 @@ public final class LevelDataResolver {
   }
 
   private static ResourceKey<LevelStem> environment(StagedImport s, ResourceKey<Level> sourceKey, String folder,
-      RegistryAccess reg) throws ImportException {
+      RegistryAccess reg) {
     Path dimDir = s.access().getDimensionPath(sourceKey);
     if (Files.exists(file(dimDir.resolve(LevelResource.DATA.id()), EnderDragonFight.TYPE))) {
       return LevelStem.END;
@@ -275,7 +275,7 @@ public final class LevelDataResolver {
     return environment;
   }
 
-  private static CompoundTag readPaperOverrides(Path file, String folder) throws ImportException {
+  private static CompoundTag readPaperOverrides(Path file, String folder) {
     try {
       CompoundTag tag = NbtIo.readCompressed(file, NbtAccounter.unlimitedHeap());
       return tag.getCompound("data").orElse(tag);
