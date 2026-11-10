@@ -35,6 +35,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Util;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelSettings;
 
 public final class WorldImporter {
@@ -139,10 +140,13 @@ public final class WorldImporter {
     job.phase().accept("level data");
     var reg = job.server().registryAccess();
     var dims = new ArrayList<ResolvedDimension>();
+    var sources = plan.targets().keySet();
+    var sequenceOwner = sources.contains(Level.OVERWORLD.identifier()) ? Level.OVERWORLD.identifier()
+        : sources.iterator().next();
     for (var target : plan.targets().entrySet()) {
       dims.add(LevelDataResolver.resolve(staged, plan.save(), plan.save().dimension(target.getKey()),
           ResourceKey.create(Registries.DIMENSION, target.getValue()), reg));
-      LevelDataResolver.copyRootState(staged, target.getKey());
+      LevelDataResolver.copyRootState(staged, target.getKey(), target.getKey().equals(sequenceOwner));
     }
     job.checkStopped();
 

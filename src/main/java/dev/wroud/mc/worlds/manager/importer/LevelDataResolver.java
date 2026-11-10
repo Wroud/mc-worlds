@@ -41,6 +41,7 @@ import net.minecraft.server.level.ChunkMap;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.util.datafix.DataFixers;
+import net.minecraft.world.RandomSequences;
 import net.minecraft.world.clock.ServerClockManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -67,6 +68,8 @@ public final class LevelDataResolver {
       new StateFile(GameRuleMap.TYPE, PerWorldGameRules.TYPE),
       new StateFile(ServerClockManager.TYPE, PerWorldClocks.TYPE),
       new StateFile(WeatherData.TYPE, WeatherData.TYPE));
+  private static final List<StateFile> ROOT_STATE_WITH_SEQUENCES = Stream
+      .concat(ROOT_STATE.stream(), Stream.of(new StateFile(RandomSequences.TYPE, RandomSequences.TYPE))).toList();
 
   private LevelDataResolver() {
   }
@@ -158,11 +161,11 @@ public final class LevelDataResolver {
     return new ResolvedDimension(sourceDim, newKey, stem, data, List.copyOf(warnings));
   }
 
-  public static void copyRootState(StagedImport s, Identifier sourceDim) {
+  public static void copyRootState(StagedImport s, Identifier sourceDim, boolean randomSequences) {
     Path dimData = dimensionData(s, ResourceKey.create(Registries.DIMENSION, sourceDim));
     Path rootData = s.access().getLevelPath(LevelResource.DATA);
     try {
-      for (StateFile state : ROOT_STATE) {
+      for (StateFile state : randomSequences ? ROOT_STATE_WITH_SEQUENCES : ROOT_STATE) {
         Path target = file(dimData, state.vanilla());
         Path root = file(rootData, state.vanilla());
         if (!Files.exists(target) && !Files.exists(file(dimData, state.own())) && Files.exists(root)) {

@@ -34,6 +34,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.RandomSequences;
 import net.minecraft.world.attribute.EnvironmentAttributeSystem;
 import net.minecraft.world.clock.ServerClockManager;
 import net.minecraft.world.level.CustomSpawner;
@@ -57,6 +59,7 @@ public class CustomServerLevel extends ServerLevel {
   private boolean deleteOnClose;
   private LevelState currentState;
   private final WeatherData weatherData;
+  private final RandomSequences randomSequences;
   private final @Nullable WorldGroups groups;
   private @Nullable Identifier groupId;
   private @Nullable RespawnData groupSpawn;
@@ -81,6 +84,7 @@ public class CustomServerLevel extends ServerLevel {
     this.deleteOnClose = false;
     this.weatherData = (WeatherData) this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
     ((ServerLevelAccessor) this).invokePrepareWeather(this.weatherData);
+    this.randomSequences = this.loadRandomSequences();
     this.groups = WorldGroups.of(server);
     this.groupId = this.resolveGroup();
     this.perWorldGameRules = PerWorldGameRules.create(this);
@@ -101,6 +105,26 @@ public class CustomServerLevel extends ServerLevel {
   @Override
   public WeatherData getWeatherData() {
     return this.weatherData;
+  }
+
+  public RandomSequences getRandomSequences() {
+    return this.randomSequences;
+  }
+
+  public RandomSource getRandomSequence(Identifier key) {
+    return this.randomSequences.get(key, this.getSeed());
+  }
+
+  private RandomSequences loadRandomSequences() {
+    SavedDataStorage storage = this.getDataStorage();
+    RandomSequences sequences = storage.get(RandomSequences.TYPE);
+    if (sequences == null) {
+      sequences = new RandomSequences();
+      sequences.setSeedDefaults(
+          this.dimensionTypeRegistration().unwrapKey().map(key -> key.identifier().hashCode()).orElse(0), true, true);
+      storage.set(RandomSequences.TYPE, sequences);
+    }
+    return sequences;
   }
 
   @Override

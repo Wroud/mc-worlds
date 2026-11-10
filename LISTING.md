@@ -181,9 +181,9 @@ Put the save, or its zip, next to the server world. Older Minecraft versions are
 
 ## Recent updates
 
+- **2.0.1** Loot in created worlds follows each world's own seed.
 - **2.0.0** World groups with linked portals, separate inventories and their own spawn and game rules, temporary worlds for minigames, and a new API for mods. Mods built on an older version need an update.
 - **1.11.0** `/worlds import` brings in singleplayer worlds, other servers' worlds and Paper or Multiverse worlds, from a folder, a zip or a download link.
-- **1.10.0** Per-world game rules through vanilla `/gamerule`, and a fix for a rare "Exception generating new chunk" crash when several worlds generate structures at once.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

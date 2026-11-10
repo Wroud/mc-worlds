@@ -14,6 +14,12 @@
 
 ### Security
 
+## 2.0.1 - 2026-11-11
+
+### Fixed
+
+- Loot in created worlds follows each world's own seed instead of one roll shared by the whole server.
+
 ## 2.0.0 - 2026-11-03
 
 ### Added
