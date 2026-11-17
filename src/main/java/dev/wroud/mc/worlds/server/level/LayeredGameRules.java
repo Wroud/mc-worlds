@@ -7,7 +7,6 @@ import java.util.stream.Stream;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleMap;
@@ -16,18 +15,20 @@ import net.minecraft.world.level.gamerules.GameRules;
 import org.jspecify.annotations.Nullable;
 
 public class LayeredGameRules extends GameRules {
-  private final ServerLevel level;
+  private final MinecraftServer server;
   private final GameRules parent;
   private final GameRuleMap overrides;
-  private final @Nullable Identifier groupId;
+  private final Identifier scopeId;
+  private final boolean group;
   private final Set<GameRule<?>> available;
 
-  public LayeredGameRules(ServerLevel level, GameRules parent, GameRuleMap overrides, @Nullable Identifier groupId) {
+  public LayeredGameRules(MinecraftServer server, GameRuleMap overrides, Identifier scopeId, boolean group) {
     super(List.of());
-    this.level = level;
-    this.parent = parent;
+    this.server = server;
+    this.parent = server.getGameRules();
     this.overrides = overrides;
-    this.groupId = groupId;
+    this.scopeId = scopeId;
+    this.group = group;
     this.available = parent.availableRules().collect(Collectors.toSet());
     this.prune();
   }
@@ -40,8 +41,8 @@ public class LayeredGameRules extends GameRules {
     }
   }
 
-  public ServerLevel level() {
-    return this.level;
+  public MinecraftServer server() {
+    return this.server;
   }
 
   public GameRules parent() {
@@ -53,11 +54,15 @@ public class LayeredGameRules extends GameRules {
   }
 
   public boolean isGroup() {
-    return this.groupId != null;
+    return this.group;
   }
 
   public Identifier scopeId() {
-    return this.groupId != null ? this.groupId : this.level.dimension().identifier();
+    return this.scopeId;
+  }
+
+  public boolean refuses(GameRule<?> rule) {
+    return GroupGameRules.isGameModeRule(rule) && !this.group;
   }
 
   public boolean isOverridden(GameRule<?> rule) {
@@ -95,7 +100,7 @@ public class LayeredGameRules extends GameRules {
       this.parent.set(rule, value, server);
     } else if (!this.available.contains(rule)) {
       super.set(rule, value, server);
-    } else if (GroupGameRules.isRefused(rule, this.level)) {
+    } else if (this.refuses(rule)) {
       return;
     } else {
       this.overrides.set(rule, value);

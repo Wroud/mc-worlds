@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleCategory;
 import net.minecraft.world.level.gamerules.GameRules;
@@ -59,8 +58,8 @@ public final class GroupGameRules {
     return rule == DEFAULT_GAME_MODE || rule == FORCE_GAME_MODE;
   }
 
-  public static boolean isRefused(GameRule<?> rule, Level level) {
-    return isGameModeRule(rule) && WorldGroups.groupOf(level) == null;
+  public static boolean isRefused(GameRule<?> rule, ServerLevel level) {
+    return level.getGameRules() instanceof LayeredGameRules rules ? rules.refuses(rule) : isGameModeRule(rule);
   }
 
   public static @Nullable GameType newPlayerMode(ServerPlayer player, @Nullable GameType loaded) {
@@ -83,7 +82,7 @@ public final class GroupGameRules {
     if (!rules.isGroup()) {
       return;
     }
-    for (ServerPlayer player : rules.level().getServer().getPlayerList().getPlayers()) {
+    for (ServerPlayer player : rules.server().getPlayerList().getPlayers()) {
       if (player.level().getGameRules() instanceof LayeredGameRules layered && layered.overrides() == rules.overrides()) {
         applyOnEnter(player, player.level());
       }

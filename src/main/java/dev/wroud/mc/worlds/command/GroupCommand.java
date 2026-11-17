@@ -1,7 +1,6 @@
 package dev.wroud.mc.worlds.command;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -13,6 +12,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import dev.wroud.mc.worlds.McWorld;
 import dev.wroud.mc.worlds.manager.group.WorldGroup;
+import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.manager.group.WorldKind;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.ChatFormatting;
@@ -65,12 +65,12 @@ public class GroupCommand {
 
   public static int info(CommandSourceStack source) {
     var level = source.getLevel();
-    var worlds = WorldsCommands.worlds(source);
+    var groups = WorldsCommands.manager(source).getGroups();
     var group = McWorld.groupOf(level);
 
     var lines = new ArrayList<Component>();
     lines.add(Component.translatable(KEY + "query", id(level.dimension().identifier()), id(group)));
-    lines.addAll(describe(worlds, group, worlds.members(group)));
+    lines.addAll(describe(groups, group));
 
     source.sendSuccess(() -> ComponentUtils.formatList(lines, CommonComponents.NEW_LINE), false);
     return Command.SINGLE_SUCCESS;
@@ -89,12 +89,13 @@ public class GroupCommand {
 
   public static int delete(CommandSourceStack source, Identifier group) throws CommandSyntaxException {
     var spawnWorld = source.getServer().getRespawnData().dimension();
-    var removed = WorldsCommands.call(() -> WorldsCommands.worlds(source).deleteGroup(group));
+    var target = require(source, group);
+    var count = target.members().size();
+    WorldsCommands.call(target::delete);
 
     if (!spawnWorld.equals(source.getServer().getRespawnData().dimension())) {
       DeleteCommand.reportSpawnReset(source, spawnWorld.identifier());
     }
-    var count = removed.members().size();
     var message = McWorld.isTemporary(group) ? "delete.temporary_success" : "delete.success";
     source.sendSuccess(() -> Component.translatable(KEY + message, id(group), count), false);
     return Command.SINGLE_SUCCESS;
@@ -103,7 +104,8 @@ public class GroupCommand {
   public static int join(CommandSourceStack source, Identifier group, boolean asMain) throws CommandSyntaxException {
     var level = source.getLevel();
     var world = level.dimension().identifier();
-    var result = WorldsCommands.call(() -> WorldsCommands.worlds(source).joinGroup(world, group, asMain));
+    var target = require(source, group);
+    var result = WorldsCommands.call(() -> target.join(world, asMain));
 
     var role = Component.translatable(KEY + "role." + (result.main() ? "main." : "member.") + result.kind().key());
     var previous = result.previousGroup();
@@ -131,7 +133,12 @@ public class GroupCommand {
   public static int leave(CommandSourceStack source) throws CommandSyntaxException {
     var level = source.getLevel();
     var world = level.dimension().identifier();
-    var previous = WorldsCommands.call(() -> WorldsCommands.worlds(source).leaveGroup(world));
+    var previous = McWorld.groupOf(level);
+    if (WorldGroups.isDefault(previous)) {
+      throw WorldsCommands.failure(Component.translatable(KEY + "leave.exception.default", id(world)));
+    }
+    var target = require(source, previous);
+    WorldsCommands.call(() -> target.leave(world));
 
     var lines = new ArrayList<Component>();
     lines.add(Component.translatable(KEY + "leave.success", id(world), id(previous)));
@@ -145,33 +152,35 @@ public class GroupCommand {
   }
 
   public static int getSpawn(CommandSourceStack source) {
-    var worlds = WorldsCommands.worlds(source);
+    var groups = WorldsCommands.manager(source).getGroups();
     var group = McWorld.groupOf(source.getLevel());
 
-    source.sendSuccess(() -> Component.translatable(KEY + "spawn.query", id(group), spawn(worlds.groupSpawn(group))),
+    source.sendSuccess(() -> Component.translatable(KEY + "spawn.query", id(group), spawn(groups.spawnOf(group))),
         false);
     return Command.SINGLE_SUCCESS;
   }
 
   public static int setSpawn(CommandSourceStack source, @Nullable Vec3 position) throws CommandSyntaxException {
     var level = source.getLevel();
-    var worlds = WorldsCommands.worlds(source);
     var group = McWorld.groupOf(level);
+    if (WorldGroups.isDefault(group)) {
+      throw WorldsCommands.failure(Component.translatable(KEY + "spawn.exception.default"));
+    }
+    var target = require(source, group);
     var spawn = SettingsCommand.respawnDataAt(source, position, level.dimension());
-    WorldsCommands.call(() -> worlds.setGroupSpawn(group, spawn));
+    WorldsCommands.call(() -> target.setSpawn(spawn));
 
-    source.sendSuccess(() -> Component.translatable(KEY + "spawn.success", id(group), spawn(worlds.groupSpawn(group))),
-        false);
+    source.sendSuccess(() -> Component.translatable(KEY + "spawn.success", id(group), spawn(target.spawn())), false);
     return Command.SINGLE_SUCCESS;
   }
 
   public static int list(CommandSourceStack source) {
-    var worlds = WorldsCommands.worlds(source);
+    var groups = WorldsCommands.manager(source).getGroups();
 
     var entries = new ArrayList<Component>();
-    entries.add(entry(worlds, McWorld.DEFAULT_GROUP));
-    for (var group : new TreeSet<>(worlds.groups().keySet())) {
-      entries.add(entry(worlds, group));
+    entries.add(entry(groups, McWorld.DEFAULT_GROUP));
+    for (var group : new TreeSet<>(groups.all().keySet())) {
+      entries.add(entry(groups, group));
     }
 
     source.sendSuccess(() -> Component.translatable(KEY + "list.success", entries.size(),
@@ -179,15 +188,15 @@ public class GroupCommand {
     return entries.size();
   }
 
-  private static Component entry(McWorld worlds, Identifier group) {
+  private static Component entry(WorldGroups groups, Identifier group) {
     var isDefault = McWorld.DEFAULT_GROUP.equals(group);
     var command = "/worlds group join " + group;
-    var members = worlds.members(group);
+    var members = groups.members(group);
 
     var lines = new ArrayList<Component>();
     lines.add(Component.literal(group.toString()).withStyle(ChatFormatting.BOLD));
     lines.add(CommonComponents.EMPTY);
-    lines.addAll(describe(worlds, group, members));
+    lines.addAll(describe(groups, group));
     if (!isDefault) {
       lines.add(CommonComponents.EMPTY);
       lines.add(Component.translatable("dev.wroud.mc.worlds.command.list.click", command)
@@ -202,8 +211,9 @@ public class GroupCommand {
             .withClickEvent(isDefault ? null : new ClickEvent.SuggestCommand(command)));
   }
 
-  private static List<Component> describe(McWorld worlds, Identifier groupId, Collection<Identifier> members) {
-    var group = worlds.group(groupId);
+  private static List<Component> describe(WorldGroups groups, Identifier groupId) {
+    var group = groups.get(groupId);
+    var members = groups.members(groupId);
 
     var mains = new ArrayList<Component>();
     if (group != null) {
@@ -218,8 +228,12 @@ public class GroupCommand {
     var lines = new ArrayList<Component>();
     lines.add(field("mains", mains.isEmpty() ? none() : ComponentUtils.formatList(mains, ComponentUtils.DEFAULT_SEPARATOR)));
     lines.add(field("members", members.isEmpty() ? none() : ComponentUtils.formatList(members, GroupCommand::id)));
-    lines.add(field("spawn", spawn(worlds.groupSpawn(groupId))));
+    lines.add(field("spawn", spawn(groups.spawnOf(groupId))));
     return lines;
+  }
+
+  private static WorldGroup require(CommandSourceStack source, Identifier group) throws CommandSyntaxException {
+    return WorldsCommands.call(() -> WorldsCommands.manager(source).getGroups().require(group));
   }
 
   private static Component spawn(WorldGroup.Spawn spawn) {

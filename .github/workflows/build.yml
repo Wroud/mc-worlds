@@ -25,11 +25,13 @@ jobs:
           distribution: 'microsoft'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+      - name: datagen
+        run: ./gradlew runDatagen
       - name: build
-        run: ./gradlew runDatagen build
+        run: ./gradlew build
       - name: capture build artifacts
         if: ${{ matrix.java == '25' }} # Only upload artifacts built from latest java
         uses: actions/upload-artifact@v7
         with:
           name: Artifacts
-          path: versions/*/build/libs/
+          path: build/libs/

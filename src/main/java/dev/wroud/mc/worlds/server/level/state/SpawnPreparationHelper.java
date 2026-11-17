@@ -11,6 +11,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
+import net.minecraft.server.level.ChunkResult;
 import net.minecraft.server.level.PlayerSpawnFinder;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -159,14 +160,14 @@ public class SpawnPreparationHelper {
     processingChunk = chunkSource.addTicketAndLoadWithRadius(
         TicketType.PLAYER_SPAWN, chunkPos, 0)
         .whenComplete((result, throwable) -> {
-          if (throwable == null) {
+          if (throwable != null) {
+            McWorldMod.LOGGER.error("Failed to load spawn chunk at {}: {}", chunkPos, throwable.getMessage());
+          } else if (result instanceof ChunkResult<?> chunk && chunk.isSuccess()) {
             BlockPos blockPos2 = PlayerSpawnFinder.getSpawnPosInChunk(serverLevel, chunkPos);
             if (blockPos2 != null) {
               setSpawn(blockPos2);
               spawnChunksToCheck.clear();
             }
-          } else {
-            McWorldMod.LOGGER.error("Failed to load spawn chunk at {}: {}", chunkPos, throwable.getMessage());
           }
           processingChunk = null;
         });

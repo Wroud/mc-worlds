@@ -41,12 +41,11 @@ public final class PerWorldGameRules {
   }
 
   public static LayeredGameRules create(ServerLevel level) {
-    GameRules serverRules = level.getServer().getGameRules();
     Identifier group = WorldGroups.groupOf(level);
     if (group != null) {
-      WorldGroups groups = Objects.requireNonNull(WorldGroups.of(level.getServer()));
-      return new LayeredGameRules(level, serverRules, groups.rules(group), group);
+      return Objects.requireNonNull(WorldGroups.of(level.getServer())).gameRules(group);
     }
+    GameRules serverRules = level.getServer().getGameRules();
     GameRuleMap overrides = CustomServerLevel.loadOrConvert(level, TYPE, GameRuleMap.TYPE.id(), vanilla -> {
       Set<GameRule<?>> available = serverRules.availableRules().collect(Collectors.toSet());
       GameRuleMap differing = GameRuleMap.of();
@@ -54,10 +53,7 @@ public final class PerWorldGameRules {
           rule -> available.contains(rule) && !Objects.equals(vanilla.get(rule), serverRules.get(rule)));
       return differing;
     });
-    if (overrides.size() == 0) {
-      overrides.setDirty(false);
-    }
-    return new LayeredGameRules(level, serverRules, overrides, null);
+    return new LayeredGameRules(level.getServer(), overrides, level.dimension().identifier(), false);
   }
 
   public static int ownOverrides(ServerLevel level) {
@@ -65,7 +61,7 @@ public final class PerWorldGameRules {
   }
 
   public static <T> void onWorldGameRuleChanged(LayeredGameRules rules, GameRule<T> rule, T value) {
-    MinecraftServer server = rules.level().getServer();
+    MinecraftServer server = rules.server();
     ScopedValue.where(CHANGED_MAP, rules.overrides()).run(() -> server.onGameRuleChanged(rule, value));
     if (GroupGameRules.isGameModeRule(rule)) {
       GroupGameRules.enforce(rules);

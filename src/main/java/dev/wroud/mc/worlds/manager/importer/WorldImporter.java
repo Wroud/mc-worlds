@@ -238,7 +238,7 @@ public final class WorldImporter {
       if (WorldsCreator.registerAndLoad(job.server(), id, d.data()) != null) {
         var message = Component.translatable(ImportException.KEY_PREFIX + "success", id.toString(), job.folder(),
             d.sourceDim().toString());
-        var join = group != null ? groups(job).join(id, group, false) : null;
+        var join = group != null ? groups(job).require(group).join(id, false) : null;
         if (join != null) {
           message.append(join.main()
               ? Component.translatable(ImportException.KEY_PREFIX + "success.group_main", join.kind().key(),

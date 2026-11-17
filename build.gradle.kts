@@ -4,13 +4,17 @@ import java.net.HttpURLConnection
 import java.net.URI
 
 plugins {
-    id("net.fabricmc.fabric-loom") version "1.17-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version "1.19-SNAPSHOT"
     id("maven-publish")
     id("me.modmuss50.mod-publish-plugin") version "1.0.0"
     id("org.jetbrains.changelog") version "2.4.0"
 }
 
-version = findProperty("mod_version") as String + "+" + findProperty("minecraft_version")
+val modVersion = findProperty("mod_version") as String
+val minecraftVersion = findProperty("minecraft_version") as String
+val javaVersion = findProperty("java_version") as String
+
+version = "$modVersion+$minecraftVersion"
 group = findProperty("maven_group") as String
 
 base {
@@ -28,7 +32,7 @@ loom {
     splitEnvironmentSourceSets()
 
     runConfigs.all {
-        ideConfigGenerated(true)
+        generateRunConfig = true
     }
 
     mods {
@@ -40,18 +44,10 @@ loom {
 
     runs {
         named("client") {
-            programArgs("--username", "Wroud")
+            programArguments.addAll("--username", "Wroud")
         }
     }
 }
-
-// sourceSets {
-//     main {
-//         java {
-//             srcDir("versions/${stonecutter.current.version}/src/main/java")
-//         }
-//     }
-// }
 
 fabricApi {
     configureDataGeneration() {
@@ -62,7 +58,7 @@ fabricApi {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${findProperty("minecraft_version")}")
+    minecraft("com.mojang:minecraft:$minecraftVersion")
     implementation("net.fabricmc:fabric-loader:${findProperty("loader_version")}")
     implementation("net.fabricmc.fabric-api:fabric-api:${findProperty("fabric_version")}")
     compileOnly("maven.modrinth:iris:${findProperty("iris_version")}")
@@ -71,10 +67,7 @@ dependencies {
 
 tasks {
     processResources {
-        val props = mapOf(
-            "version" to project.version,
-            "javaVersion" to findProperty("java_version")
-        )
+        val props = mapOf("version" to project.version)
 
         inputs.properties(props)
 
@@ -84,22 +77,15 @@ tasks {
     }
 }
 
-tasks.withType<JavaCompile>().configureEach {
-	options.release = 25
-}
-
 java {
-	  withSourcesJar()
-    toolchain.languageVersion = JavaLanguageVersion.of(findProperty("java_version") as String)
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    withSourcesJar()
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
 }
 
 tasks.named("sourcesJar") {
     dependsOn(tasks.named("runDatagen"))
 }
 
-val minecraftVersion = findProperty("minecraft_version")!!.toString()
 val githubRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("wroud/mc-worlds")
 
 publishMods {
@@ -119,7 +105,7 @@ publishMods {
 
 
     curseforge {
-        javaVersions.add(JavaVersion.VERSION_25)
+        javaVersions.add(JavaVersion.toVersion(javaVersion))
         clientRequired = true
         serverRequired = true
         projectSlug = "worlds"
@@ -229,8 +215,7 @@ publishing {
 }
 
 fun fetchChangelog(): String {
-    val log = rootProject.extensions.getByType<ChangelogPluginExtension>()
-    val modVersion = findProperty("mod_version")!!.toString()
+    val log = extensions.getByType<ChangelogPluginExtension>()
     return if (log.has(modVersion)) {
         log.renderItem(
                 log.get(modVersion).withHeader(false),

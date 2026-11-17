@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
@@ -14,6 +15,9 @@ import dev.wroud.mc.worlds.McWorld;
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.abstractions.TeleportTransitionAbstraction;
 import dev.wroud.mc.worlds.manager.TemporaryIds;
+import dev.wroud.mc.worlds.manager.WorldsCreator;
+import dev.wroud.mc.worlds.manager.WorldsException;
+import dev.wroud.mc.worlds.manager.group.WorldGroup;
 import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.mixin.groups.PlayerListAccessor;
 import dev.wroud.mc.worlds.mixin.groups.ServerPlayerAccessor;
@@ -143,9 +147,34 @@ public final class GroupTransitions {
       return TeleportTransitionAbstraction.spawnNear(player, this.server.findRespawnDimension(),
           this.server.getRespawnData(), TeleportTransition.DO_NOTHING);
     }
+    return at(level, saved);
+  }
+
+  private static TeleportTransition at(ServerLevel level, ServerPlayer.SavedPosition saved) {
     var rotation = saved.rotation().orElse(Vec2.ZERO);
-    return new TeleportTransition(level, saved.position().get(), Vec3.ZERO, rotation.x, rotation.y,
+    return new TeleportTransition(level, saved.position().orElseThrow(), Vec3.ZERO, rotation.x, rotation.y,
         TeleportTransition.DO_NOTHING);
+  }
+
+  public CompletableFuture<Boolean> returnTo(WorldGroup group, ServerPlayer player) {
+    var uuid = player.getUUID();
+    var saved = this.profiles.load(group.id(), player.nameAndId()).map(GroupProfiles::positionOf)
+        .filter(position -> position.position().isPresent()
+            && position.dimension().filter(key -> group.contains(key.identifier())).isPresent());
+    var dimension = saved.flatMap(ServerPlayer.SavedPosition::dimension)
+        .orElseGet(() -> group.spawn().spawn().dimension());
+    if (!(this.server.getLevel(dimension) instanceof CustomServerLevel level)) {
+      return CompletableFuture.failedFuture(new WorldsException(WorldsCreator.NOT_LOADED, dimension.identifier()));
+    }
+    return level.whenReady().thenApply(ready -> {
+      var current = this.server.getPlayerList().getPlayer(uuid);
+      if (current == null || current.isDeadOrDying() || group.id().equals(groupOf(current))) {
+        return false;
+      }
+      return current.teleport(saved.map(position -> at(ready, position))
+          .orElseGet(() -> TeleportTransitionAbstraction.spawnAtRespawn(current, ready,
+              TeleportTransition.DO_NOTHING))) != null;
+    });
   }
 
   private @Nullable ServerLevel liveLevel(ResourceKey<Level> dimension) {
@@ -207,8 +236,7 @@ public final class GroupTransitions {
       }
       var player = entry.getKey().connection.player;
       this.leaving.remove(player.getUUID());
-      if (player.isRemoved()
-          || entry.getValue().newLevel() instanceof CustomServerLevel target && !target.canTeleport()) {
+      if (player.isRemoved() || !CustomServerLevel.admits(entry.getValue().newLevel(), player)) {
         continue;
       }
       if (!needsSwitch(player, entry.getValue().newLevel())) {
