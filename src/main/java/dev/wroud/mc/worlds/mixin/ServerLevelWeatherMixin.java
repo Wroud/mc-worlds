@@ -22,7 +22,10 @@ import net.minecraft.server.players.PlayerList;
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelWeatherMixin {
 
+    // require = 0: another mod may already scope these broadcasts the same way
+    // (e.g. The Sift redirects them to broadcastAll(packet, dimension) too).
     @Redirect(
+        require = 0,
         method = "advanceWeatherCycle",
         at = @At(value = "INVOKE",
             target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
