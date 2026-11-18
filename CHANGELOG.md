@@ -14,6 +14,16 @@
 
 ### Security
 
+## 2.2.0 - 2026-11-18
+
+### Added
+
+- Mods can get a short id for a temporary world or group, for logs and exported results. The [API guide](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the details.
+
+### Changed
+
+- Temporary worlds and groups get shorter ids, so they are easier to read in world lists and commands.
+
 ## 2.1.0 - 2026-11-18
 
 ### Added

@@ -107,11 +107,12 @@ public final class WorldGroup {
 
 ### Temporary worlds and groups
 
-A temporary world or group uses the normal calls with a generated id. Its files are deleted when it closes and at startup.
+A temporary world or group uses the normal calls with a generated id: the name plus 8 random hex characters, such as `mc-worlds-temp:match-3f9c1a7e`. Its files are deleted when it closes and at startup.
 
 ```java
 static Identifier temporaryId(String name);
 static boolean isTemporary(Identifier id);
+static String temporarySuffix(Identifier id);
 boolean returnHome(ServerPlayer player);
 ```
 
@@ -133,6 +134,7 @@ group.delete();
 - A player enters blank, so give starting items after entry.
 - `returnHome` is true when the player will go home or a queued entry into a temporary group was cancelled. A mod that owes a reward checks `isTemporary(groupOf(player))` first.
 - `importWorld` refuses `all` with a temporary id.
+- `temporarySuffix` returns the random part (`3f9c1a7e`), a short id for logs and exported results.
 
 ### Moving players
 

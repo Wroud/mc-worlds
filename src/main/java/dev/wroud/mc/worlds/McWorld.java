@@ -196,6 +196,10 @@ public class McWorld {
     return TemporaryIds.isTemporary(id);
   }
 
+  public static String temporarySuffix(Identifier id) {
+    return TemporaryIds.suffixOf(id);
+  }
+
   public boolean returnHome(ServerPlayer player) {
     return this.service().transitions().returnHome(player);
   }
