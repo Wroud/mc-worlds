@@ -223,7 +223,7 @@ public class CustomServerLevel extends ServerLevel {
   @Override
   public TickRateManager tickRateManager() {
     var group = this.group();
-    return group != null && group.isFrozen() ? FROZEN : super.tickRateManager();
+    return !this.isOpen() || group != null && group.isFrozen() ? FROZEN : super.tickRateManager();
   }
 
   @Override

@@ -14,6 +14,12 @@
 
 ### Security
 
+## 2.2.1 - 2026-11-19
+
+### Fixed
+
+- A world that is being deleted or unloaded no longer runs mob, block and weather ticks while it closes.
+
 ## 2.2.0 - 2026-11-18
 
 ### Added
