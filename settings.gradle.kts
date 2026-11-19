@@ -6,13 +6,4 @@ pluginManagement {
 	}
 }
 
-plugins {
-	id("dev.kikugie.stonecutter") version "0.7.10"
-}
-
-stonecutter {
-	create(rootProject) {
-		versions("latest")
-		vcsVersion = "latest"
-	}
-}
+rootProject.name = "mc-worlds"

@@ -41,8 +41,8 @@ replay_*.log
 
 
 # Datagen
-versions/*/logs/
-versions/*/src/main/generated/
+/logs/
+src/main/generated/
 
 # minecraft
 minecraft-client/

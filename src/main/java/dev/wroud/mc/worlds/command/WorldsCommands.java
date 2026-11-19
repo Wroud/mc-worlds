@@ -70,7 +70,7 @@ public class WorldsCommands {
     return McWorldMod.getManager(source.getServer()).orElseThrow();
   }
 
-  private static CommandSyntaxException failure(Component message) {
+  public static CommandSyntaxException failure(Component message) {
     return new SimpleCommandExceptionType(message).create();
   }
 

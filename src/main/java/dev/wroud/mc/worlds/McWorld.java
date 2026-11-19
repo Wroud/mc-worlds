@@ -2,7 +2,6 @@ package dev.wroud.mc.worlds;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.SequencedCollection;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -16,9 +15,9 @@ import dev.wroud.mc.worlds.manager.WorldSpawns;
 import dev.wroud.mc.worlds.manager.WorldsCreator;
 import dev.wroud.mc.worlds.manager.WorldsException;
 import dev.wroud.mc.worlds.manager.WorldsManager;
+import dev.wroud.mc.worlds.manager.group.GroupProvider;
 import dev.wroud.mc.worlds.manager.group.WorldGroup;
 import dev.wroud.mc.worlds.manager.group.WorldGroups;
-import dev.wroud.mc.worlds.manager.group.WorldKind;
 import dev.wroud.mc.worlds.manager.group.transition.GroupTransitions;
 import dev.wroud.mc.worlds.manager.importer.ImportResult;
 import dev.wroud.mc.worlds.manager.importer.WorldImporter;
@@ -32,7 +31,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.FileUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -60,7 +58,6 @@ public class McWorld {
       });
 
   private static final String UNKNOWN_WORLD = "dev.wroud.mc.worlds.command.exception.unknown_world";
-  private static final String GROUP_KEY = "dev.wroud.mc.worlds.command.group.";
 
   private final MinecraftServer server;
   private final WorldsManager worldsManager;
@@ -154,7 +151,7 @@ public class McWorld {
     if (level == null) {
       throw new WorldsException(UNKNOWN_WORLD);
     }
-    if (player.level() == level || level instanceof CustomServerLevel custom && !custom.canTeleport()) {
+    if (player.level() == level || !CustomServerLevel.admits(level, player)) {
       return false;
     }
     player.setPortalCooldown();
@@ -166,71 +163,14 @@ public class McWorld {
     return WorldSpawns.transition(level, entity);
   }
 
-  public void createGroup(Identifier group) {
-    this.refuseDefault(group);
-    if (!FileUtil.isValidPathSegment(group.getNamespace()) || !FileUtil.isValidPathSegment(group.getPath())) {
-      throw new WorldsException(GROUP_KEY + "create.exception.invalid", group);
-    }
-    if (this.service().transitions().isDeleting(group)) {
-      throw new WorldsException(GROUP_KEY + "create.exception.deleting", group);
-    }
-    if (!this.service().create(group)) {
-      throw new WorldsException(GROUP_KEY + "create.exception.exists", group);
-    }
+  public WorldGroup createGroup(Identifier group) {
+    return this.createGroup(group, null);
   }
 
-  public WorldGroup deleteGroup(Identifier group) {
-    this.refuseDefault(group);
-    var removed = this.service().delete(group);
-    if (removed == null) {
-      throw unknownGroup(group);
-    }
-    return removed;
+  public WorldGroup createGroup(Identifier group, @Nullable Identifier provider) {
+    return this.service().create(group, provider);
   }
 
-  public WorldGroup.Join joinGroup(Identifier world, Identifier group, boolean asMain) {
-    this.requireGroupable(world);
-    this.refuseDefault(group);
-    var groups = this.service();
-    if (groups.get(group) != null && !WorldGroups.accepts(group, world)) {
-      throw new WorldsException(GROUP_KEY + "join.exception.not_temporary", world, group);
-    }
-    if (asMain && !WorldKind.of(this.server, world).isMain()) {
-      throw new WorldsException(GROUP_KEY + "join.exception.other", world);
-    }
-    var joined = groups.join(world, group, asMain);
-    if (joined == null) {
-      throw unknownGroup(group);
-    }
-    return joined;
-  }
-
-  public Identifier leaveGroup(Identifier world) {
-    this.requireGroupable(world);
-    var previous = this.service().leave(world);
-    if (previous == null) {
-      throw new WorldsException(GROUP_KEY + "leave.exception.default", world);
-    }
-    return previous;
-  }
-
-  public void setGroupSpawn(Identifier group, @Nullable RespawnData spawn) {
-    if (WorldGroups.isDefault(group)) {
-      throw new WorldsException(GROUP_KEY + "spawn.exception.default");
-    }
-    var target = this.service().get(group);
-    if (target == null) {
-      throw unknownGroup(group);
-    }
-    if (spawn != null && !target.contains(spawn.dimension().identifier())) {
-      throw new WorldsException(GROUP_KEY + "spawn.exception.outside", group);
-    }
-    this.service().setSpawn(group, spawn);
-  }
-
-  public WorldGroup.Spawn groupSpawn(Identifier group) {
-    return this.service().spawnOf(group);
-  }
 
   public Identifier groupOf(Identifier world) {
     return this.service().groupOrDefault(world);
@@ -240,12 +180,12 @@ public class McWorld {
     return this.service().get(group);
   }
 
-  public SequencedCollection<Identifier> members(Identifier group) {
-    return this.service().members(group);
-  }
-
   public Map<Identifier, WorldGroup> groups() {
     return this.service().all();
+  }
+
+  public static void registerGroupProvider(Identifier id, GroupProvider provider) {
+    WorldGroups.registerProvider(id, provider);
   }
 
   public static Identifier temporaryId(String name) {
@@ -254,6 +194,10 @@ public class McWorld {
 
   public static boolean isTemporary(Identifier id) {
     return TemporaryIds.isTemporary(id);
+  }
+
+  public static String temporarySuffix(Identifier id) {
+    return TemporaryIds.suffixOf(id);
   }
 
   public boolean returnHome(ServerPlayer player) {
@@ -288,25 +232,5 @@ public class McWorld {
       throw new WorldsException(UNKNOWN_WORLD);
     }
     return data;
-  }
-
-  private void requireGroupable(Identifier world) {
-    if (this.worldsManager.getWorldsData().getLevelData(world) != null) {
-      return;
-    }
-    if (this.server.levelKeys().contains(ResourceKey.create(Registries.DIMENSION, world))) {
-      throw new WorldsException(GROUP_KEY + "exception.vanilla");
-    }
-    throw new WorldsException(UNKNOWN_WORLD);
-  }
-
-  private void refuseDefault(Identifier group) {
-    if (WorldGroups.isDefault(group)) {
-      throw new WorldsException(GROUP_KEY + "exception.default");
-    }
-  }
-
-  private static WorldsException unknownGroup(Identifier group) {
-    return new WorldsException(GROUP_KEY + "exception.unknown_group", group);
   }
 }

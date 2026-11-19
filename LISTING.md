@@ -82,7 +82,7 @@ A mod that keeps player data in the world's saved data instead, as Pufferfish's 
 <img src="https://raw.githubusercontent.com/Wroud/mc-worlds/main/docs/listing/ribbon-servers.png" alt="Performance and API" width="100%">
 </center>
 
-- **Load on demand.** A world loads when a player enters it and unloads a minute after the last player leaves, so you can keep hundreds of worlds without paying for idle ones.
+- **Load on demand.** Worlds load when needed, stop mob, block and weather ticks as they close, and unload a minute after the last player leaves, so you can keep hundreds without paying for idle worlds.
 - **Updated within a week of each Minecraft release.** Worlds follows the newest Minecraft version; older versions stay on the Versions tab.
 - **A base for other mods.** Mods can do everything the commands do and register their own world types through the Worlds API. [Stargate](https://modrinth.com/mod/mc-stargate) is built on it; [API.md](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the guide and the Gradle setup.
 
@@ -181,9 +181,9 @@ Put the save, or its zip, next to the server world. Older Minecraft versions are
 
 ## Recent updates
 
-- **2.0.1** Loot in created worlds follows each world's own seed.
-- **2.0.0** World groups with linked portals, separate inventories and their own spawn and game rules, temporary worlds for minigames, and a new API for mods. Mods built on an older version need an update.
-- **1.11.0** `/worlds import` brings in singleplayer worlds, other servers' worlds and Paper or Multiverse worlds, from a folder, a zip or a download link.
+- **2.2.1** Worlds stop ticking as soon as they start closing.
+- **2.2.0** Temporary worlds and groups get shorter ids, and mods can use them in logs and exported results.
+- **2.1.0** Advancement and death messages and world-wide sounds stay in their world group, and mods can run their own games in a group.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

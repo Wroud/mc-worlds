@@ -15,12 +15,14 @@ import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 
 import dev.wroud.mc.worlds.McWorldMod;
+import dev.wroud.mc.worlds.manager.WorldsException;
 import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.manager.LazyLevelMap;
 import dev.wroud.mc.worlds.manager.TemporaryIds;
 import dev.wroud.mc.worlds.manager.group.transition.GroupTransitions;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import dev.wroud.mc.worlds.server.level.LayeredGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -29,6 +31,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.util.FileUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRule;
@@ -39,6 +43,7 @@ import net.minecraft.world.level.storage.LevelResource;
 
 public final class WorldGroups {
   public static final Identifier DEFAULT = Identifier.withDefaultNamespace("default");
+  private static final Map<Identifier, GroupProvider> PROVIDERS = new HashMap<>();
 
   private final MinecraftServer server;
   private final WorldsManager manager;
@@ -50,11 +55,12 @@ public final class WorldGroups {
   public WorldGroups(MinecraftServer server, WorldsManager manager) {
     this.server = server;
     this.manager = manager;
-    this.data = server.getDataStorage().computeIfAbsent(WorldGroupsData.TYPE);
-    if (this.data.groups().isEmpty()) {
-      this.data.setDirty(false);
-    }
+    this.data = server.getDataStorage().computeIfAbsent(WorldGroupsData.type(this));
     this.transitions = new GroupTransitions(server, this);
+  }
+
+  public MinecraftServer server() {
+    return this.server;
   }
 
   public GroupTransitions transitions() {
@@ -63,6 +69,16 @@ public final class WorldGroups {
 
   public static @Nullable WorldGroups of(MinecraftServer server) {
     return McWorldMod.getManager(server).map(WorldsManager::getGroups).orElse(null);
+  }
+
+  public static void registerProvider(Identifier id, GroupProvider provider) {
+    if (PROVIDERS.putIfAbsent(id, provider) != null) {
+      throw new IllegalStateException("Group provider " + id + " is already registered");
+    }
+  }
+
+  public static @Nullable GroupProvider provider(Identifier id) {
+    return PROVIDERS.get(id);
   }
 
   public static boolean isDefault(Identifier group) {
@@ -102,6 +118,10 @@ public final class WorldGroups {
     return groupOrDefault(level).equals(groupOrDefault(other));
   }
 
+  public static void broadcastSystemMessage(PlayerList players, Level level, Component message, boolean overlay) {
+    players.broadcastSystemMessage(message, player -> sameGroup(player.level(), level) ? message : null, overlay);
+  }
+
   public boolean sameGroup(Level level, ResourceKey<Level> other) {
     return groupOrDefault(level).equals(this.groupOrDefault(other.identifier()));
   }
@@ -116,17 +136,68 @@ public final class WorldGroups {
     return ids;
   }
 
-  public boolean create(Identifier group) {
-    if (isDefault(group) || this.data.get(group) != null) {
-      return false;
+  public WorldGroup create(Identifier group, @Nullable Identifier provider) {
+    if (isDefault(group)) {
+      throw new WorldsException(WorldGroup.KEY + "exception.default");
+    }
+    if (!FileUtil.isValidPathSegment(group.getNamespace()) || !FileUtil.isValidPathSegment(group.getPath())) {
+      throw new WorldsException(WorldGroup.KEY + "create.exception.invalid", group);
+    }
+    if (this.transitions.isDeleting(group)) {
+      throw new WorldsException(WorldGroup.KEY + "create.exception.deleting", group);
+    }
+    var factory = provider != null ? provider(provider) : null;
+    if (provider != null && factory == null) {
+      throw new WorldsException(WorldGroup.KEY + "create.exception.unknown_provider", provider);
+    }
+    if (this.data.get(group) != null) {
+      throw new WorldsException(WorldGroup.KEY + "create.exception.exists", group);
     }
     if (TemporaryIds.isTemporary(group)) {
       this.manager.getTemporaryStorage().putGroup(group);
     } else {
       this.transitions.clearProfiles(group);
     }
-    this.data.put(group, new WorldGroup());
-    return true;
+    var created = new WorldGroup(this, group);
+    if (factory != null) {
+      created.attach(provider, factory.create(created, null));
+    }
+    this.data.put(group, created);
+    return created;
+  }
+
+  public WorldGroup require(Identifier group) {
+    if (isDefault(group)) {
+      throw new WorldsException(WorldGroup.KEY + "exception.default");
+    }
+    var found = this.data.get(group);
+    if (found == null) {
+      throw unknownGroup(group);
+    }
+    return found;
+  }
+
+  static WorldsException unknownGroup(Identifier group) {
+    return new WorldsException(WorldGroup.KEY + "exception.unknown_group", group);
+  }
+
+  void requireGroupable(Identifier world) {
+    if (this.manager.getWorldsData().getLevelData(world) != null) {
+      return;
+    }
+    if (this.server.levelKeys().contains(ResourceKey.create(Registries.DIMENSION, world))) {
+      throw new WorldsException(WorldGroup.KEY + "exception.vanilla");
+    }
+    throw new WorldsException("dev.wroud.mc.worlds.command.exception.unknown_world");
+  }
+
+  public void tickInstances() {
+    for (var group : this.data.groups().values()) {
+      var instance = group.instance();
+      if (instance != null && !group.isDeleted()) {
+        instance.tick();
+      }
+    }
   }
 
   public void sweepTemporary() {
@@ -138,11 +209,17 @@ public final class WorldGroups {
         .forEach(this::leave);
   }
 
-  public @Nullable WorldGroup delete(Identifier group) {
-    var removed = this.data.remove(group);
-    if (removed == null) {
-      return null;
+  public void removeTemporary() {
+    for (var id : List.copyOf(this.data.groups().keySet())) {
+      if (TemporaryIds.isTemporary(id)) {
+        notifyRemoved(this.data.remove(id));
+      }
     }
+  }
+
+  void delete(WorldGroup removed) {
+    var group = removed.id();
+    this.data.remove(group);
     if (TemporaryIds.isTemporary(group)) {
       removed.members().forEach(this.manager::deleteWorld);
       this.manager.getTemporaryStorage().forget(group);
@@ -150,18 +227,22 @@ public final class WorldGroups {
     removed.members().forEach(this::refresh);
     this.deleteRules(group);
     this.transitions.scheduleProfileDeletion(group);
-    return removed;
+    notifyRemoved(removed);
+  }
+
+  private static void notifyRemoved(@Nullable WorldGroup group) {
+    var instance = group != null ? group.instance() : null;
+    if (instance != null) {
+      instance.removed();
+    }
   }
 
   public static boolean accepts(Identifier group, Identifier world) {
     return !TemporaryIds.isTemporary(group) || TemporaryIds.isTemporary(world);
   }
 
-  public WorldGroup.@Nullable Join join(Identifier world, Identifier group, boolean asMain) {
-    var target = this.data.get(group);
-    if (target == null || !accepts(group, world)) {
-      return null;
-    }
+  WorldGroup.Join join(WorldGroup target, Identifier world, boolean asMain) {
+    var group = target.id();
     var previous = this.groupOf(world);
     if (previous != null && !previous.equals(group)) {
       this.data.get(previous).remove(world);
@@ -190,8 +271,11 @@ public final class WorldGroups {
     return previous;
   }
 
-  public void setSpawn(Identifier group, @Nullable RespawnData spawn) {
-    this.data.get(group).setSpawn(spawn);
+  void markDirty() {
+    this.data.setDirty();
+  }
+
+  void spawnChanged(Identifier group) {
     this.data.setDirty();
     this.refreshSpawns(group);
   }
@@ -216,7 +300,7 @@ public final class WorldGroups {
   public WorldGroup.Spawn spawnOf(Identifier group) {
     var target = this.data.get(group);
     if (target != null) {
-      var set = target.spawn();
+      var set = target.spawnData();
       if (set != null && target.contains(set.dimension().identifier())) {
         return new WorldGroup.Spawn(set, WorldGroup.SpawnSource.SET);
       }
@@ -244,7 +328,7 @@ public final class WorldGroups {
 
   public @Nullable Identifier spawnHolder(Identifier world) {
     for (var entry : this.data.groups().entrySet()) {
-      var spawn = entry.getValue().spawn();
+      var spawn = entry.getValue().spawnData();
       if (spawn != null && spawn.dimension().identifier().equals(world) && entry.getValue().contains(world)) {
         return entry.getKey();
       }
@@ -277,15 +361,15 @@ public final class WorldGroups {
     return loader.apply(target);
   }
 
-  public GameRuleMap rules(Identifier group) {
+  public LayeredGameRules gameRules(Identifier group) {
+    return new LayeredGameRules(this.server, this.rules(group), group, true);
+  }
+
+  private GameRuleMap rules(Identifier group) {
     if (TemporaryIds.isTemporary(group)) {
       return this.temporaryRules.computeIfAbsent(group, id -> GameRuleMap.of());
     }
-    var rules = this.server.getDataStorage().computeIfAbsent(this.ruleType(group));
-    if (rules.size() == 0) {
-      rules.setDirty(false);
-    }
-    return rules;
+    return this.server.getDataStorage().computeIfAbsent(this.ruleType(group));
   }
 
   private SavedDataType<GameRuleMap> ruleType(Identifier group) {

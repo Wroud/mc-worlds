@@ -16,11 +16,11 @@ public class ServerPlayerMixin {
   @Inject(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", at = @At("HEAD"), cancellable = true)
   private void onTeleport(TeleportTransition teleportTransition, CallbackInfoReturnable<ServerPlayer> cir) {
     var level = teleportTransition.newLevel();
-    if (level instanceof CustomServerLevel customServerLevel && !customServerLevel.canTeleport()) {
+    var player = (ServerPlayer) (Object) this;
+    if (!CustomServerLevel.admits(level, player)) {
       cir.setReturnValue(null);
       return;
     }
-    var player = (ServerPlayer) (Object) this;
     var transitions = GroupTransitions.of(level.getServer());
     if (transitions != null && transitions.queue(player, teleportTransition)) {
       cir.setReturnValue(teleportTransition.asPassenger() ? null : player);

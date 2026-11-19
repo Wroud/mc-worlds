@@ -1,5 +1,6 @@
 package dev.wroud.mc.worlds;
 
+import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.manager.group.transition.GroupTransitions;
 import dev.wroud.mc.worlds.network.GameRuleOriginsPayload;
 import dev.wroud.mc.worlds.server.level.GroupGameRules;
@@ -60,13 +61,18 @@ public class McWorldMod implements ModInitializer {
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((serverInstance, resources, success) -> PerWorldGameRules.pruneAll(serverInstance));
 
         ServerLifecycleEvents.SERVER_STOPPED.register(serverInstance -> {
+            var groups = WorldGroups.of(serverInstance);
+            if (groups != null) {
+                groups.removeTemporary();
+            }
             worlds.remove(serverInstance);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            var transitions = GroupTransitions.of(server);
-            if (transitions != null) {
-                transitions.drain();
+            var groups = WorldGroups.of(server);
+            if (groups != null) {
+                groups.tickInstances();
+                groups.transitions().drain();
             }
             var toRemove = new ArrayList<ResourceKey<Level>>();
 

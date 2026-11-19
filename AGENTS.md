@@ -1,6 +1,6 @@
 # MC-Worlds Agent Instructions
 
-Fabric Minecraft mod for managing multiple per-server worlds via in-game commands. Mod ID `mc-worlds`. Published to Modrinth, CurseForge, GitHub Releases and GitHub Packages from CI (`.github/workflows/release.yml`, `build.gradle.kts` `publishMods`; `platforms` and `dry_run` inputs). Versions in `gradle.properties` (mod) and `versions/latest/gradle.properties` (MC/Java).
+Fabric Minecraft mod for managing multiple per-server worlds via in-game commands. Mod ID `mc-worlds`. Published to Modrinth, CurseForge, GitHub Releases and GitHub Packages from CI (`.github/workflows/release.yml`, `build.gradle.kts` `publishMods`; `platforms` and `dry_run` inputs). Versions in `gradle.properties`.
 
 **Read `../mc-worlds-internal/AGENTS.md` first when it exists.** It holds the architecture, patterns, version bump checks and test recipes, and `../mc-worlds-internal/docs/features/` holds the design docs and roadmap. Those notes are private: design plans, test plans and implementation notes never go in this public repository.
 
@@ -14,7 +14,7 @@ Fabric Minecraft mod for managing multiple per-server worlds via in-game command
 ## Build & Run
 
 ```bash
-./gradlew build         # build JAR → versions/latest/build/libs/worlds-<mod_version>+<mc_version>.jar
+./gradlew build         # build JAR → build/libs/worlds-<mod_version>+<mc_version>.jar
 ./gradlew runClient     # dev client
 ./gradlew runServer     # dev server (no test suite)
 ./gradlew runDatagen    # data generation
@@ -37,10 +37,15 @@ Per-mod values are in `.claude/mod-skills.env`.
 
 ## Conventions
 
-- Add an operation to `McWorld`, then call it from a command in `command/`, registered in `WorldsCommands`. Text goes through `Component.translatable`, with keys in `src/main/resources/assets/mc-worlds/lang/en_us.json`.
+- Add a server-wide operation to `McWorld` and a group operation to `WorldGroup`, then call it from a command in `command/`, registered in `WorldsCommands`. Text goes through `Component.translatable`, with keys in `src/main/resources/assets/mc-worlds/lang/en_us.json`.
+- The API is object-based: a lookup returns the object (`createGroup` returns the `WorldGroup`) and its methods do the work. Add no method that takes an id of an object the caller already holds.
+- One implementation per concern: the public method validates, the internal service only applies, and commands, the importer and mods all call that public method. Every game-rule change goes through `LayeredGameRules.set`/`inherit`.
+- mc-worlds owns group lifecycles: it creates, ticks and removes `GroupInstance`s, including at server stop. Mods react in `removed()` instead of registering their own server events.
+- A decision that belongs to a group is a `GroupInstance` method mc-worlds calls (`canEnter`), so no caller casts the instance.
+- Follow vanilla behaviour over custom shortcuts: saved data is written even when empty, as vanilla's `raids.dat` is.
 - Mixins live under `src/main/java/dev/wroud/mc/worlds/mixin/` and are registered in `src/main/resources/worlds.mixins.json` or `src/client/resources/worlds.client.mixins.json`.
 - Persisted data uses `Codec<T>` via `RecordCodecBuilder`.
 
 ## Minecraft Source (Mojmap)
 
-Fabric Loom decompiles MC into source JARs under `.gradle/loom-cache/minecraftMaven/net/minecraft/`. Manual extract: `unzip .../minecraft-common-*-sources.jar -d /tmp/mc-src`. If the stable version has no `-sources.jar` yet, run `./gradlew :latest:genSources` first. Do not read a `-pre`/`-rc` decompile for the stable version.
+Fabric Loom decompiles MC into source JARs under `.gradle/loom-cache/minecraftMaven/net/minecraft/`. Manual extract: `unzip .../minecraft-common-*-sources.jar -d /tmp/mc-src`. If the stable version has no `-sources.jar` yet, run `./gradlew genSources` first. Do not read a `-pre`/`-rc` decompile for the stable version.

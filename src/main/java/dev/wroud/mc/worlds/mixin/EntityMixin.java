@@ -14,11 +14,8 @@ public class EntityMixin {
 
   @Inject(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/world/entity/Entity;", at = @At("HEAD"), cancellable = true)
   private void onTeleport(TeleportTransition teleportTransition, CallbackInfoReturnable<Entity> cir) {
-    var level = teleportTransition.newLevel();
-    if (level instanceof CustomServerLevel customServerLevel) {
-      if (!customServerLevel.canTeleport()) {
-        cir.setReturnValue(null);
-      }
+    if (!CustomServerLevel.admits(teleportTransition.newLevel(), (Entity) (Object) this)) {
+      cir.setReturnValue(null);
     }
   }
 }

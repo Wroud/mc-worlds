@@ -12,6 +12,8 @@ import java.util.function.UnaryOperator;
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.WorldsCreator;
 import dev.wroud.mc.worlds.manager.WorldsException;
+import dev.wroud.mc.worlds.manager.group.GroupInstance;
+import dev.wroud.mc.worlds.manager.group.WorldGroup;
 import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.manager.level.data.WorldsLevelData;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
@@ -36,8 +38,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.RandomSequences;
+import net.minecraft.world.TickRateManager;
 import net.minecraft.world.attribute.EnvironmentAttributeSystem;
 import net.minecraft.world.clock.ServerClockManager;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -55,6 +59,17 @@ import org.jspecify.annotations.Nullable;
 
 public class CustomServerLevel extends ServerLevel {
   public static final int STOP_AFTER = 1200; // 60 seconds * 20 ticks
+  private static final TickRateManager FROZEN = new TickRateManager() {
+    @Override
+    public boolean runsNormally() {
+      return false;
+    }
+
+    @Override
+    public boolean isFrozen() {
+      return true;
+    }
+  };
   private boolean isClosed;
   private boolean deleteOnClose;
   private LevelState currentState;
@@ -143,6 +158,17 @@ public class CustomServerLevel extends ServerLevel {
     return this.groups != null ? this.groups.groupOf(this.dimension().identifier()) : null;
   }
 
+  private @Nullable WorldGroup group() {
+    WorldGroups groups = this.groups;
+    Identifier group = this.groupId;
+    return groups != null && group != null ? groups.get(group) : null;
+  }
+
+  public @Nullable GroupInstance groupInstance() {
+    var group = this.group();
+    return group != null ? group.instance() : null;
+  }
+
   public void refreshGroup() {
     LayeredGameRules previous = this.perWorldGameRules;
     this.groupId = this.resolveGroup();
@@ -183,7 +209,7 @@ public class CustomServerLevel extends ServerLevel {
 
   @Override
   public boolean isAllowedToEnterPortal(Level toLevel) {
-    if (toLevel instanceof CustomServerLevel destination && !destination.canTeleport()) {
+    if (toLevel instanceof CustomServerLevel destination && !destination.isOpen()) {
       return false;
     }
     return !DimensionDetectionUtil.isNetherLikeDimension(toLevel)
@@ -194,6 +220,12 @@ public class CustomServerLevel extends ServerLevel {
   public ServerClockManager clockManager() {
     ServerClockManager clock = this.perWorldClockManager;
     return clock != null ? clock : super.clockManager();
+  }
+
+  @Override
+  public TickRateManager tickRateManager() {
+    var group = this.group();
+    return !this.isOpen() || group != null && group.isFrozen() ? FROZEN : super.tickRateManager();
   }
 
   @Override
@@ -218,8 +250,21 @@ public class CustomServerLevel extends ServerLevel {
     worldsLevelData.setGameTime(worldsLevelData.getGameTime() + 1L);
   }
 
-  public boolean canTeleport() {
+  public boolean isOpen() {
     return !this.isStopping() && !this.isStopped();
+  }
+
+  public boolean canEnter(Entity entity) {
+    var instance = this.groupInstance();
+    return this.isOpen()
+        && (instance == null || WorldGroups.sameGroup(entity.level(), this) || instance.canEnter(entity));
+  }
+
+  public static boolean admits(Level level, Entity entity) {
+    if (!(level instanceof CustomServerLevel custom)) {
+      return true;
+    }
+    return entity.level() == custom ? custom.isOpen() : custom.canEnter(entity);
   }
 
   public boolean isActive() {
@@ -280,7 +325,7 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   private void markReady() {
-    if (!this.canTeleport()) {
+    if (!this.isOpen()) {
       return;
     }
     McWorldMod.getManager(this.getServer()).ifPresent(
@@ -289,7 +334,7 @@ public class CustomServerLevel extends ServerLevel {
   }
 
   public CompletableFuture<ServerLevel> whenReady() {
-    if (!this.canTeleport()) {
+    if (!this.isOpen()) {
       return CompletableFuture.failedFuture(this.notLoaded());
     }
     var result = new CompletableFuture<ServerLevel>();

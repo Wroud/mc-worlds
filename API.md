@@ -63,55 +63,78 @@ static CompletableFuture<ServerLevel> whenReady(ServerLevel level);
 
 ### Groups
 
+`McWorld` creates and finds groups; a `WorldGroup` manages itself:
+
 ```java
 Identifier DEFAULT_GROUP;
-void createGroup(Identifier group);
-WorldGroup deleteGroup(Identifier group);
-WorldGroup.Join joinGroup(Identifier world, Identifier group, boolean asMain);
-Identifier leaveGroup(Identifier world);
-void setGroupSpawn(Identifier group, @Nullable RespawnData spawn);
-WorldGroup.Spawn groupSpawn(Identifier group);
-Identifier groupOf(Identifier world);
+WorldGroup createGroup(Identifier group);
+WorldGroup createGroup(Identifier group, @Nullable Identifier provider);
 @Nullable WorldGroup group(Identifier group);
-SequencedCollection<Identifier> members(Identifier group);
 Map<Identifier, WorldGroup> groups();
+Identifier groupOf(Identifier world);
 static Identifier groupOf(Level level);
 static Identifier groupOf(ServerPlayer player);
+static void registerGroupProvider(Identifier id, GroupProvider provider);
 ```
 
-- `joinGroup` takes a world id, so the world doesn't have to be loaded.
-- `deleteGroup` returns the removed group. Players inside move out at the end of the tick. `createGroup` refuses that id until the deletion has finished; `GROUP_DELETED` is where a mod creates it again.
+```java
+public final class WorldGroup {
+  Identifier id();
+  MinecraftServer server();
+  @Nullable GroupInstance instance();
+  WorldGroup.Join join(Identifier world, boolean asMain);
+  void leave(Identifier world);
+  SequencedSet<Identifier> members();
+  boolean contains(Identifier world);
+  @Nullable Identifier main(WorldKind kind);
+  boolean isMain(Identifier world);
+  WorldGroup.Spawn spawn();
+  void setSpawn(@Nullable RespawnData spawn);
+  GameRules rules();
+  CompletableFuture<Boolean> returnTo(ServerPlayer player);
+  void delete();
+  boolean isDeleted();
+}
+```
+
+- `DEFAULT_GROUP` has no `WorldGroup`: `group(DEFAULT_GROUP)` is null.
+- `join` takes a world id, so the world doesn't have to be loaded. A world in another group moves.
+- `rules` returns the group's rules, the same ones `getGameRules()` returns in each of its worlds, even before any world joins. Setting a rule there works as `/gamerule` does in one of those worlds.
+- `delete` removes the group. Players inside move out at the end of the tick. `createGroup` refuses that id until the deletion has finished; `GROUP_DELETED` is where a mod creates it again. Every other change to a deleted group throws, and `isDeleted` tells.
+- `returnTo` is the counterpart of `returnHome`: it sends the player back to where they last left the group, or to the group spawn when that world is gone or they were never inside, and loads the world first. It completes true when the teleport was sent, false when the player is already inside, dead, offline by then or refused, and exceptionally when the world can't load.
 - A level from another mod counts as `DEFAULT_GROUP` and can't join a group.
-- `groupOf(Level)`, `groupOf(ServerPlayer)` and `isTemporary` are safe to call every tick. `worlds()`, `members(DEFAULT_GROUP)` and `groupOf(Identifier)` do more work per call, so don't.
+- `groupOf(Level)`, `groupOf(ServerPlayer)` and `isTemporary` are safe to call every tick. `worlds()` and `groupOf(Identifier)` do more work per call, so don't.
 
 ### Temporary worlds and groups
 
-A temporary world or group uses the normal calls with a generated id. Its files are deleted when it closes and at startup.
+A temporary world or group uses the normal calls with a generated id: the name plus 8 random hex characters, such as `mc-worlds-temp:match-3f9c1a7e`. Its files are deleted when it closes and at startup.
 
 ```java
 static Identifier temporaryId(String name);
 static boolean isTemporary(Identifier id);
+static String temporarySuffix(Identifier id);
 boolean returnHome(ServerPlayer player);
 ```
 
 A minigame:
 
 ```java
-var group = McWorld.temporaryId("match");
-worlds.createGroup(group);
-worlds.createWorld(McWorld.temporaryId("arena"), worlds.levelStem(WorldPresets.FLAT, null), null).thenAccept(level -> {
-  worlds.joinGroup(level.dimension().identifier(), group, false);
+var group = worlds.createGroup(McWorld.temporaryId("match"));
+var arena = McWorld.temporaryId("arena");
+worlds.createWorld(arena, worlds.levelStem(WorldPresets.FLAT, null), null).thenAccept(level -> {
   player.teleport(new TeleportTransition(level, position, Vec3.ZERO, 0f, 0f, TeleportTransition.DO_NOTHING));
 });
+group.join(arena, false);
 // later
 worlds.returnHome(player);
-worlds.deleteGroup(group);
+group.delete();
 ```
 
 - Only temporary worlds can join a temporary group.
 - A player enters blank, so give starting items after entry.
 - `returnHome` is true when the player will go home or a queued entry into a temporary group was cancelled. A mod that owes a reward checks `isTemporary(groupOf(player))` first.
 - `importWorld` refuses `all` with a temporary id.
+- `temporarySuffix` returns the random part (`3f9c1a7e`), a short id for logs and exported results.
 
 ### Moving players
 
@@ -122,7 +145,7 @@ boolean teleport(ServerPlayer player, Identifier world);
 static TeleportTransition spawnTransition(ServerLevel level, Entity entity);
 ```
 
-`teleport` moves a player to the world's spawn, as `/worlds tp` does. It throws for an unknown world, and returns false when the player is already there or the world is stopping. `spawnTransition` is that same spawn search for a mod that moves the entity itself. A group switch builds a new `ServerPlayer`, so don't keep the old reference.
+`teleport` moves a player to the world's spawn, as `/worlds tp` does. It throws for an unknown world, and returns false when the player is already there, the world is stopping or it refuses the player. `spawnTransition` is that same spawn search for a mod that moves the entity itself. A group switch builds a new `ServerPlayer`, so don't keep the old reference.
 
 Non-player entities never cross groups.
 
@@ -201,6 +224,59 @@ level.getGameRules().set(GameRules.KEEP_INVENTORY, true, null);
 ```
 
 Rules in the `#mc-worlds:global` game rule tag are always written to the server's rules. A mod that reads `level.getGameRules()` sees the world's value; one that reads `server.getGameRules()` sees only the server's value.
+
+### Entry
+
+Override `canEnter` to choose who may enter the level from another level:
+
+```java
+@Override
+public boolean canEnter(Entity entity) {
+    return super.canEnter(entity) && entity instanceof ServerPlayer;
+}
+```
+
+It is asked for `/tp`, `/worlds tp`, portals, ender pearls and group switches. By default it asks the group's instance (see Group Instances). A refused move leaves the entity where it was. Login, respawn and the End exit before the credits don't ask it, so a player who logs out inside the level comes back into it. It can run off the server thread, and more than once for one move, so keep it free of side effects. `isOpen()` is false once the level is stopping.
+
+## Group Instances
+
+A provider attaches a `GroupInstance` to each group created with it, the way a level provider builds a `CustomServerLevel`:
+
+```java
+@FunctionalInterface
+public interface GroupProvider {
+  GroupInstance create(WorldGroup group, @Nullable Dynamic<?> saved);
+}
+
+public abstract class GroupInstance {
+  protected final MinecraftServer server;
+  protected final WorldGroup group;
+
+  protected GroupInstance(WorldGroup group) { ... }
+  public final WorldGroup group() { ... }
+  public final void setDirty() { ... }
+  public <T> T save(DynamicOps<T> ops) { return ops.emptyMap(); }
+  public void tick() {}
+  public boolean canEnter(Entity entity) { return true; }
+  public void removed() {}
+}
+```
+
+Register the provider during mod initialization, then create groups with it. `instance()` on the group returns the instance, and `group()` on the instance returns its group:
+
+```java
+McWorld.registerGroupProvider(MyGame.ID, MyGame::new);
+var game = (MyGame) McWorld.of(server).createGroup(id, MyGame.ID).instance();
+```
+
+- `saved` is null for a new group; the instance sets up its own initial state.
+- A `CustomServerLevel` returns its group's instance from `groupInstance()`, null outside such a group and once the group is deleted. It is safe to read in `canEnter`.
+- `canEnter` decides who may enter the group from outside it, under the same rules as the level's `canEnter` in Entry. Travel between the group's own worlds doesn't ask it. The level asks it unless the level overrides `canEnter` without calling `super`.
+- A permanent group stores what `save` returns with the group at the next save after `setDirty`, and passes it back at startup. `create` then runs while the server loads, before `McWorld.of(server)` is available, so it must not call it.
+- `create` runs before the group is registered, at startup and on `createGroup`, so the constructor uses only `id()` and `server()` of its group. Set the group up after `createGroup` returns or in the first `tick`. A temporary group is never saved.
+- `tick` runs at the end of every server tick, before group switches run, whether or not the group's worlds are loaded. An instance may delete its own group from it.
+- `removed` runs once when the group is deleted. Its players are queued to leave at the end of that tick. When the server stops, every temporary group is removed once its players are saved and `removed` runs for its instance; a permanent group's instance gets no call.
+- If a saved group's provider is no longer registered, or `create` throws at startup, the group loads without an instance, and its data is dropped the next time the groups are saved.
 
 ## Dependencies
 

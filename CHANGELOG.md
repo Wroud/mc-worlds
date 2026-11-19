@@ -14,6 +14,37 @@
 
 ### Security
 
+## 2.2.1 - 2026-11-19
+
+### Fixed
+
+- A world that is being deleted or unloaded no longer runs mob, block and weather ticks while it closes.
+
+## 2.2.0 - 2026-11-18
+
+### Added
+
+- Mods can get a short id for a temporary world or group, for logs and exported results. The [API guide](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the details.
+
+### Changed
+
+- Temporary worlds and groups get shorter ids, so they are easier to read in world lists and commands.
+
+## 2.1.0 - 2026-11-18
+
+### Added
+
+- Mods can attach their own data and rules to a world group, decide who may enter it, and send a player back to where they left it. The [API guide](https://github.com/Wroud/mc-worlds/blob/main/API.md) has the details.
+
+### Changed
+
+- The group API for mods changed, so mods built on Worlds 2.0 need an update.
+
+### Fixed
+
+- Deleting a world while its spawn is still being prepared no longer crashes the server.
+- Advancement and death messages, and the wither, dragon death and End portal sounds, stay in the group where they happen.
+
 ## 2.0.1 - 2026-11-11
 
 ### Fixed
