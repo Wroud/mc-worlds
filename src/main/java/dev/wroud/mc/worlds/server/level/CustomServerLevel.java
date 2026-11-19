@@ -58,8 +58,6 @@ public class CustomServerLevel extends ServerLevel {
   private boolean isClosed;
   private boolean deleteOnClose;
   private LevelState currentState;
-  // Not final and lazily created: mods that hook the end of ServerLevel.<init>
-  // (e.g. The Sift) call getWeatherData() before this constructor body runs.
   private WeatherData weatherData;
   private final RandomSequences randomSequences;
   private final @Nullable WorldGroups groups;
@@ -84,8 +82,7 @@ public class CustomServerLevel extends ServerLevel {
 
     this.isClosed = false;
     this.deleteOnClose = false;
-    this.weatherData = this.getWeatherData();
-    ((ServerLevelAccessor) this).invokePrepareWeather(this.weatherData);
+    ((ServerLevelAccessor) this).invokePrepareWeather(this.getWeatherData());
     this.randomSequences = this.loadRandomSequences();
     this.groups = WorldGroups.of(server);
     this.groupId = this.resolveGroup();
