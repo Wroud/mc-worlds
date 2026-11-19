@@ -14,6 +14,12 @@
 
 ### Security
 
+## 2.2.2 - 2026-11-20
+
+### Fixed
+
+- Servers start and created worlds load with Mielon's The Sift installed.
+
 ## 2.2.1 - 2026-11-19
 
 ### Fixed

@@ -181,9 +181,9 @@ Put the save, or its zip, next to the server world. Older Minecraft versions are
 
 ## Recent updates
 
+- **2.2.2** Servers start and created worlds load with Mielon's The Sift installed.
 - **2.2.1** Worlds stop ticking as soon as they start closing.
 - **2.2.0** Temporary worlds and groups get shorter ids, and mods can use them in logs and exported results.
-- **2.1.0** Advancement and death messages and world-wide sounds stay in their world group, and mods can run their own games in a group.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

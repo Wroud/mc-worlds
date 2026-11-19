@@ -23,6 +23,7 @@ import net.minecraft.server.players.PlayerList;
 public abstract class ServerLevelWeatherMixin {
 
     @Redirect(
+        require = 0,
         method = "advanceWeatherCycle",
         at = @At(value = "INVOKE",
             target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))

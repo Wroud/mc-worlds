@@ -73,7 +73,7 @@ public class CustomServerLevel extends ServerLevel {
   private boolean isClosed;
   private boolean deleteOnClose;
   private LevelState currentState;
-  private final WeatherData weatherData;
+  private WeatherData weatherData;
   private final RandomSequences randomSequences;
   private final @Nullable WorldGroups groups;
   private @Nullable Identifier groupId;
@@ -97,8 +97,7 @@ public class CustomServerLevel extends ServerLevel {
 
     this.isClosed = false;
     this.deleteOnClose = false;
-    this.weatherData = (WeatherData) this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
-    ((ServerLevelAccessor) this).invokePrepareWeather(this.weatherData);
+    ((ServerLevelAccessor) this).invokePrepareWeather(this.getWeatherData());
     this.randomSequences = this.loadRandomSequences();
     this.groups = WorldGroups.of(server);
     this.groupId = this.resolveGroup();
@@ -119,6 +118,9 @@ public class CustomServerLevel extends ServerLevel {
 
   @Override
   public WeatherData getWeatherData() {
+    if (this.weatherData == null) {
+      this.weatherData = (WeatherData) this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
+    }
     return this.weatherData;
   }
 
