@@ -8,7 +8,7 @@ Fabric Minecraft mod for managing multiple per-server worlds via in-game command
 
 - `docs/how-it-works.md`: the public overview. Keep it to behaviour, with no class names, mixin targets or test plans.
 - `docs/compatibility.md`: what the README and store page claim about other mods. List a mod as tested with a real player only after that run.
-- `API.md`: the public API, which is everything public on `McWorld`.
+- `API.md`: the public API: `McWorld`, the types it hands out, and `WorldsGameRules`. API types hold no internal logic and internal classes are not API, so other mods never depend on internals.
 - `LISTING.md`: the store page, built with the `mod-listing` skill.
 
 ## Build & Run

@@ -176,7 +176,7 @@ public class CustomServerLevel extends ServerLevel {
     this.perWorldGameRules = rules;
     for (ServerPlayer player : this.players()) {
       PerWorldGameRules.sendOrigins(player);
-      GroupGameRules.applyOnEnter(player, this);
+      PerWorldGameRules.applyOnEnter(player, this);
     }
     if (previous != null) {
       PerWorldGameRules.replayChanges(previous, rules);

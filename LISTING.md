@@ -64,6 +64,7 @@ curseforge_slugs:
 - **Own Nether and End.** Worlds in a group act as one vanilla world: a nether portal leads to the group's Nether and back, with a shared spawn and shared game rules.
 - **Separate inventories.** Each group keeps its own copy of every player: inventory, ender chest, experience, health, effects, game mode, statistics, advancements and the data other mods store on the player. Your first visit starts empty, as on a first join.
 - **Its own game mode.** Two game rules give a group a default or forced game mode, so a creative group can sit beside a survival one.
+- **Its own spawn protection.** A game rule sets how far from a group's spawn only operators can build, or turns it off, like the server's spawn protection setting.
 - **Temporary worlds for minigames.** Temporary worlds and groups are deleted when they close or the server restarts, and players return where they came from with everything they had. Data pack functions can create, enter and delete all of it.
 
 ## Compatible with Trinkets, backpacks, Origins and other mods
@@ -181,9 +182,9 @@ Put the save, or its zip, next to the server world. Older Minecraft versions are
 
 ## Recent updates
 
+- **2.3.0** A group can have its own spawn protection, or none.
 - **2.2.2** Servers start and created worlds load with Mielon's The Sift installed.
 - **2.2.1** Worlds stop ticking as soon as they start closing.
-- **2.2.0** Temporary worlds and groups get shorter ids, and mods can use them in logs and exported results.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

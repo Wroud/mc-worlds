@@ -45,6 +45,7 @@
     "groups.SwitchPlayerListMixin",
     "groups.SwitchServerLevelMixin",
     "groups.SwitchTeleportCommandMixin",
+    "DedicatedServerSpawnProtectionMixin",
     "DerivedLevelDataAccessor",
     "EntityMixin",
     "EnumRuleCommandMixin",

@@ -10,7 +10,6 @@ import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
-import dev.wroud.mc.worlds.server.level.GroupGameRules;
 import dev.wroud.mc.worlds.server.level.LayeredGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.commands.CommandBuildContext;
@@ -67,7 +66,7 @@ public class WorldGameRuleCommand {
   }
 
   public static void requireGroup(CommandSourceStack source, GameRule<?> rule) throws CommandSyntaxException {
-    if (GroupGameRules.isRefused(rule, source.getLevel())) {
+    if (PerWorldGameRules.isRefused(rule, source.getLevel())) {
       throw GROUP_ONLY_EXCEPTION.create(rule);
     }
   }

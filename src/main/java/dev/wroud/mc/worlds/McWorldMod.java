@@ -3,7 +3,6 @@ package dev.wroud.mc.worlds;
 import dev.wroud.mc.worlds.manager.group.WorldGroups;
 import dev.wroud.mc.worlds.manager.group.transition.GroupTransitions;
 import dev.wroud.mc.worlds.network.GameRuleOriginsPayload;
-import dev.wroud.mc.worlds.server.level.GroupGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.api.ModInitializer;
@@ -43,7 +42,7 @@ public class McWorldMod implements ModInitializer {
     public void onInitialize() {
         
         WorldsRegistries.bootstrap();
-        GroupGameRules.bootstrap();
+        WorldsGameRules.bootstrap();
         GroupTransitions.bootstrap();
         PayloadTypeRegistry.clientboundPlay().register(GameRuleOriginsPayload.TYPE, GameRuleOriginsPayload.CODEC);
 

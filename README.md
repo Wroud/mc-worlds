@@ -102,7 +102,7 @@ A group makes several worlds act as one vanilla world, with its own Nether and E
 
 - **Portals.** A nether portal in `sky` leads to `sky_nether` and back. An End portal needs an End world in the group.
 - **Moving between groups.** Going to a world in another group, by `/tp`, `/worlds tp` or a mod's teleport, saves your player and loads your copy for that group. Your first visit starts empty, as on a first join.
-- **Game rules.** A rule set in any world of the group holds in all of them. `mc-worlds:default_game_mode` and `mc-worlds:force_game_mode` give a group its own game mode.
+- **Game rules.** A rule set in any world of the group holds in all of them. `mc-worlds:default_game_mode` and `mc-worlds:force_game_mode` give a group its own game mode, and `mc-worlds:spawn_protection` its own spawn protection radius.
 - **Mobs and items stay.** Only players cross between groups.
 
 Temporary groups are for minigames and events. They use generated ids, which data pack functions read from the `mc-worlds:temporary` command storage:

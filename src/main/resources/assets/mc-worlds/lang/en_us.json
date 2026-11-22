@@ -115,6 +115,8 @@
   "gamerule.mc-worlds.default_game_mode.spectator": "Spectator",
   "gamerule.mc-worlds.force_game_mode": "Force game mode",
   "gamerule.mc-worlds.force_game_mode.description": "Every player entering this world group gets the default game mode",
+  "gamerule.mc-worlds.spawn_protection": "Spawn protection radius",
+  "gamerule.mc-worlds.spawn_protection.description": "Blocks from the spawn that only operators can change; -1 uses the server's spawn-protection",
   "dev.wroud.mc.worlds.command.import.started": "Importing %s from %s, please wait",
   "dev.wroud.mc.worlds.command.import.success": "World %s imported from %s (%s). ",
   "dev.wroud.mc.worlds.command.import.success.nested": "Found the save in subfolder %s of %s",

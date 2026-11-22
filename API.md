@@ -223,6 +223,8 @@ Every `CustomServerLevel` returns its own game rules from `getGameRules()`: valu
 level.getGameRules().set(GameRules.KEEP_INVENTORY, true, null);
 ```
 
+`WorldsGameRules` holds the mod's own rules: `DEFAULT_GAME_MODE` and `FORCE_GAME_MODE` for a group's game mode, and `SPAWN_PROTECTION`, the spawn protection radius in blocks or `-1` (the default) for the server's `spawn-protection` property. `group.rules().set(WorldsGameRules.SPAWN_PROTECTION, 0, server)` turns it off in a group.
+
 Rules in the `#mc-worlds:global` game rule tag are always written to the server's rules. A mod that reads `level.getGameRules()` sees the world's value; one that reads `server.getGameRules()` sees only the server's value.
 
 ### Entry

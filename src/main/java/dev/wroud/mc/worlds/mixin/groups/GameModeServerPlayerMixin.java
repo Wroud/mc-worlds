@@ -3,7 +3,7 @@ package dev.wroud.mc.worlds.mixin.groups;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 
-import dev.wroud.mc.worlds.server.level.GroupGameRules;
+import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
 import org.jspecify.annotations.Nullable;
@@ -14,7 +14,7 @@ public abstract class GameModeServerPlayerMixin {
 
     @WrapMethod(method = "calculateGameModeForNewPlayer")
     private GameType mcworlds$groupGameMode(@Nullable GameType loadedGameType, Operation<GameType> original) {
-        GameType mode = GroupGameRules.newPlayerMode((ServerPlayer) (Object) this, loadedGameType);
+        GameType mode = PerWorldGameRules.newPlayerMode((ServerPlayer) (Object) this, loadedGameType);
         return mode != null ? mode : original.call(loadedGameType);
     }
 }

@@ -62,7 +62,7 @@ public class LayeredGameRules extends GameRules {
   }
 
   public boolean refuses(GameRule<?> rule) {
-    return GroupGameRules.isGameModeRule(rule) && !this.group;
+    return PerWorldGameRules.isGameModeRule(rule) && !this.group;
   }
 
   public boolean isOverridden(GameRule<?> rule) {

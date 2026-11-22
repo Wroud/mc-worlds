@@ -14,6 +14,12 @@
 
 ### Security
 
+## 2.3.0 - 2026-11-22
+
+### Added
+
+- A group can have its own spawn protection radius, or none, with the `mc-worlds:spawn_protection` game rule. By default it follows the server's spawn protection.
+
 ## 2.2.2 - 2026-11-20
 
 ### Fixed
