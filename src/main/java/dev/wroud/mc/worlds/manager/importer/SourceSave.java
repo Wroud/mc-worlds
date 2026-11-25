@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
 
 import dev.wroud.mc.worlds.McWorldMod;
 import dev.wroud.mc.worlds.manager.WorldsData;
-import net.minecraft.SharedConstants;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -36,6 +36,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.validation.ContentValidationException;
 
 public record SourceSave(Path root, String folder, @Nullable String nested, List<SourceDimension> dimensions) {
   private static final String ZIP_EXTENSION = ".zip";
@@ -159,13 +160,13 @@ public record SourceSave(Path root, String folder, @Nullable String nested, List
       nested = inner.getFileName().toString();
     }
     try {
-      if (!storage.getWorldDirValidator().validateDirectory(folderPath, true).isEmpty()) {
-        throw new ImportException("exception.symlink", folder);
-      }
+      storage.getWorldDirValidator().validateDirectory(folderPath, true);
       if (DirectoryLock.isLocked(root)) {
         throw new ImportException("exception.locked", folder);
       }
       return new SourceSave(root, folder, nested, discoverDimensions(root));
+    } catch (ContentValidationException e) {
+      throw new ImportException("exception.symlink", folder);
     } catch (OverlappingFileLockException e) {
       throw new ImportException("exception.own_world", folder);
     } catch (IOException e) {
@@ -274,7 +275,7 @@ public record SourceSave(Path root, String folder, @Nullable String nested, List
     if (folder.isEmpty() || folder.equals(".") || folder.equals("..") || !FileUtil.isPathPartPortable(folder)) {
       return null;
     }
-    for (char illegal : SharedConstants.ILLEGAL_FILE_CHARACTERS) {
+    for (char illegal : FileUtil.ILLEGAL_FILE_CHARACTERS) {
       if (folder.indexOf(illegal) >= 0) {
         return null;
       }

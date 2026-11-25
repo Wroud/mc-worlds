@@ -21,8 +21,10 @@ import dev.wroud.mc.worlds.manager.importer.SourceSave;
 import dev.wroud.mc.worlds.manager.importer.ImportResult;
 import dev.wroud.mc.worlds.mixin.MinecraftServerAccessor;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.commands.arguments.StringArgument;
+import net.minecraft.commands.suggestions.SuggestionContext;
+import net.minecraft.commands.suggestions.SuggestionProviders;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -33,19 +35,21 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public class ImportCommand {
-  private static final SuggestionProvider<CommandSourceStack> FOLDER_SUGGESTIONS = (context, builder) -> {
-    var access = storage(context.getSource().getServer());
-    return CompletableFuture.supplyAsync(() -> SourceSave.suggestFolders(access), Util.ioPool())
-        .thenCompose(folders -> SharedSuggestionProvider.suggest(
-            folders.stream().map(StringArgumentType::escapeIfRequired), builder));
-  };
+  private static final SuggestionProvider<CommandSourceStack> FOLDER_SUGGESTIONS = SuggestionProviders.serverOnly(
+      (server, context, builder) -> {
+        var access = storage(server);
+        return CompletableFuture.supplyAsync(() -> SourceSave.suggestFolders(access), Util.ioPool())
+            .thenCompose(folders -> SuggestionContext.suggest(
+                folders.stream().map(StringArgumentType::escapeIfRequired), builder));
+      });
 
-  private static final SuggestionProvider<CommandSourceStack> DIMENSION_SUGGESTIONS = (context, builder) -> {
-    var access = storage(context.getSource().getServer());
-    var folder = StringArgumentType.getString(context, "folder");
-    return CompletableFuture.supplyAsync(() -> SourceSave.suggestDimensions(access, folder), Util.ioPool())
-        .thenCompose(dimensions -> SharedSuggestionProvider.suggestResource(dimensions, builder));
-  };
+  private static final SuggestionProvider<CommandSourceStack> DIMENSION_SUGGESTIONS = SuggestionProviders.serverOnly(
+      (server, context, builder) -> {
+        var access = storage(server);
+        var folder = StringArgument.getString(context, "folder");
+        return CompletableFuture.supplyAsync(() -> SourceSave.suggestDimensions(access, folder), Util.ioPool())
+            .thenCompose(dimensions -> SuggestionContext.suggestResource(dimensions, builder));
+      });
 
   public static LiteralArgumentBuilder<CommandSourceStack> build() {
     return literal("import")
@@ -66,7 +70,7 @@ public class ImportCommand {
   }
 
   private static RequiredArgumentBuilder<CommandSourceStack, String> sources(Target target) {
-    return argument("folder", StringArgumentType.string())
+    return argument("folder", StringArgument.string())
         .suggests(FOLDER_SUGGESTIONS)
         .executes(run(target, false, false, false))
         .then(group(run(target, false, false, true)))
@@ -84,7 +88,7 @@ public class ImportCommand {
 
   private static Command<CommandSourceStack> run(Target target, boolean withDimension, boolean all,
       boolean withGroup) {
-    return context -> target.run(context, StringArgumentType.getString(context, "folder"),
+    return context -> target.run(context, StringArgument.getString(context, "folder"),
         withDimension ? IdentifierArgument.getId(context, "dimension") : null, all,
         withGroup ? IdentifierArgument.getId(context, "group") : null);
   }

@@ -16,13 +16,13 @@ import org.spongepowered.asm.mixin.injection.At;
 public class FrostedIceBlockMixin {
 
     @ModifyExpressionValue(
-            method = "tick",
+            method = "shouldEnvironmentIncreaseCracking",
             at = @At(
                     value = "FIELD",
                     target = "Lnet/minecraft/world/level/Level;END:Lnet/minecraft/resources/ResourceKey;"
             )
     )
-    private ResourceKey<Level> modifyTickEndDimension(
+    private ResourceKey<Level> modifyCrackingEndDimension(
             ResourceKey<Level> original,
             BlockState state,
             ServerLevel level,

@@ -1,11 +1,9 @@
 package dev.wroud.mc.worlds.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
@@ -16,47 +14,48 @@ import dev.wroud.mc.worlds.manager.WorldsException;
 import dev.wroud.mc.worlds.manager.WorldsManager;
 import dev.wroud.mc.worlds.mixin.WorldPresetAccessor;
 import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandPermissionLevels;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.IdentifierArgument;
-import net.minecraft.commands.arguments.ResourceKeyArgument;
+import net.minecraft.commands.arguments.ResourceArgument;
+import net.minecraft.commands.arguments.StringArgument;
+import net.minecraft.commands.suggestions.SuggestionContext;
+import net.minecraft.commands.suggestions.SuggestionProviders;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.LevelStem;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public class WorldsCommands {
-  private static final DynamicCommandExceptionType ERROR_INVALID_PRESET = new DynamicCommandExceptionType(
-      object -> Component.translatableEscape("advancement.advancementNotFound", object));
+  public static final SuggestionProvider<CommandSourceStack> PRESET_DIMENSION_SUGGESTIONS = SuggestionProviders
+      .serverOnly((server, context, builder) -> {
+        var worldPreset = ResourceArgument.getResource(context, "preset", Registries.WORLD_PRESET).value();
+        var dimensions = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream()
+            .filter(key -> !key.equals(LevelStem.NETHER) && !key.equals(LevelStem.END)).map(ResourceKey::identifier);
+        return SuggestionContext.suggestResource(dimensions, builder);
+      });
 
-  public static final SuggestionProvider<CommandSourceStack> PRESET_DIMENSION_SUGGESTIONS = (context,
-      builder) -> {
-    var preset = ResourceKeyArgument.getRegistryKey(context, "preset", Registries.WORLD_PRESET,
-        ERROR_INVALID_PRESET);
-    var worldPreset = context.getSource().registryAccess().lookupOrThrow(Registries.WORLD_PRESET).getOrThrow(preset)
-        .value();
-    var dimensions = ((WorldPresetAccessor) worldPreset).getDimensions().keySet().stream()
-        .filter(key -> !key.equals(LevelStem.NETHER) && !key.equals(LevelStem.END)).map(ResourceKey::identifier);
+  public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = suggestIds(WorldsManager::allWorldIds);
 
-    return SharedSuggestionProvider.suggestResource(dimensions, builder);
-  };
+  public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = suggestIds(
+      WorldsManager::getWorldIds);
 
-  public static final SuggestionProvider<CommandSourceStack> WORLD_SUGGESTIONS = (context,
-      builder) -> SharedSuggestionProvider.suggestResource(manager(context.getSource()).allWorldIds(), builder);
+  public static final SuggestionProvider<CommandSourceStack> GROUP_SUGGESTIONS = suggestIds(
+      manager -> manager.getGroups().all().keySet());
 
-  public static final SuggestionProvider<CommandSourceStack> CUSTOM_WORLD_SUGGESTIONS = (context,
-      builder) -> SharedSuggestionProvider.suggestResource(manager(context.getSource()).getWorldIds(), builder);
-
-  public static final SuggestionProvider<CommandSourceStack> GROUP_SUGGESTIONS = (context,
-      builder) -> SharedSuggestionProvider.suggestResource(manager(context.getSource()).getGroups().all().keySet(),
-          builder);
+  private static SuggestionProvider<CommandSourceStack> suggestIds(
+      Function<WorldsManager, Iterable<Identifier>> ids) {
+    return SuggestionProviders.serverOnly((server, context, builder) -> SuggestionContext
+        .suggestResource(ids.apply(McWorldMod.getManager(server).orElseThrow()), builder));
+  }
 
   public static RequiredArgumentBuilder<CommandSourceStack, Identifier> groupArgument() {
     return argument("group", IdentifierArgument.id()).suggests(GROUP_SUGGESTIONS);
@@ -96,11 +95,11 @@ public class WorldsCommands {
   }
 
   public static RequiredArgumentBuilder<CommandSourceStack, String> temporaryNameArgument() {
-    return argument("name", StringArgumentType.word());
+    return argument("name", StringArgument.word());
   }
 
   public static Identifier temporaryId(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-    var name = StringArgumentType.getString(context, "name");
+    var name = StringArgument.getString(context, "name");
     return call(() -> McWorld.temporaryId(name));
   }
 
@@ -108,7 +107,7 @@ public class WorldsCommands {
       CommandBuildContext commandBuildContext) {
     dispatcher.register(
         literal("worlds")
-            .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+            .requires(Commands.hasPermission(CommandPermissionLevels.LEVEL_GAMEMASTERS))
             .then(DeleteCommand.build())
             .then(TeleportCommand.build())
             .then(CreateCommand.build())

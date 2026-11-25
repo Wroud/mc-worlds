@@ -182,9 +182,9 @@ Put the save, or its zip, next to the server world. Older Minecraft versions are
 
 ## Recent updates
 
+- **2.3.1** Support for Minecraft 26.4 Pre-Release 1.
 - **2.3.0** A group can have its own spawn protection, or none.
 - **2.2.2** Servers start and created worlds load with Mielon's The Sift installed.
-- **2.2.1** Worlds stop ticking as soon as they start closing.
 
 The full history is in the [changelog](https://github.com/Wroud/mc-worlds/blob/main/CHANGELOG.md).
 

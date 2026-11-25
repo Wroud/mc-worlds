@@ -240,7 +240,7 @@ public final class LevelDataResolver {
             continue;
           }
           CompoundTag chunk = storage.upgradeChunkTag(stored.get(), -1, context, currentVersion());
-          if (!SerializableChunkData.getChunkStatusFromTag(chunk).isOrAfter(ChunkStatus.BIOMES)) {
+          if (!SerializableChunkData.getChunkStatusFromTag(chunk).isOrAfter(ChunkStatus.NOISE_BIOMES)) {
             continue;
           }
           ResourceKey<LevelStem> environment = environmentOf(chunk, biomes);
@@ -259,7 +259,8 @@ public final class LevelDataResolver {
   private static @Nullable ResourceKey<LevelStem> environmentOf(CompoundTag chunk, Registry<Biome> biomes) {
     ResourceKey<LevelStem> environment = null;
     for (CompoundTag section : chunk.getListOrEmpty("sections").compoundStream().toList()) {
-      ListTag palette = section.getCompoundOrEmpty("biomes").getListOrEmpty("palette");
+      ListTag palette = section.getCompound("noise_biomes").orElseGet(() -> section.getCompoundOrEmpty("biomes"))
+          .getListOrEmpty("palette");
       for (int i = 0; i < palette.size(); i++) {
         Optional<Holder.Reference<Biome>> biome = palette.getString(i).map(Identifier::tryParse)
             .flatMap(biomes::get);

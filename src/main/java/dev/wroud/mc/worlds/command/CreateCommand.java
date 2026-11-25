@@ -4,15 +4,14 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 
 import dev.wroud.mc.worlds.manager.WorldsException;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.ResourceKeyArgument;
+import net.minecraft.commands.arguments.LongArgument;
+import net.minecraft.commands.arguments.ResourceArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
 
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.LongArgumentType;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -27,9 +26,6 @@ import static net.minecraft.commands.Commands.literal;
 import org.jetbrains.annotations.Nullable;
 
 public class CreateCommand {
-  private static final DynamicCommandExceptionType ERROR_INVALID_LEVEL_STEM = new DynamicCommandExceptionType(
-      object -> Component.translatableEscape("advancement.advancementNotFound", object));
-
   @FunctionalInterface
   private interface Creation {
     int run(CommandContext<CommandSourceStack> context, @Nullable ResourceKey<WorldPreset> preset,
@@ -51,42 +47,42 @@ public class CreateCommand {
   private static <T extends ArgumentBuilder<CommandSourceStack, T>> T sources(T target, Creation creation) {
     return target
         .executes(context -> creation.run(context, null, null, null, null))
-        .then(argument("seed", LongArgumentType.longArg())
+        .then(argument("seed", LongArgument.longArg())
             .executes(context -> creation.run(context, null, null, null, seed(context))))
         .then(literal("from-preset").then(
-            argument("preset", ResourceKeyArgument.key(Registries.WORLD_PRESET))
+            argument("preset", ResourceArgument.resource(Registries.WORLD_PRESET))
                 .executes(context -> creation.run(context, preset(context), null, null, null))
-                .then(argument("seed", LongArgumentType.longArg())
+                .then(argument("seed", LongArgument.longArg())
                     .executes(context -> creation.run(context, preset(context), null, null,
                         seed(context))))
                 .then(argument("dimension", IdentifierArgument.id())
                     .suggests(WorldsCommands.PRESET_DIMENSION_SUGGESTIONS)
                     .executes(context -> creation.run(context, preset(context),
                         IdentifierArgument.getId(context, "dimension"), null, null))
-                    .then(argument("seed", LongArgumentType.longArg())
+                    .then(argument("seed", LongArgument.longArg())
                         .executes(context -> creation.run(context, preset(context),
                             IdentifierArgument.getId(context, "dimension"), null,
                             seed(context)))))))
         .then(literal("from-dimension").then(
-            argument("dimension", ResourceKeyArgument.key(Registries.LEVEL_STEM))
+            argument("dimension", ResourceArgument.resource(Registries.LEVEL_STEM))
                 .executes(context -> creation.run(context, null, null, levelStem(context), null))
-                .then(argument("seed", LongArgumentType.longArg())
+                .then(argument("seed", LongArgument.longArg())
                     .executes(context -> creation.run(context, null, null, levelStem(context),
                         seed(context))))));
   }
 
   private static long seed(CommandContext<CommandSourceStack> context) {
-    return LongArgumentType.getLong(context, "seed");
+    return LongArgument.getLong(context, "seed");
   }
 
   private static ResourceKey<WorldPreset> preset(CommandContext<CommandSourceStack> context)
       throws CommandSyntaxException {
-    return ResourceKeyArgument.getRegistryKey(context, "preset", Registries.WORLD_PRESET, ERROR_INVALID_LEVEL_STEM);
+    return ResourceArgument.getResource(context, "preset", Registries.WORLD_PRESET).key();
   }
 
   private static ResourceKey<LevelStem> levelStem(CommandContext<CommandSourceStack> context)
       throws CommandSyntaxException {
-    return ResourceKeyArgument.getRegistryKey(context, "dimension", Registries.LEVEL_STEM, ERROR_INVALID_LEVEL_STEM);
+    return ResourceArgument.getResource(context, "dimension", Registries.LEVEL_STEM).key();
   }
 
   public static int createWorld(CommandSourceStack source, Identifier id,

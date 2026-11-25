@@ -6,10 +6,10 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.BooleanArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.BoolArgumentType;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -27,10 +27,10 @@ public class SettingsCommand {
         .then(literal("loadOnStartup")
             .executes(context -> getLoadOnStartup(context.getSource()))
             .then(
-                argument("value", BoolArgumentType.bool())
+                argument("value", BooleanArgument.bool())
                     .executes(context -> setLoadOnStartup(
                         context.getSource(),
-                        BoolArgumentType.getBool(context, "value")))))
+                        BooleanArgument.getBool(context, "value")))))
         .then(literal("spawn")
             .executes(context -> getSpawn(context.getSource()))
             .then(literal("here")

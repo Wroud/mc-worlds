@@ -26,7 +26,6 @@
     "fixes.ServerPlayerParentVehicleMixin",
     "fixes.ServerPlayerTeleportMixin",
     "fixes.ServerPlayerTriggerMixin",
-    "fixes.StructureTemplatePaletteMixin",
     "fixes.TheEndGatewayBlockEntityMixin",
     "fixes.ThrownEnderpearlMixin",
     "groups.AnnounceAdvancementsMixin",

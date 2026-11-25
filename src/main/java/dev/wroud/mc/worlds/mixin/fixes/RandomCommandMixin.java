@@ -3,10 +3,13 @@ package dev.wroud.mc.worlds.mixin.fixes;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.brigadier.context.CommandContext;
 
 import dev.wroud.mc.worlds.server.level.CustomServerLevel;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.suggestions.ServerOnlyCustomSuggestion;
+import net.minecraft.commands.suggestions.SuggestionContext;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.commands.RandomCommand;
@@ -14,6 +17,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.RandomSequences;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(RandomCommand.class)
 public class RandomCommandMixin {
@@ -33,13 +37,20 @@ public class RandomCommandMixin {
         return original.call(server);
     }
 
-    @WrapOperation(
-            method = "suggestRandomSequence",
-            at = @At(value = "INVOKE", target = GET_RANDOM_SEQUENCES))
-    private static RandomSequences mcworlds$suggestWorldSequences(MinecraftServer server,
-            Operation<RandomSequences> original, @Local(argsOnly = true) CommandContext<CommandSourceStack> context) {
-        return context.getSource().getLevel() instanceof CustomServerLevel level ? level.getRandomSequences()
-                : original.call(server);
+    @ModifyArg(
+            method = "<clinit>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/commands/suggestions/SuggestionProviders;serverOnly(Lnet/minecraft/commands/suggestions/ServerOnlyCustomSuggestion;)Lcom/mojang/brigadier/suggestion/SuggestionProvider;"))
+    private static ServerOnlyCustomSuggestion mcworlds$suggestWorldSequences(ServerOnlyCustomSuggestion original) {
+        return (server, context, builder) -> {
+            if (context.getSource().level() instanceof CustomServerLevel level) {
+                List<String> ids = new ArrayList<>();
+                level.getRandomSequences().forAllSequences((key, sequence) -> ids.add(key.toString()));
+                return SuggestionContext.suggest(ids, builder);
+            }
+            return original.generate(server, context, builder);
+        };
     }
 
     @WrapOperation(

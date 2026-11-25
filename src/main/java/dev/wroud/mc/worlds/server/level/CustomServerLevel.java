@@ -28,6 +28,7 @@ import dev.wroud.mc.worlds.server.level.state.StoppingLevelState;
 import dev.wroud.mc.worlds.util.DimensionDetectionUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
@@ -44,6 +45,7 @@ import net.minecraft.world.clock.ServerClockManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gamerules.GameRules;
@@ -82,6 +84,7 @@ public class CustomServerLevel extends ServerLevel {
   private @Nullable LayeredGameRules perWorldGameRules;
   private final @Nullable ServerClockManager perWorldClockManager;
   private final @Nullable EnvironmentAttributeSystem perWorldEnvironmentAttributes;
+  private final BiomeManager uncachedBiomes;
 
   public CustomServerLevel(
       MinecraftServer server,
@@ -91,12 +94,13 @@ public class CustomServerLevel extends ServerLevel {
       ResourceKey<Level> dimension,
       LevelStem levelStem,
       List<CustomSpawner> customSpawners) {
-    super(server, executor, levelStorage, levelData, dimension, levelStem,
-        levelData.getWorldData().isDebugWorld(), BiomeManager.obfuscateSeed(levelData.getSeed()),
-        customSpawners, true);
+    super(server, executor, levelStorage, levelData, dimension, levelStem, customSpawners, true);
 
     this.isClosed = false;
     this.deleteOnClose = false;
+    this.uncachedBiomes = new BiomeManager(
+        this.getChunkSource().getGenerator().getBiomeSource().createUncachedResolver(this.getChunkSource().randomState()),
+        BiomeManager.obfuscateSeed(this.getSeed()));
     ((ServerLevelAccessor) this).invokePrepareWeather(this.getWeatherData());
     this.randomSequences = this.loadRandomSequences();
     this.groups = WorldGroups.of(server);
@@ -300,6 +304,11 @@ public class CustomServerLevel extends ServerLevel {
   @Override
   public long getSeed() {
     return ((WorldsLevelData) this.levelData).getSeed();
+  }
+
+  @Override
+  public Holder<Biome> getUncachedBiome(int x, int y, int z) {
+    return this.uncachedBiomes.getBiome(x, y, z);
   }
 
   public void stop(boolean deleteOnClose) {

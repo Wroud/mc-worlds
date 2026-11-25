@@ -14,6 +14,7 @@ import dev.wroud.mc.worlds.server.level.LayeredGameRules;
 import dev.wroud.mc.worlds.server.level.PerWorldGameRules;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.CommandPermissionLevels;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -77,7 +78,7 @@ public class WorldGameRuleCommand {
 
   private static LiteralArgumentBuilder<CommandSourceStack> inherit(GameRule<?> rule) {
     return literal("inherit")
-        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+        .requires(Commands.hasPermission(CommandPermissionLevels.LEVEL_GAMEMASTERS))
         .executes(c -> inherit(c.getSource(), rule));
   }
 
