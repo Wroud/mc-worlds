@@ -14,6 +14,12 @@
 
 ### Security
 
+## 2.3.2 - 2026-11-27
+
+### Added
+
+- Support for Minecraft 26.4 Pre-Release 2.
+
 ## 2.3.1 - 2026-11-25
 
 ### Added
